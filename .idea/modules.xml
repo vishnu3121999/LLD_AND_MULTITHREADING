@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/01_TicTacToe/01_TicTacToe.iml" filepath="$PROJECT_DIR$/01_TicTacToe/01_TicTacToe.iml" />
+      <module fileurl="file://$PROJECT_DIR$/LLD_AND_MULTITHREADING.iml" filepath="$PROJECT_DIR$/LLD_AND_MULTITHREADING.iml" />
+    </modules>
+  </component>
+</project>
