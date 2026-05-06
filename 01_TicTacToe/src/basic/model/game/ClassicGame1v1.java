@@ -10,8 +10,7 @@ import java.util.Random;
 
 public class ClassicGame1v1 extends TicTacToeGame{
     private Player playerX;
-    private Player playerO;
-    private Player currentPlayer;
+    private Player playerO;;
 
     public void start(){
         gameState = GameState.IN_PROGRESS;
@@ -37,7 +36,8 @@ public class ClassicGame1v1 extends TicTacToeGame{
         super(board, GameState.NOT_STARTED);
         this.playerX = playerX;
         this.playerO = playerO;
-        currentPlayer = playerX;
+        Random random = new Random();
+        currentPlayer = random.nextBoolean()?playerX:playerO;
     }
 }
 

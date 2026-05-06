@@ -10,7 +10,11 @@ import java.util.List;
 public abstract class TicTacToeGame {
     protected TicTacToeBoard board;
     protected GameState gameState;
+    protected Player currentPlayer;
+
+
     protected Player winner;
+
 
     public abstract void start();
     public abstract boolean applyMove(Move move);
@@ -23,6 +27,13 @@ public abstract class TicTacToeGame {
         winner = null;
     }
 
+    public Player getCurrentPlayer() {
+        return currentPlayer;
+    }
+
+    public void setCurrentPlayer(Player currentPlayer) {
+        this.currentPlayer = currentPlayer;
+    }
     public Player getWinner() {
         return winner;
     }

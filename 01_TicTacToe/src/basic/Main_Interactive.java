@@ -25,9 +25,10 @@ public class Main_Interactive {
         game.getBoard().print();
         System.out.println();
 
-        Player currentPlayer = playerX;
+
 
         while (game.getGameState().equals(GameState.IN_PROGRESS)) {
+            Player currentPlayer = game.getCurrentPlayer();
             System.out.println(currentPlayer.getName() + " (" + currentPlayer.getSymbol() + ") turn");
 
             System.out.print("Enter row: ");
@@ -48,11 +49,9 @@ public class Main_Interactive {
             game.getBoard().print();
             System.out.println();
 
-            // switch player
-            currentPlayer = (currentPlayer == playerX) ? playerO : playerX;
         }
 
-        System.out.println("Final state: " + game.getGameState() + "Winner: " + game.getWinner());
+        System.out.println("Final state: " + game.getGameState() + ", Winner: " + game.getWinner().getName());
 
         scanner.close();
     }

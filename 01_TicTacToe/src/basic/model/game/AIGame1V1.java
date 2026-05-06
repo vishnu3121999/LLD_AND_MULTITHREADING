@@ -26,6 +26,7 @@ public class AIGame1V1 extends TicTacToeGame{
             aiSymbol = Symbol.X;
         }
         else aiSymbol = Symbol.O;
+        currentPlayer = player;
     }
 
     @Override
