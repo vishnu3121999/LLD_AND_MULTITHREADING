@@ -4,7 +4,53 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="64a0acb2-1dfb-413c-a6e2-8247ba411467" name="Changes" comment="" />
+    <list default="true" id="64a0acb2-1dfb-413c-a6e2-8247ba411467" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/A_basic/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic/Main_Interactive.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/A_basic/Main_Interactive.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic/model/Move.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/A_basic/model/Move.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic/model/Player.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/A_basic/model/Player.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic/model/board/ClassicBoard.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/A_basic/model/board/ClassicBoard.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic/model/board/TicTacToeBoard.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/A_basic/model/board/TicTacToeBoard.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic/model/enums/GameState.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/A_basic/model/enums/GameState.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic/model/enums/Symbol.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/A_basic/model/enums/Symbol.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic/model/game/AIGame1V1.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/A_basic/model/game/AIGame1V1.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic/model/game/ClassicGame1v1.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/A_basic/model/game/ClassicGame1v1.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic/model/game/TicTacToeGame.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/A_basic/model/game/TicTacToeGame.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic/service/TicTacToeFacade.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/A_basic/service/TicTacToeFacade.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/B_strategy/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy/Main_Interactive.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/B_strategy/Main_Interactive.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy/model/Move.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/B_strategy/model/Move.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy/model/Player.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/B_strategy/model/Player.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy/model/board/ClassicBoard.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/B_strategy/model/board/ClassicBoard.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy/model/board/TicTacToeBoard.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/B_strategy/model/board/TicTacToeBoard.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy/model/board/winstrategy/ClassicWinStrategy.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/B_strategy/model/board/winstrategy/ClassicWinStrategy.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy/model/board/winstrategy/WinStrategy.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/B_strategy/model/board/winstrategy/WinStrategy.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy/model/enums/GameState.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/B_strategy/model/enums/GameState.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy/model/enums/Symbol.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/B_strategy/model/enums/Symbol.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy/model/game/AIGame1V1.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/B_strategy/model/game/AIGame1V1.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy/model/game/ClassicGame1v1.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/B_strategy/model/game/ClassicGame1v1.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy/model/game/TicTacToeGame.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/B_strategy/model/game/TicTacToeGame.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy/service/TicTacToeFacade.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/B_strategy/service/TicTacToeFacade.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy_command/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/C_command/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy_command/Main_Interactive.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/C_command/Main_Interactive.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy_command/command/Command.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/C_command/command/Command.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy_command/command/CommandInvoker.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/C_command/command/CommandInvoker.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy_command/command/MoveCommand.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/C_command/command/MoveCommand.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy_command/model/Move.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/C_command/model/Move.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy_command/model/Player.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/C_command/model/Player.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy_command/model/board/ClassicBoard.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/C_command/model/board/ClassicBoard.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy_command/model/board/TicTacToeBoard.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/C_command/model/board/TicTacToeBoard.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy_command/model/board/winstrategy/ClassicWinStrategy.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/C_command/model/board/winstrategy/ClassicWinStrategy.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy_command/model/board/winstrategy/WinStrategy.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/C_command/model/board/winstrategy/WinStrategy.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy_command/model/enums/GameState.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/C_command/model/enums/GameState.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy_command/model/enums/Symbol.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/C_command/model/enums/Symbol.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy_command/model/game/AIGame1V1.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/C_command/model/game/AIGame1V1.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy_command/model/game/ClassicGame1v1.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/C_command/model/game/ClassicGame1v1.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy_command/model/game/TicTacToeGame.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/C_command/model/game/TicTacToeGame.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/basic_strategy_command/service/TicTacToeFacade.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/C_command/service/TicTacToeFacade.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -30,6 +76,8 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Application.B_strategy.Main.executor": "Run",
+    "Application.C_command.Main.executor": "Run",
     "Application.Main.executor": "Run",
     "Application.Main_Interactive.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
@@ -40,16 +88,46 @@
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "git-widget-placeholder": "main",
     "kotlin-language-version-configured": "true",
-    "two.files.diff.last.used.folder": "C:/Users/vishn/OneDrive/Desktop/workspace/InterviewPrep/LLD_AND_MULTITHREADING/01_TicTacToe/src/basic_strategy"
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "two.files.diff.last.used.file": "C:/Users/vishn/OneDrive/Desktop/workspace/InterviewPrep/LLD_AND_MULTITHREADING/01_TicTacToe/src/A_basic/model/game/ClassicGame1v1.java",
+    "two.files.diff.last.used.folder": "C:/Users/vishn/OneDrive/Desktop/workspace/InterviewPrep/LLD_AND_MULTITHREADING/01_TicTacToe/src/A_basic"
   }
 }]]></component>
-  <component name="RunManager" selected="Application.Main">
-    <configuration name="Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="basic.Main" />
+  <component name="RunManager" selected="Application.Main_Interactive">
+    <configuration name="B_strategy.Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="B_strategy.Main" />
       <module name="01_TicTacToe" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="basic.*" />
+          <option name="PATTERN" value="B_strategy.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="C_command.Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="C_command.Main" />
+      <module name="01_TicTacToe" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="C_command.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="A_basic.Main" />
+      <module name="01_TicTacToe" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="A_basic.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -58,11 +136,11 @@
       </method>
     </configuration>
     <configuration name="Main_Interactive" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="basic.Main_Interactive" />
+      <option name="MAIN_CLASS_NAME" value="A_basic.Main_Interactive" />
       <module name="01_TicTacToe" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="basic.*" />
+          <option name="PATTERN" value="A_basic.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -81,8 +159,10 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Application.Main" />
         <item itemvalue="Application.Main_Interactive" />
+        <item itemvalue="Application.Main" />
+        <item itemvalue="Application.C_command.Main" />
+        <item itemvalue="Application.B_strategy.Main" />
       </list>
     </recent_temporary>
   </component>
