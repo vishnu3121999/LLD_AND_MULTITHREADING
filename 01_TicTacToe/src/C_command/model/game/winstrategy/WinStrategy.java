@@ -1,4 +1,4 @@
-package C_command.model.board.winstrategy;
+package C_command.model.game.winstrategy;
 
 import C_command.model.enums.Symbol;
 

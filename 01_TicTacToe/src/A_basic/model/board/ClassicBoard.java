@@ -4,9 +4,9 @@ import A_basic.model.*;
 import A_basic.model.enums.Symbol;
 
 
-public class ClassicBoard implements TicTacToeBoard{
+public class ClassicBoard implements TicTacToeBoard {
     // in chess, it will be Piece[][] grid
-    private Symbol[][] grid;
+    private final Symbol[][] grid;
 
     public ClassicBoard(int n){
         grid = new Symbol[n][n];
@@ -17,9 +17,6 @@ public class ClassicBoard implements TicTacToeBoard{
         }
     }
 
-    public Symbol[][] getGrid() {
-        return grid;
-    }
 
     public void print() {
         int n = grid.length;

@@ -3,11 +3,11 @@ package C_command;
 import C_command.model.Player;
 import C_command.model.board.ClassicBoard;
 import C_command.model.board.TicTacToeBoard;
-import C_command.model.board.winstrategy.ClassicWinStrategy;
 import C_command.model.enums.GameState;
 import C_command.model.enums.Symbol;
 import C_command.model.game.ClassicGame1v1;
 import C_command.model.game.TicTacToeGame;
+import C_command.model.game.winstrategy.ClassicWinStrategy;
 import C_command.service.TicTacToeFacade;
 
 import java.util.Scanner;
@@ -19,8 +19,8 @@ public class Main_Interactive {
         Player playerX = new Player("Player-1", Symbol.X);
         Player playerO = new Player("Player-2", Symbol.O);
 
-        TicTacToeBoard board = new ClassicBoard(3, new ClassicWinStrategy());
-        TicTacToeGame game = new ClassicGame1v1(board, playerX, playerO);
+        TicTacToeBoard board = new ClassicBoard(3);
+        TicTacToeGame game = new ClassicGame1v1(board, playerX, playerO, new ClassicWinStrategy());
         TicTacToeFacade facade = new TicTacToeFacade(game);
 
         Scanner scanner = new Scanner(System.in);

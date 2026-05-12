@@ -5,6 +5,7 @@ import B_strategy.model.Player;
 import B_strategy.model.board.TicTacToeBoard;
 import B_strategy.model.enums.GameState;
 import B_strategy.model.enums.Symbol;
+import B_strategy.model.game.winstrategy.WinStrategy;
 
 import java.util.Random;
 
@@ -15,8 +16,8 @@ public class AIGame1V1 extends TicTacToeGame {
     boolean aiFirstMove;
     Symbol aiSymbol;
 
-    public AIGame1V1(TicTacToeBoard board, Player player, int difficulty, boolean aiFirstMove) {
-        super(board, GameState.NOT_STARTED);
+    public AIGame1V1(TicTacToeBoard board, Player player, int difficulty, boolean aiFirstMove, WinStrategy winStrategy) {
+        super(board, GameState.NOT_STARTED, winStrategy);
         this.difficulty = difficulty;
 
         Random random = new Random();
@@ -40,14 +41,14 @@ public class AIGame1V1 extends TicTacToeGame {
         if (!gameState.equals(GameState.IN_PROGRESS)) return false;
 
         boolean result = board.applyMove(move);
-        if (board.hasWinner()) {
+        if (winStrategy.hasWinner(board.getGrid())) {
             gameState = GameState.WON;
             winner = player;
         } else if (board.isFull()) gameState = GameState.DRAW;
 
         if (result) {
             applyAIMove();
-            if (board.hasWinner()) {
+            if (winStrategy.hasWinner(board.getGrid())) {
                 gameState = GameState.WON;
                 winner = null;
             } else if (board.isFull()) gameState = GameState.DRAW;

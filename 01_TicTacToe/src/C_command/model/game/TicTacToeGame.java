@@ -5,20 +5,23 @@ import C_command.model.Player;
 import C_command.model.board.TicTacToeBoard;
 import C_command.model.enums.GameState;
 import C_command.model.enums.Symbol;
+import C_command.model.game.winstrategy.WinStrategy;
 
 public abstract class TicTacToeGame {
     protected TicTacToeBoard board;
     protected GameState gameState;
     protected Player currentPlayer;
     protected Player winner;
+    protected final WinStrategy winStrategy;
 
     public abstract void start();
     public abstract boolean applyMove(Move move);
     public abstract void undoMove(Move move);
 
-    public TicTacToeGame(TicTacToeBoard board, GameState gameState) {
+    public TicTacToeGame(TicTacToeBoard board, GameState gameState, WinStrategy winStrategy) {
         this.board = board;
         this.gameState = gameState;
+        this.winStrategy = winStrategy;
         winner = null;
     }
 

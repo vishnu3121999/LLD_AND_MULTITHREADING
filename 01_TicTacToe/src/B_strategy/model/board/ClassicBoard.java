@@ -1,15 +1,13 @@
 package B_strategy.model.board;
 
 import B_strategy.model.Move;
-import B_strategy.model.board.winstrategy.WinStrategy;
 import B_strategy.model.enums.Symbol;
 
 public class ClassicBoard implements TicTacToeBoard {
+    // in chess, it will be Piece[][] grid
     private final Symbol[][] grid;
-    private final WinStrategy winStrategy;
 
-    public ClassicBoard(int n, WinStrategy winStrategy) {
-        this.winStrategy = winStrategy;
+    public ClassicBoard(int n) {
         grid = new Symbol[n][n];
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
@@ -39,10 +37,6 @@ public class ClassicBoard implements TicTacToeBoard {
         if (grid[row][col] != Symbol.EMPTY) return false;
         grid[row][col] = move.getSymbol();
         return true;
-    }
-
-    public boolean hasWinner() {
-        return winStrategy.hasWinner(grid);
     }
 
     public boolean isFull() {

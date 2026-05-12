@@ -1,6 +1,6 @@
-package C_command.model.board.winstrategy;
+package B_strategy.model.game.winstrategy;
 
-import C_command.model.enums.Symbol;
+import B_strategy.model.enums.Symbol;
 
 public class ClassicWinStrategy implements WinStrategy {
     @Override

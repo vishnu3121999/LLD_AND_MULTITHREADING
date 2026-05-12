@@ -4,11 +4,11 @@ import B_strategy.model.Move;
 import B_strategy.model.Player;
 import B_strategy.model.board.ClassicBoard;
 import B_strategy.model.board.TicTacToeBoard;
-import B_strategy.model.board.winstrategy.ClassicWinStrategy;
 import B_strategy.model.enums.GameState;
 import B_strategy.model.enums.Symbol;
 import B_strategy.model.game.ClassicGame1v1;
 import B_strategy.model.game.TicTacToeGame;
+import B_strategy.model.game.winstrategy.ClassicWinStrategy;
 import B_strategy.service.TicTacToeFacade;
 
 import java.util.Scanner;
@@ -20,8 +20,8 @@ public class Main_Interactive {
         Player playerX = new Player("Player-1", Symbol.X);
         Player playerO = new Player("Player-2", Symbol.O);
 
-        TicTacToeBoard board = new ClassicBoard(3, new ClassicWinStrategy());
-        TicTacToeGame game = new ClassicGame1v1(board, playerX, playerO);
+        TicTacToeBoard board = new ClassicBoard(3);
+        TicTacToeGame game = new ClassicGame1v1(board, playerX, playerO, new ClassicWinStrategy());
         TicTacToeFacade facade = new TicTacToeFacade(game);
 
         Scanner scanner = new Scanner(System.in);
