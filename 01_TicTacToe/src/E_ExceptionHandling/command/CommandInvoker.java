@@ -1,4 +1,4 @@
-package C_command.command;
+package E_ExceptionHandling.command;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -22,6 +22,9 @@ public class CommandInvoker {
         if (history.isEmpty()) {
             return false;
         }
+        // removeLast() will throw NoSuchElementException if empty, so we dont need to throw ourselves
         return history.removeLast().undo();
     }
 }
+
+

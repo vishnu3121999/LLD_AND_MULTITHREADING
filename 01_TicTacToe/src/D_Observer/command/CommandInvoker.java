@@ -1,4 +1,4 @@
-package C_command.command;
+package D_Observer.command;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -25,3 +25,4 @@ public class CommandInvoker {
         return history.removeLast().undo();
     }
 }
+

@@ -1,4 +1,4 @@
-package C_command.command;
+package F_Concurrency.command;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -10,7 +10,7 @@ public class CommandInvoker {
         this.history = new ArrayDeque<>();
     }
 
-    public boolean execute(Command command) {
+    public synchronized boolean execute(Command command) {
         boolean success = command.execute();
         if (success) {
             history.addLast(command);
@@ -18,7 +18,7 @@ public class CommandInvoker {
         return success;
     }
 
-    public boolean undoLast() {
+    public synchronized boolean undoLast() {
         if (history.isEmpty()) {
             return false;
         }

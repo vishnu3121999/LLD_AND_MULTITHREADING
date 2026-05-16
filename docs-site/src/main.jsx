@@ -47,6 +47,7 @@ function App() {
   const [selectedPage, setSelectedPage] = useState(null);
   const [selectedDiff, setSelectedDiff] = useState(null);
   const [javaMode, setJavaMode] = useState("page");
+  const [reorganizeRequest, setReorganizeRequest] = useState(null);
 
   useEffect(() => {
     localStorage.setItem("lld-docs.site-theme", siteTheme);
@@ -190,6 +191,14 @@ function App() {
               setSelectedDiff(diffSelection);
               setJavaMode("diff");
             }}
+            onReorganizePage={(page) => {
+              setSelectedModule(page.module);
+              setModuleMode("java");
+              setSelectedPage(page);
+              setSelectedDiff(null);
+              setJavaMode("page");
+              setReorganizeRequest({ pageId: page.id, requestedAt: Date.now() });
+            }}
           />
         )}
       </aside>
@@ -197,7 +206,7 @@ function App() {
       <main className="main-panel">
         {moduleMode === "docs"
           ? <ModuleDocsEditor moduleName={selectedModule} />
-          : <JavaVisualizer selectedPage={selectedPage} selectedDiff={selectedDiff} mode={javaMode} codeTheme={codeTheme} />}
+          : <JavaVisualizer javaModules={javaModules} selectedPage={selectedPage} selectedDiff={selectedDiff} mode={javaMode} codeTheme={codeTheme} reorganizeRequest={reorganizeRequest} />}
       </main>
     </div>
   );
@@ -208,7 +217,7 @@ function isEditableTarget(target) {
   return Boolean(target.closest("input, textarea, select, [contenteditable='true']"));
 }
 
-function JavaPageNav({ modules, selectedModule, moduleMode, collapsedModules, selectedPage, selectedDiff, javaMode, onSelectModuleMode, onToggleModule, onSelectPage, onSelectDiff }) {
+function JavaPageNav({ modules, selectedModule, moduleMode, collapsedModules, selectedPage, selectedDiff, javaMode, onSelectModuleMode, onToggleModule, onSelectPage, onSelectDiff, onReorganizePage }) {
   function showDiff(module, page, sourcePackage) {
     if (!sourcePackage || sourcePackage === page.packageName) return;
     onSelectDiff({
@@ -251,6 +260,7 @@ function JavaPageNav({ modules, selectedModule, moduleMode, collapsedModules, se
             const isDiffActive = javaMode === "diff" && selectedDiff?.targetPage?.id === page.id;
             const sourceOptions = module.pages.filter((candidate) => candidate.id !== page.id);
             const sourcePackage = isDiffActive ? selectedDiff.from : defaultSourceFor(module, page);
+            const previousPage = findPreviousPage(modules, page);
 
             return (
               <div key={page.id} className={`package-entry ${isNormalActive || isDiffActive ? "active" : ""}`}>
@@ -259,9 +269,23 @@ function JavaPageNav({ modules, selectedModule, moduleMode, collapsedModules, se
                     <span>{page.title}</span>
                     <small>{page.count}</small>
                   </button>
-                  <button className={isDiffActive ? "active package-diff-button" : "package-diff-button"} onClick={() => showDiff(module, page, sourcePackage)} disabled={sourceOptions.length === 0}>
+                  <button
+                    className="package-action-button"
+                    onClick={() => onReorganizePage(page)}
+                    disabled={!previousPage}
+                    title={previousPage ? `Reorganize from ${previousPage.title}` : "No previous package"}
+                    aria-label={previousPage ? `Reorganize from ${previousPage.title}` : "No previous package"}
+                  >
+                    <LayoutGrid size={14} aria-hidden="true" />
+                  </button>
+                  <button
+                    className={isDiffActive ? "active package-action-button package-diff-button" : "package-action-button package-diff-button"}
+                    onClick={() => showDiff(module, page, sourcePackage)}
+                    disabled={sourceOptions.length === 0}
+                    title="Diff"
+                    aria-label="Diff"
+                  >
                     <GitCompareArrows size={14} aria-hidden="true" />
-                    Diff
                   </button>
                 </div>
 
@@ -441,7 +465,7 @@ function ModuleDocsEditor({ moduleName }) {
   );
 }
 
-function JavaVisualizer({ selectedPage, selectedDiff, mode, codeTheme }) {
+function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeTheme, reorganizeRequest }) {
   const [pageData, setPageData] = useState(null);
   const [layouts, setLayouts] = useState({});
   const [constructorVisibility, setConstructorVisibility] = useState(() => readJsonStorage("lld-docs.show-constructors", {}));
@@ -559,6 +583,12 @@ function JavaVisualizer({ selectedPage, selectedDiff, mode, codeTheme }) {
 
   const files = pageData?.files || [];
 
+  useEffect(() => {
+    if (mode !== "page" || !selectedPage || !reorganizeRequest) return;
+    if (reorganizeRequest.pageId !== selectedPage.id || files.length === 0) return;
+    reorganizeFromPreviousPackage(selectedPage);
+  }, [reorganizeRequest, mode, selectedPage?.id, files]);
+
   function toggleConstructors(fileId) {
     if (!activeLayoutPageId) return;
     const storageKey = constructorVisibilityKey(activeLayoutPageId, fileId);
@@ -575,6 +605,18 @@ function JavaVisualizer({ selectedPage, selectedDiff, mode, codeTheme }) {
       ...current,
       [storageKey]: !current[storageKey]
     }));
+  }
+
+  function reorganizeFromPreviousPackage(targetPage) {
+    const previousPage = findPreviousPage(javaModules, targetPage);
+    if (!previousPage || !activeLayoutPageId || files.length === 0) return;
+
+    const previousLayouts = readJsonStorage(layoutStorageKey(previousPage.id), {});
+    const nextLayouts = buildLayoutsFromPreviousPackage(files, previousLayouts);
+    setLayouts(nextLayouts);
+
+    const previousZoom = localStorage.getItem(parentZoomStorageKey(previousPage.id));
+    if (previousZoom) setParentZoom(Number(previousZoom) || 1);
   }
 
   return (
@@ -843,6 +885,22 @@ function clampToWorkspace(layout, workspace) {
 
 function buildInitialLayouts(files) {
   return Object.fromEntries(files.map((file, index) => [file.id, defaultLayout(index)]));
+}
+
+function buildLayoutsFromPreviousPackage(files, previousLayouts) {
+  return Object.fromEntries(files.map((file, index) => {
+    const previousLayout = previousLayouts[file.id];
+    return [file.id, previousLayout ? { ...previousLayout } : defaultLayout(index)];
+  }));
+}
+
+function findPreviousPage(modules, selectedPage) {
+  if (!selectedPage) return null;
+  const module = modules.find((candidate) => candidate.name === selectedPage.module);
+  const pages = module?.pages || [];
+  const index = pages.findIndex((page) => page.id === selectedPage.id);
+  if (index <= 0) return null;
+  return pages[index - 1];
 }
 
 function defaultLayout(index) {

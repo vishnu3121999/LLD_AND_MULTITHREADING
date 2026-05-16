@@ -1,7 +1,7 @@
-package B_strategy.model.board;
+package E_ExceptionHandling.model.board;
 
-import B_strategy.model.Move;
-import B_strategy.model.enums.Symbol;
+import E_ExceptionHandling.model.Move;
+import E_ExceptionHandling.model.enums.Symbol;
 
 public class ClassicBoard implements TicTacToeBoard {
     // in chess, it will be Piece[][] grid
@@ -16,7 +16,6 @@ public class ClassicBoard implements TicTacToeBoard {
         }
     }
 
-    // getter
     public Symbol[][] getGrid() {
         return grid;
     }
@@ -40,6 +39,15 @@ public class ClassicBoard implements TicTacToeBoard {
         return true;
     }
 
+    public boolean removeMove(Move move) {
+        int row = move.getRow();
+        int col = move.getCol();
+        if (grid[row][col] == Symbol.EMPTY) return false;
+        if (grid[row][col] != move.getSymbol()) return false;
+        grid[row][col] = Symbol.EMPTY;
+        return true;
+    }
+
     public boolean isFull() {
         int n = grid.length;
         for (int i = 0; i < n; i++) {
@@ -52,3 +60,5 @@ public class ClassicBoard implements TicTacToeBoard {
         return true;
     }
 }
+
+

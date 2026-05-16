@@ -331,7 +331,7 @@ button:disabled {
 }
 
 .module-mode-buttons button.active,
-.package-diff-button.active {
+.package-action-button.active {
   background: var(--accent);
   color: #ffffff;
 }
@@ -346,7 +346,7 @@ button:disabled {
 
 .package-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   gap: 4px;
   align-items: center;
 }
@@ -374,13 +374,14 @@ button:disabled {
   font-size: 12px;
 }
 
-.package-diff-button {
+.package-action-button {
+  display: grid;
+  place-items: center;
   justify-content: center;
-  width: 64px;
-  padding: 0 8px;
+  width: 34px;
+  padding: 0;
   border-color: #34443b;
   background: #223129;
-  font-size: 12px;
 }
 
 .source-picker {
@@ -466,6 +467,7 @@ button:disabled {
 .visualizer-view {
   padding: 0;
   overflow: hidden;
+  position: relative;
 }
 
 .docs-editor-view {
