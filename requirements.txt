@@ -1,0 +1,947 @@
+This can become much more powerful than just “a blog of solved LLD problems.” I would design it as an **LLD problem-solving framework website**, where your template is the engine and each problem is solved by filling that engine.
+
+Think of it like:
+
+> “For every LLD problem, we will walk through the same structured thinking process: requirements, actors, entities, services, extensibility, patterns, concurrency, edge cases, and code.”
+
+That itself can become your brand.
+
+---
+
+# 1. Core Website Idea
+
+You can build the site around this concept:
+
+## **LLD Template-Based Problem Solver**
+
+Every problem page follows the same structure:
+
+```text
+1. Problem Statement
+2. Requirement Clarification
+3. Actors and Use Cases
+4. Core Entities
+5. Class Diagram
+6. Service / Facade APIs
+7. Datastore Design
+8. Object Creation Strategy
+9. Extensibility Points
+10. Design Patterns Used
+11. Exception Handling
+12. Concurrency Handling
+13. Important Flows
+14. Code Skeleton
+15. Interview Talking Points
+16. Common Mistakes
+```
+
+So when someone opens “Design Parking Lot”, “Design Chess”, “Design BookMyShow”, or “Design Splitwise”, they see the same solving process applied to different systems.
+
+That makes your site unique because people are not just memorizing solutions. They are learning **how to think**.
+
+---
+
+# 2. Main User Flow
+
+A user should be able to do two things:
+
+## Flow 1: Learn From Solved Problems
+
+User opens:
+
+```text
+LLD Problems → Parking Lot → Full Guided Solution
+```
+
+They see a structured solution.
+
+Example page layout:
+
+```text
+Design Parking Lot
+
+[Problem Overview]
+
+Step 1: Clarify Requirements
+Step 2: Identify Actors
+Step 3: Identify Core Entities
+Step 4: Decide Entity Relationships
+Step 5: Design Service APIs
+Step 6: Add Strategies
+Step 7: Handle Exceptions
+Step 8: Handle Concurrency
+Step 9: Code Skeleton
+Step 10: Interview Summary
+```
+
+Each section should have:
+
+```text
+What to think
+What to say in interview
+Final design decision
+Code / diagram if needed
+```
+
+---
+
+## Flow 2: Solve a New Problem Using the Template
+
+This is the more interesting feature.
+
+User enters:
+
+```text
+Design a Library Management System
+```
+
+Your site shows a guided workspace:
+
+```text
+Step 1: Is this offline or online?
+Step 2: Who are the actors?
+Step 3: What are the main actions?
+Step 4: What are the core entities?
+Step 5: Which entities need IDs?
+Step 6: Which behavior needs Strategy?
+Step 7: Which APIs should facade expose?
+Step 8: What concurrency risks exist?
+```
+
+The user fills answers step-by-step.
+
+At the end, your website generates a structured LLD solution page.
+
+This can be your long-term differentiator.
+
+---
+
+# 3. Website Sections
+
+I would divide the website into these major sections.
+
+---
+
+## 3.1 Home Page
+
+The homepage should explain your philosophy.
+
+Example hero section:
+
+```text
+Master LLD Interviews With a Reusable Design Template
+
+Learn how to solve any low-level design problem using a structured framework:
+requirements, entities, services, extensibility, design patterns, concurrency, and edge cases.
+```
+
+Main buttons:
+
+```text
+Start With Template
+Explore Solved Problems
+Practice a New Problem
+```
+
+Sections on homepage:
+
+```text
+- Why most candidates struggle with LLD
+- The reusable LLD solving framework
+- Solved examples
+- Practice mode
+- Design pattern decision guide
+```
+
+---
+
+## 3.2 The Template Page
+
+This is your core page.
+
+It should explain your complete LLD template in a polished way.
+
+Possible URL:
+
+```text
+/lld-template
+```
+
+Sections:
+
+```text
+1. Requirement Clarification
+2. Use Case Diagram
+3. Core Entity Identification
+4. Class Design Rules
+5. Service Layer Design
+6. Datastore Design
+7. Extensibility Checklist
+8. Design Pattern Selection
+9. Exception Handling
+10. Concurrency Handling
+11. Final Interview Checklist
+```
+
+This page should be your “master reference.”
+
+---
+
+## 3.3 Solved Problems Library
+
+Possible URL:
+
+```text
+/problems
+```
+
+Problem cards:
+
+```text
+Parking Lot
+Chess
+TicTacToe
+Snake and Ladder
+BookMyShow
+Splitwise
+Vending Machine
+Elevator
+ATM
+Car Rental
+Library Management
+Food Delivery
+Uber
+Hotel Booking
+Notification System
+Rate Limiter
+```
+
+Each card can show tags:
+
+```text
+Difficulty: Medium
+Patterns: Strategy, Factory
+Concurrency: Yes
+Type: Online System
+```
+
+Example:
+
+```text
+Parking Lot
+Tags: Strategy, Factory, Concurrency, In-Memory Datastore
+Best for: Entity modeling, service APIs, spot assignment
+```
+
+---
+
+## 3.4 Problem Solution Page
+
+Every problem should follow a fixed format.
+
+Example for Parking Lot:
+
+```text
+/problems/parking-lot
+```
+
+Page structure:
+
+```text
+Design Parking Lot
+
+1. Problem Understanding
+2. Requirements
+   - Physical structure
+   - User actions
+   - Admin actions
+   - System actions
+
+3. Actors and Use Cases
+4. Core Entities
+5. Entity Relationship Diagram
+6. Class Diagram
+7. Service APIs
+8. Datastore
+9. Strategies
+10. Factory Usage
+11. Exception Handling
+12. Concurrency
+13. Code Skeleton
+14. Interview Explanation
+15. Common Mistakes
+```
+
+This makes every problem consistent.
+
+---
+
+# 4. Interactive Template Solver
+
+This is the feature I think can make your website stand out.
+
+Instead of only showing static content, create a page like:
+
+```text
+/solve
+```
+
+The user selects or types a problem:
+
+```text
+Design a Food Delivery App
+```
+
+Then your website asks template-based questions.
+
+---
+
+## Step 1: System Type
+
+```text
+Is this system offline or online?
+
+[ ] Offline local app
+[ ] Online API-based system
+[ ] Not sure
+```
+
+If online is selected, show:
+
+```text
+You probably need:
+- Controllers
+- Services
+- Datastore
+- IDs for independently queried entities
+- Concurrency checks
+```
+
+If offline is selected, show:
+
+```text
+You probably need:
+- Main loop
+- Game/session object
+- No external datastore unless history is needed
+```
+
+---
+
+## Step 2: Actors
+
+Prompt:
+
+```text
+Who can interact with this system?
+```
+
+Input boxes:
+
+```text
+Actor 1: User
+Actor 2: Admin
+Actor 3: System
+Actor 4: External Payment Gateway
+```
+
+Then generate:
+
+```text
+Use Case Section
+```
+
+---
+
+## Step 3: Core Entities
+
+Ask:
+
+```text
+What are the main real-world objects?
+```
+
+Then provide helper categories:
+
+```text
+Infrastructure entities:
+- ParkingLot, Floor, Spot
+- Theatre, Screen, Seat
+- Board, Cell
+
+User entities:
+- User, Admin, Player, Driver, Rider
+
+Transaction entities:
+- Ticket, Booking, Move, RideRequest, Payment
+```
+
+This helps users think.
+
+---
+
+## Step 4: Entity Relationship Builder
+
+For each entity, ask:
+
+```text
+Does this entity need an ID?
+Does it exist independently?
+Is it queried independently?
+Is it one-to-many?
+Should parent store object reference or ID?
+```
+
+Example UI:
+
+```text
+Entity: ParkingSpot
+
+Needs ID? Yes
+Reason:
+- Queried independently
+- Assigned to ticket
+- Stored separately
+```
+
+This can generate a decision note.
+
+---
+
+## Step 5: Extensibility Detector
+
+Ask:
+
+```text
+Can this entity have multiple types?
+```
+
+Example:
+
+```text
+Vehicle → Bike, Car, Truck
+ParkingSpot → BikeSpot, CompactSpot, LargeSpot
+Payment → CardPayment, UPIPayment, CashPayment
+```
+
+Then the website suggests:
+
+```text
+Vehicle has common state and multiple subtypes → use abstract class.
+Payment behavior varies → use PaymentStrategy interface.
+```
+
+This would be very useful.
+
+---
+
+## Step 6: Service API Generator
+
+Ask:
+
+```text
+What actions should users/admin/system perform?
+```
+
+Then generate service methods.
+
+Example:
+
+```java
+class ParkingLotService {
+    Ticket enterParkingLot(String gateId, Vehicle vehicle);
+    Receipt exitParkingLot(String ticketId, PaymentMode paymentMode);
+    void addFloor(String lotId, ParkingFloor floor);
+    void addSpot(String floorId, ParkingSpot spot);
+}
+```
+
+---
+
+## Step 7: Concurrency Checklist
+
+Ask:
+
+```text
+Which APIs modify shared state?
+```
+
+Then show:
+
+```text
+Potential Race Conditions:
+- Two vehicles may get the same spot.
+- Two users may book the same seat.
+- Two drivers may accept the same ride.
+```
+
+Then suggest:
+
+```text
+Protect check-and-update sections using locking or atomic operations.
+```
+
+---
+
+# 5. Content Format for Every Problem
+
+To make the website scalable, store every problem in a structured format.
+
+For example:
+
+```ts
+type LLDProblem = {
+  slug: string;
+  title: string;
+  difficulty: "Easy" | "Medium" | "Hard";
+  systemType: "Offline" | "Online";
+  tags: string[];
+  patterns: string[];
+  hasConcurrency: boolean;
+  requirements: RequirementSection;
+  actors: Actor[];
+  entities: Entity[];
+  services: Service[];
+  strategies: Strategy[];
+  exceptions: ExceptionCase[];
+  concurrencyCases: ConcurrencyCase[];
+  codeSkeleton: CodeBlock[];
+};
+```
+
+Then your website can render every problem using the same template.
+
+This is important because later you can add filters like:
+
+```text
+Show me all problems using Strategy Pattern.
+Show me all problems with concurrency.
+Show me offline game problems.
+Show me problems involving booking systems.
+```
+
+---
+
+# 6. UI Design Idea
+
+I would use a 3-column layout for problem pages.
+
+```text
+Left Sidebar:
+- Problem sections
+- Requirements
+- Entities
+- Services
+- Patterns
+- Concurrency
+- Code
+
+Center:
+- Main explanation
+
+Right Sidebar:
+- Interview tips
+- Mistakes to avoid
+- Pattern decision cards
+- Related problems
+```
+
+Example:
+
+```text
+-----------------------------------------------------
+| Sections         | Main Content        | Tips       |
+| Requirements     | Design Parking Lot  | Say this:  |
+| Actors           | ...                 | "I will..."|
+| Entities         |                     |            |
+| Services         |                     | Mistakes   |
+| Concurrency      |                     |            |
+-----------------------------------------------------
+```
+
+This will make it feel like a serious learning platform, not a random article site.
+
+---
+
+# 7. Special Features You Can Add
+
+## 7.1 “Interview Mode”
+
+A toggle:
+
+```text
+[Verbose Learning Mode] [Interview Answer Mode]
+```
+
+Verbose mode explains everything deeply.
+
+Interview mode gives crisp answers:
+
+```text
+I will model ParkingLot, Floor, Spot, Vehicle, Ticket, and Payment.
+Spot assignment will be handled by SpotAssignmentStrategy.
+Fee calculation will be handled by FeeCalculationStrategy.
+For concurrency, I will lock the spot assignment and occupation flow.
+```
+
+This helps users practice speaking.
+
+---
+
+## 7.2 “Common Mistakes” Section
+
+For every problem, add mistakes.
+
+Example for BookMyShow:
+
+```text
+Mistake 1: Storing booking status inside physical Seat.
+Correct: Use ShowSeat because same seat exists across multiple shows.
+
+Mistake 2: Ignoring seat locking.
+Correct: Temporarily lock seats before payment.
+
+Mistake 3: Using simple HashMap without thinking about concurrent booking.
+Correct: Protect seat status transition.
+```
+
+This section will be extremely valuable.
+
+---
+
+## 7.3 “Pattern Decision Cards”
+
+Create reusable cards like:
+
+```text
+Should I use Factory?
+
+Use Factory when:
+- Object creation depends on type.
+- Creation logic is repeated.
+- Subtypes are involved.
+
+Avoid Factory when:
+- Object has no subtypes.
+- Constructor is simple.
+```
+
+Other cards:
+
+```text
+Abstract Class vs Interface
+Strategy vs Inheritance
+Entity vs Service Method
+Object Reference vs ID
+State Pattern vs Simple Checks
+ConcurrentHashMap vs Locking
+```
+
+These can appear inside problem pages.
+
+---
+
+## 7.4 “Compare Designs”
+
+For some problems, show:
+
+```text
+Simple Interview Design
+Production-Level Design
+```
+
+Example:
+
+```text
+Parking Lot
+
+Simple:
+- InMemoryDataStore
+- synchronized service method
+- simple strategy objects
+
+Production:
+- SQL database
+- transactions
+- distributed locks
+- payment gateway
+- event-driven notifications
+```
+
+This is useful because interviewers often ask:
+
+> How would you scale this?
+
+---
+
+## 7.5 “Code Skeleton Generator”
+
+For each problem, provide skeleton code.
+
+Example:
+
+```java
+abstract class Vehicle {
+    protected String id;
+    protected String registrationNumber;
+    protected VehicleType type;
+}
+
+interface SpotAssignmentStrategy {
+    Optional<ParkingSpot> findSpot(ParkingLot lot, Vehicle vehicle);
+}
+
+class ParkingLotService {
+    public Ticket enterParkingLot(String gateId, Vehicle vehicle) {
+        // fetch lot
+        // find spot
+        // occupy spot
+        // create ticket
+        // save ticket
+    }
+}
+```
+
+You can support Java first because LLD interviews are commonly Java-heavy.
+
+Later, add:
+
+```text
+Java
+Python
+TypeScript
+```
+
+---
+
+# 8. Website Navigation
+
+Possible navigation:
+
+```text
+Home
+Template
+Problems
+Patterns
+Practice
+Roadmaps
+Cheatsheets
+```
+
+Problems page filters:
+
+```text
+By Difficulty:
+- Easy
+- Medium
+- Hard
+
+By Category:
+- Games
+- Booking Systems
+- Machines
+- Marketplace
+- Transportation
+
+By Pattern:
+- Strategy
+- Factory
+- Observer
+- State
+- Command
+- Memento
+
+By NFR:
+- Concurrency
+- Undo
+- Notifications
+- Payment
+- Inventory
+```
+
+---
+
+# 9. Problem Categories
+
+You can organize problems like this:
+
+## Games
+
+```text
+TicTacToe
+Chess
+Snake and Ladder
+Minesweeper
+2048
+Sudoku
+```
+
+## Machines
+
+```text
+Vending Machine
+ATM
+Elevator
+Coffee Machine
+Parking Meter
+```
+
+## Booking Systems
+
+```text
+Parking Lot
+BookMyShow
+Hotel Booking
+Restaurant Reservation
+Flight Booking
+Car Rental
+```
+
+## Marketplace / Apps
+
+```text
+Food Delivery
+Uber
+Amazon Locker
+Splitwise
+Library Management
+Inventory Management
+```
+
+## Infra / System Design-Lite
+
+```text
+Rate Limiter
+Notification System
+Logging Framework
+Cache
+Task Scheduler
+```
+
+---
+
+# 10. MVP Version
+
+Do not build everything at once.
+
+Your MVP can be:
+
+```text
+1. Home page
+2. Master LLD template page
+3. 5 solved problems
+4. Pattern decision guide
+5. Static code snippets
+```
+
+Start with these 5 problems:
+
+```text
+1. Parking Lot
+2. TicTacToe
+3. Vending Machine
+4. BookMyShow
+5. Splitwise
+```
+
+These cover most important concepts:
+
+```text
+Parking Lot → entities, strategy, factory, concurrency
+TicTacToe → offline game, board, winning strategy
+Vending Machine → state pattern
+BookMyShow → seat locking, show seat modeling, concurrency
+Splitwise → transaction modeling, balances
+```
+
+After MVP, add the interactive solver.
+
+---
+
+# 11. Tech Stack Suggestion
+
+Since you already work with React and TypeScript, I would suggest:
+
+```text
+Frontend:
+- Next.js
+- TypeScript
+- TailwindCSS
+- MDX for content
+- Mermaid.js or React Flow for diagrams
+
+Content:
+- MDX files for static articles
+- JSON/YAML metadata for problems
+
+Backend later:
+- Supabase / Firebase / Spring Boot
+- PostgreSQL for user submissions
+```
+
+For diagrams:
+
+```text
+Mermaid.js → quick UML-style diagrams
+React Flow → interactive class/entity relationship diagrams
+```
+
+For code blocks:
+
+```text
+Shiki or Prism.js
+```
+
+For search:
+
+```text
+Pagefind / Algolia later
+```
+
+---
+
+# 12. Your Unique Angle
+
+Many websites provide LLD solutions.
+
+Your unique angle can be:
+
+```text
+Do not memorize LLD solutions. Learn the reusable template to solve any LLD problem.
+```
+
+Possible names:
+
+```text
+LLDPlaybook
+LLDTemplate
+DesignWithLLD
+LLDFramework
+ObjectWise
+DesignByTemplate
+LLDPatterns
+```
+
+Tagline ideas:
+
+```text
+Solve any LLD problem with a reusable interview framework.
+
+From requirements to class diagram to code.
+
+A structured way to master low-level design interviews.
+```
+
+---
+
+# 13. Best Final Product Vision
+
+The best version of this website would be:
+
+```text
+A guided LLD interview preparation platform where every problem is solved using the same reusable template, with diagrams, code skeletons, pattern decisions, concurrency analysis, and interview-ready explanations.
+```
+
+The template should not just be an article.
+
+It should become the **core engine** of the website.

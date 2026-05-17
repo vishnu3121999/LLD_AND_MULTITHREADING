@@ -3,6 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/01_TicTacToe/01_TicTacToe.iml" filepath="$PROJECT_DIR$/01_TicTacToe/01_TicTacToe.iml" />
+      <module fileurl="file://$PROJECT_DIR$/02_Chess/02_Chess.iml" filepath="$PROJECT_DIR$/02_Chess/02_Chess.iml" />
+      <module fileurl="file://$PROJECT_DIR$/03_BookMyShow/03_BookMyShow.iml" filepath="$PROJECT_DIR$/03_BookMyShow/03_BookMyShow.iml" />
       <module fileurl="file://$PROJECT_DIR$/LLD_AND_MULTITHREADING.iml" filepath="$PROJECT_DIR$/LLD_AND_MULTITHREADING.iml" />
     </modules>
   </component>

@@ -6,19 +6,35 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "server": "node server/index.js",
-    "client": "vite --host 127.0.0.1",
-    "build": "vite build",
-    "preview": "vite preview --host 127.0.0.1"
+    "client": "next dev -H 127.0.0.1 -p 5173",
+    "client:vite": "vite --host 127.0.0.1",
+    "build": "next build",
+    "preview": "next start -H 127.0.0.1"
   },
   "dependencies": {
+    "@next/mdx": "^16.2.6",
+    "@radix-ui/react-slot": "^1.2.4",
+    "@radix-ui/react-tabs": "^1.1.13",
+    "@supabase/supabase-js": "^2.105.4",
     "@vitejs/plugin-react": "^5.0.0",
+    "algoliasearch": "^5.52.1",
+    "autoprefixer": "^10.5.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "highlight.js": "^11.11.1",
     "lucide-react": "^0.475.0",
     "marked": "^15.0.7",
+    "next": "^16.2.6",
+    "postcss": "^8.5.14",
+    "posthog-js": "^1.373.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "resend": "^6.12.3",
+    "stripe": "^22.1.1",
+    "tailwind-merge": "^3.6.0",
+    "tailwindcss": "^3.4.17",
     "vite": "^6.1.0"
   }
 }

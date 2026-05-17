@@ -7,10 +7,14 @@ const processes = [
     stdio: "inherit",
     env: { ...process.env, PORT: process.env.API_PORT || "5174" }
   }),
-  spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--host", "127.0.0.1"], {
+  spawn(process.execPath, ["node_modules/next/dist/bin/next", "dev", "-H", "127.0.0.1", "-p", "5173"], {
     cwd: process.cwd(),
     stdio: "inherit",
-    env: { ...process.env, VITE_API_BASE: process.env.VITE_API_BASE || "http://127.0.0.1:5174" }
+    env: {
+      ...process.env,
+      VITE_API_BASE: process.env.VITE_API_BASE || "http://127.0.0.1:5174",
+      NEXT_PUBLIC_JAVA_API_BASE: process.env.NEXT_PUBLIC_JAVA_API_BASE || "http://127.0.0.1:5174"
+    }
   })
 ];
 

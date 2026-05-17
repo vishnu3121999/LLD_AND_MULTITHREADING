@@ -1,65 +1,94 @@
+"use client";
+
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import hljs from "highlight.js/lib/core";
 import java from "highlight.js/lib/languages/java";
 import {
-  Bold,
-  Code,
-  Code2,
-  FilePlus2,
+  ChevronDown,
+  ChevronRight,
   GitCompareArrows,
   FileCode2,
-  Heading1,
-  Heading2,
-  Italic,
+  FolderTree,
   LayoutGrid,
-  List,
-  ListOrdered,
+  Maximize2,
+  Minimize2,
   Moon,
   PanelLeftClose,
   PanelLeftOpen,
-  Quote,
-  Save,
   Sun,
-  Trash2,
-  Type,
-  Underline
 } from "lucide-react";
-import "./styles.css";
+import { fileStorageGetItem, fileStorageSetItem, migrateLegacyBrowserStorage } from "../lib/file-storage-client";
 
 hljs.registerLanguage("java", java);
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:5174";
+const API_BASE = process.env.NEXT_PUBLIC_JAVA_API_BASE || "http://127.0.0.1:5174";
+const SITE_THEME_STORAGE_KEY = "lld-playbook.site-theme";
 const MIN_BLOCK_WIDTH = 140;
 const MIN_BLOCK_HEIGHT = 90;
 const CANVAS_SIZE = 100000;
 
-function App() {
+export default function App() {
   const appRef = useRef(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [siteTheme, setSiteTheme] = useState(() => normalizeSiteTheme(localStorage.getItem("lld-docs.site-theme")));
-  const [codeTheme, setCodeTheme] = useState(() => normalizeCodeTheme(localStorage.getItem("lld-docs.code-theme")));
+  const [siteTheme, setSiteTheme] = useState("studio");
+  const [codeTheme, setCodeTheme] = useState("github-dark");
   const [javaModules, setJavaModules] = useState([]);
-  const [collapsedModules, setCollapsedModules] = useState(() => JSON.parse(localStorage.getItem("lld-docs.collapsed-modules") || "{}"));
+  const [collapsedModules, setCollapsedModules] = useState({});
+  const [workspacePrefsReady, setWorkspacePrefsReady] = useState(false);
   const [selectedModule, setSelectedModule] = useState("");
-  const [moduleMode, setModuleMode] = useState("java");
+  const [workspaceMode, setWorkspaceMode] = useState("visualizer");
   const [selectedPage, setSelectedPage] = useState(null);
   const [selectedDiff, setSelectedDiff] = useState(null);
   const [javaMode, setJavaMode] = useState("page");
   const [reorganizeRequest, setReorganizeRequest] = useState(null);
 
   useEffect(() => {
-    localStorage.setItem("lld-docs.site-theme", siteTheme);
-  }, [siteTheme]);
+    let cancelled = false;
+
+    async function loadWorkspacePrefs() {
+      await migrateLegacyBrowserStorage();
+      const [storedSiteTheme, storedCodeTheme, storedCollapsedModules] = await Promise.all([
+        fileStorageGetItem(SITE_THEME_STORAGE_KEY),
+        fileStorageGetItem("lld-docs.code-theme"),
+        fileStorageGetItem("lld-docs.collapsed-modules")
+      ]);
+
+      if (cancelled) return;
+      setSiteTheme(normalizeSiteTheme(storedSiteTheme));
+      setCodeTheme(normalizeCodeTheme(storedCodeTheme));
+      setCollapsedModules(parseJsonValue(storedCollapsedModules, {}));
+      setWorkspacePrefsReady(true);
+    }
+
+    loadWorkspacePrefs();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem("lld-docs.code-theme", codeTheme);
-  }, [codeTheme]);
+    function syncSiteTheme(event) {
+      const nextTheme = event.detail?.theme;
+      if (nextTheme) setSiteTheme(normalizeSiteTheme(nextTheme));
+    }
+
+    window.addEventListener("lld-site-theme-change", syncSiteTheme);
+    return () => {
+      window.removeEventListener("lld-site-theme-change", syncSiteTheme);
+    };
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem("lld-docs.collapsed-modules", JSON.stringify(collapsedModules));
-  }, [collapsedModules]);
+    if (!workspacePrefsReady) return;
+    fileStorageSetItem("lld-docs.code-theme", codeTheme);
+  }, [codeTheme, workspacePrefsReady]);
+
+  useEffect(() => {
+    if (!workspacePrefsReady) return;
+    fileStorageSetItem("lld-docs.collapsed-modules", JSON.stringify(collapsedModules));
+  }, [collapsedModules, workspacePrefsReady]);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/java/pages`)
@@ -109,12 +138,16 @@ function App() {
   }, [isFullscreen, javaModules, selectedPage]);
 
   async function toggleFullscreen() {
-    if (document.fullscreenElement) {
-      await document.exitFullscreen();
-      return;
-    }
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+        return;
+      }
 
-    await appRef.current?.requestFullscreen();
+      await appRef.current?.requestFullscreen();
+    } catch {
+      // Fullscreen can be blocked by the browser if not triggered by a direct user gesture.
+    }
   }
 
   function moveFullscreenPage(direction) {
@@ -127,7 +160,7 @@ function App() {
 
     setSelectedModule(nextPage.module);
     setSelectedPage(nextPage);
-    setModuleMode("java");
+    setWorkspaceMode("visualizer");
     setJavaMode("page");
   }
 
@@ -135,65 +168,58 @@ function App() {
     <div ref={appRef} className={`app-shell site-${siteTheme} ${sidebarCollapsed ? "sidebar-collapsed" : ""} ${isFullscreen ? "fullscreen-mode" : ""}`}>
       <aside className="sidebar">
         <div className="sidebar-top">
-          <div className="brand">
-            <Code2 size={24} aria-hidden="true" />
-            <div>
-              <strong>LLD Docs</strong>
-              <span>Java workspace</span>
+          {!sidebarCollapsed && (
+            <button className="icon-toggle" onClick={() => setCodeTheme((value) => value === "github-dark" ? "github-light" : "github-dark")} title="Toggle code theme">
+              {codeTheme === "github-dark" ? <Sun size={18} aria-hidden="true" /> : <Moon size={18} aria-hidden="true" />}
+              <span>Code theme</span>
+            </button>
+          )}
+          {!sidebarCollapsed && (
+            <div className="workspace-mode-buttons" aria-label="Workspace mode">
+              <button className={workspaceMode === "visualizer" ? "active" : ""} onClick={() => setWorkspaceMode("visualizer")} title="Java visualizer">
+                <LayoutGrid size={16} aria-hidden="true" />
+              </button>
+              <button className={workspaceMode === "reader" ? "active" : ""} onClick={() => setWorkspaceMode("reader")} title="Editor view">
+                <FolderTree size={16} aria-hidden="true" />
+              </button>
             </div>
-          </div>
+          )}
+          {!sidebarCollapsed && (
+            <button className="sidebar-toggle" onClick={toggleFullscreen} title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"} aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}>
+              {isFullscreen ? <Minimize2 size={18} aria-hidden="true" /> : <Maximize2 size={18} aria-hidden="true" />}
+            </button>
+          )}
           <button className="sidebar-toggle" onClick={() => setSidebarCollapsed((value) => !value)} aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>
             {sidebarCollapsed ? <PanelLeftOpen size={18} aria-hidden="true" /> : <PanelLeftClose size={18} aria-hidden="true" />}
           </button>
         </div>
 
         {!sidebarCollapsed && (
-          <div className="theme-panel">
-            <button className="icon-toggle" onClick={() => setSiteTheme((value) => value === "studio" ? "midnight" : "studio")} title="Toggle site theme">
-              {siteTheme === "studio" ? <Moon size={18} aria-hidden="true" /> : <Sun size={18} aria-hidden="true" />}
-              <span>Site</span>
-            </button>
-            <button className="icon-toggle" onClick={() => setCodeTheme((value) => value === "github-dark" ? "github-light" : "github-dark")} title="Toggle code theme">
-              {codeTheme === "github-dark" ? <Sun size={18} aria-hidden="true" /> : <Moon size={18} aria-hidden="true" />}
-              <span>Code</span>
-            </button>
-          </div>
-        )}
-
-        {!sidebarCollapsed && (
           <JavaPageNav
             modules={javaModules}
             selectedModule={selectedModule}
-            moduleMode={moduleMode}
+            workspaceMode={workspaceMode}
             collapsedModules={collapsedModules}
             selectedPage={selectedPage}
             selectedDiff={selectedDiff}
             javaMode={javaMode}
-            onSelectModuleMode={(moduleName, mode) => {
-              setSelectedModule(moduleName);
-              setModuleMode(mode);
-              if (mode === "java") {
-                const page = javaModules.find((module) => module.name === moduleName)?.pages?.[0];
-                if (page && selectedPage?.module !== moduleName) setSelectedPage(page);
-              }
-            }}
             onToggleModule={(moduleName) => setCollapsedModules((current) => ({ ...current, [moduleName]: !current[moduleName] }))}
             onSelectPage={(page) => {
               setSelectedModule(page.module);
-              setModuleMode("java");
               setSelectedPage(page);
+              setSelectedDiff(null);
               setJavaMode("page");
             }}
             onSelectDiff={(diffSelection) => {
               setSelectedModule(diffSelection.module);
-              setModuleMode("java");
+              setWorkspaceMode("visualizer");
               setSelectedPage(diffSelection.targetPage);
               setSelectedDiff(diffSelection);
               setJavaMode("diff");
             }}
             onReorganizePage={(page) => {
               setSelectedModule(page.module);
-              setModuleMode("java");
+              setWorkspaceMode("visualizer");
               setSelectedPage(page);
               setSelectedDiff(null);
               setJavaMode("page");
@@ -204,9 +230,9 @@ function App() {
       </aside>
 
       <main className="main-panel">
-        {moduleMode === "docs"
-          ? <ModuleDocsEditor moduleName={selectedModule} />
-          : <JavaVisualizer javaModules={javaModules} selectedPage={selectedPage} selectedDiff={selectedDiff} mode={javaMode} codeTheme={codeTheme} reorganizeRequest={reorganizeRequest} />}
+        {workspaceMode === "reader"
+          ? <JavaCodeReader selectedPage={selectedPage} codeTheme={codeTheme} />
+          : <JavaVisualizer javaModules={javaModules} selectedPage={selectedPage} selectedDiff={selectedDiff} mode={javaMode} codeTheme={codeTheme} reorganizeRequest={reorganizeRequest} prefsReady={workspacePrefsReady} />}
       </main>
     </div>
   );
@@ -217,7 +243,7 @@ function isEditableTarget(target) {
   return Boolean(target.closest("input, textarea, select, [contenteditable='true']"));
 }
 
-function JavaPageNav({ modules, selectedModule, moduleMode, collapsedModules, selectedPage, selectedDiff, javaMode, onSelectModuleMode, onToggleModule, onSelectPage, onSelectDiff, onReorganizePage }) {
+function JavaPageNav({ modules, selectedModule, workspaceMode, collapsedModules, selectedPage, selectedDiff, javaMode, onToggleModule, onSelectPage, onSelectDiff, onReorganizePage }) {
   function showDiff(module, page, sourcePackage) {
     if (!sourcePackage || sourcePackage === page.packageName) return;
     onSelectDiff({
@@ -242,20 +268,12 @@ function JavaPageNav({ modules, selectedModule, moduleMode, collapsedModules, se
       {modules.map((module) => (
         <section key={module.name} className="module-group">
           <div className="module-header">
-            <button className="module-collapse-button" onClick={() => onToggleModule(module.name)} title={collapsedModules[module.name] ? "Expand module" : "Collapse module"}>
-              <span aria-hidden="true">{collapsedModules[module.name] ? "+" : "-"}</span>
+            <button className="module-title-button" onClick={() => onToggleModule(module.name)} title={collapsedModules[module.name] ? "Expand module" : "Collapse module"}>
+              {collapsedModules[module.name] ? <ChevronRight size={16} aria-hidden="true" /> : <ChevronDown size={16} aria-hidden="true" />}
+              <strong>{formatModuleTitle(module.name)}</strong>
             </button>
-            <strong>{module.name}</strong>
-            <div className="module-mode-buttons">
-              <button className={selectedModule === module.name && moduleMode === "java" ? "active" : ""} onClick={() => onSelectModuleMode(module.name, "java")} title="Java visualizer">
-                <LayoutGrid size={14} aria-hidden="true" />
-              </button>
-              <button className={selectedModule === module.name && moduleMode === "docs" ? "active" : ""} onClick={() => onSelectModuleMode(module.name, "docs")} title="Docs">
-                <FilePlus2 size={14} aria-hidden="true" />
-              </button>
-            </div>
           </div>
-          {!collapsedModules[module.name] && selectedModule === module.name && moduleMode === "java" && module.pages.map((page) => {
+          {!collapsedModules[module.name] && module.pages.map((page) => {
             const isNormalActive = javaMode === "page" && page.id === selectedPage?.id;
             const isDiffActive = javaMode === "diff" && selectedDiff?.targetPage?.id === page.id;
             const sourceOptions = module.pages.filter((candidate) => candidate.id !== page.id);
@@ -289,7 +307,7 @@ function JavaPageNav({ modules, selectedModule, moduleMode, collapsedModules, se
                   </button>
                 </div>
 
-                {isDiffActive && (
+                {workspaceMode === "visualizer" && isDiffActive && (
                   <label className="source-picker">
                     <span>Source</span>
                     <select value={selectedDiff.from} onChange={(event) => showDiff(module, page, event.target.value)}>
@@ -310,167 +328,197 @@ function JavaPageNav({ modules, selectedModule, moduleMode, collapsedModules, se
   );
 }
 
-function ModuleDocsEditor({ moduleName }) {
-  const editorRef = useRef(null);
-  const [versions, setVersions] = useState([]);
-  const [version, setVersion] = useState("");
-  const [draftName, setDraftName] = useState("");
-  const [html, setHtml] = useState("");
-  const [status, setStatus] = useState("");
+function formatModuleTitle(name) {
+  return name
+    .replace(/^\d+_?/, "")
+    .replaceAll("_", " ")
+    .trim() || name;
+}
+
+function JavaCodeReader({ selectedPage, codeTheme }) {
+  const [pageData, setPageData] = useState(null);
+  const [selectedFileId, setSelectedFileId] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!moduleName) return;
-    refreshVersions();
-  }, [moduleName]);
-
-  useEffect(() => {
-    if (!moduleName || !version) {
-      setHtml("");
+    if (!selectedPage) {
+      setPageData(null);
+      setSelectedFileId("");
       return;
     }
 
-    fetch(`${API_BASE}/api/module-docs/${moduleName}/${version}`)
-      .then((response) => response.ok ? response.json() : { html: "" })
-      .then((payload) => setHtml(payload.html || ""))
-      .catch(() => setHtml(""));
-  }, [moduleName, version]);
-
-  useEffect(() => {
-    if (editorRef.current && editorRef.current.innerHTML !== html) {
-      editorRef.current.innerHTML = html;
-    }
-  }, [html]);
-
-  useEffect(() => {
-    if (!moduleName || !version) return;
-    const timeout = window.setTimeout(() => {
-      saveDoc("Autosaved");
-    }, 1200);
-    return () => window.clearTimeout(timeout);
-  }, [html, moduleName, version]);
-
-  async function refreshVersions() {
-    const response = await fetch(`${API_BASE}/api/module-docs?module=${encodeURIComponent(moduleName)}`);
-    const payload = await response.json();
-    setVersions(payload.versions || []);
-    const first = payload.versions?.[0] || "";
-    setVersion((current) => current && payload.versions?.includes(current) ? current : first);
-  }
-
-  async function prefillTemplate() {
-    const response = await fetch(`${API_BASE}/api/module-docs/template?module=${encodeURIComponent(moduleName)}`);
-    const payload = await response.json();
-    setHtml(payload.html || "");
-    setStatus("Template loaded");
-  }
-
-  async function saveDoc(successStatus = "Saved") {
-    const name = version || draftName.trim();
-    if (!name) {
-      setStatus("Create or select a version first");
-      return;
-    }
-
-    const body = {
-      module: moduleName,
-      version: name,
-      html: editorRef.current?.innerHTML || ""
-    };
-
-    const response = await fetch(`${API_BASE}/api/module-docs`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
+    let cancelled = false;
+    const params = new URLSearchParams({
+      module: selectedPage.module,
+      package: selectedPage.packageName
     });
 
-    if (!response.ok) {
-      setStatus("Save failed");
-      return;
-    }
+    setLoading(true);
+    setError("");
+    setPageData(null);
+    setSelectedFileId("");
 
-    setVersion(name);
-    setDraftName("");
-    await refreshVersions();
-    setStatus(successStatus);
-  }
+    fetch(`${API_BASE}/api/java/page?${params.toString()}`)
+      .then(async (response) => {
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || "Unable to load files");
+        if (cancelled) return;
+        setPageData(payload);
+        setSelectedFileId(payload.files?.[0]?.id || "");
+      })
+      .catch((readerError) => {
+        if (cancelled) return;
+        setError(readerError.message);
+        setPageData(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
 
-  async function createVersion() {
-    const name = draftName.trim();
-    if (!name) {
-      setStatus("Enter a version name");
-      return;
-    }
-    setVersion(name);
-    setHtml("");
-    setStatus("New version ready");
-  }
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedPage?.id]);
 
-  async function deleteVersion() {
-    if (!version) return;
-    if (!window.confirm(`Are you sure you want to delete ${moduleName}/${version}?`)) return;
+  const isCurrentReaderPage = pageData?.id === selectedPage?.id;
+  const files = isCurrentReaderPage ? pageData?.files || [] : [];
+  const selectedFile = files.find((file) => file.id === selectedFileId) || files[0] || null;
+  const highlightedCode = useMemo(() => {
+    if (!selectedFile) return "";
+    return hljs.highlight(selectedFile.rawCode || selectedFile.codeWithConstructors || selectedFile.code || "", { language: "java" }).value;
+  }, [selectedFile]);
 
-    await fetch(`${API_BASE}/api/module-docs/${moduleName}/${version}`, { method: "DELETE" });
-    setVersion("");
-    setHtml("");
-    await refreshVersions();
-    setStatus("Deleted");
-  }
-
-  function format(command, value = null) {
-    editorRef.current?.focus();
-    document.execCommand(command, false, value);
-    setHtml(editorRef.current?.innerHTML || "");
+  if (!selectedPage) {
+    return (
+      <section className="code-reader-view empty-workspace">
+        <FileCode2 size={28} aria-hidden="true" />
+        <span>Select a Java package to open the editor view.</span>
+      </section>
+    );
   }
 
   return (
-    <section className="docs-editor-view">
-      <div className="docs-editor-topbar">
-        <div className="version-controls">
-          <strong>{moduleName || "Module"} Docs</strong>
-          <select value={version} onChange={(event) => setVersion(event.target.value)}>
-            <option value="">Select version</option>
-            {versions.map((item) => (
-              <option key={item} value={item}>{item}</option>
-            ))}
-          </select>
-          <input value={draftName} onChange={(event) => setDraftName(event.target.value)} placeholder="new-version" />
-          <button onClick={createVersion}><FilePlus2 size={16} aria-hidden="true" /> New</button>
-          <button onClick={prefillTemplate}><Type size={16} aria-hidden="true" /> Template</button>
-          <button onClick={saveDoc}><Save size={16} aria-hidden="true" /> Save</button>
-          <button className="danger-button" onClick={deleteVersion} disabled={!version}><Trash2 size={16} aria-hidden="true" /> Delete</button>
+    <section className={`code-reader-view theme-${codeTheme}`}>
+      <aside className="reader-file-pane">
+        <div className="reader-file-pane-header">
+          <strong>{selectedPage.packageName}</strong>
+          <span>{files.length} files</span>
         </div>
-        <span>{status}</span>
-      </div>
+        {loading && <div className="reader-status">Loading files...</div>}
+        {error && <div className="reader-status error-text">{error}</div>}
+        {!loading && !error && (
+          <FileTree files={files} selectedFileId={selectedFile?.id || ""} onSelectFile={setSelectedFileId} />
+        )}
+      </aside>
 
-      <div className="format-toolbar">
-        <button onClick={() => format("bold")}><Bold size={16} /></button>
-        <button onClick={() => format("italic")}><Italic size={16} /></button>
-        <button onClick={() => format("underline")}><Underline size={16} /></button>
-        <button onClick={() => format("formatBlock", "h1")}><Heading1 size={16} /></button>
-        <button onClick={() => format("formatBlock", "h2")}><Heading2 size={16} /></button>
-        <button onClick={() => format("insertUnorderedList")}><List size={16} /></button>
-        <button onClick={() => format("insertOrderedList")}><ListOrdered size={16} /></button>
-        <button onClick={() => format("formatBlock", "blockquote")}><Quote size={16} /></button>
-        <button onClick={() => format("formatBlock", "pre")}><Code size={16} /></button>
-      </div>
-
-      <article
-        ref={editorRef}
-        className="rich-editor"
-        contentEditable
-        suppressContentEditableWarning
-        onInput={() => setHtml(editorRef.current?.innerHTML || "")}
-      />
+      <section className="reader-editor-pane">
+        {selectedFile ? (
+          <>
+            <div className="reader-editor-tab">
+              <FileCode2 size={16} aria-hidden="true" />
+              <span>{selectedFile.relativePath}</span>
+            </div>
+            <pre className="reader-code-pre code-pre hljs">
+              <code dangerouslySetInnerHTML={{ __html: highlightedCode }} />
+            </pre>
+          </>
+        ) : (
+          <div className="reader-empty-state">Select a file to view source.</div>
+        )}
+      </section>
     </section>
   );
 }
 
-function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeTheme, reorganizeRequest }) {
+function FileTree({ files, selectedFileId, onSelectFile }) {
+  const tree = useMemo(() => buildFileTree(files), [files]);
+  return (
+    <div className="reader-file-tree">
+      {tree.map((node) => (
+        <FileTreeNode key={node.path} node={node} selectedFileId={selectedFileId} onSelectFile={onSelectFile} />
+      ))}
+    </div>
+  );
+}
+
+function FileTreeNode({ node, selectedFileId, onSelectFile, depth = 0 }) {
+  if (node.type === "folder") {
+    return (
+      <div>
+        <div className="reader-tree-folder" style={{ paddingLeft: `${8 + depth * 14}px` }}>
+          <ChevronDown size={14} aria-hidden="true" />
+          <span>{node.name}</span>
+        </div>
+        {node.children.map((child) => (
+          <FileTreeNode key={child.path} node={child} selectedFileId={selectedFileId} onSelectFile={onSelectFile} depth={depth + 1} />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <button
+      className={`reader-tree-file ${selectedFileId === node.file.id ? "active" : ""}`}
+      style={{ paddingLeft: `${24 + depth * 14}px` }}
+      onClick={() => onSelectFile(node.file.id)}
+      title={node.file.relativePath}
+    >
+      <span>{node.name}</span>
+    </button>
+  );
+}
+
+function buildFileTree(files) {
+  const root = [];
+  const folders = new Map();
+
+  for (const file of files) {
+    const parts = file.relativePath.split("/");
+    let current = root;
+    let currentPath = "";
+
+    for (let index = 0; index < parts.length; index += 1) {
+      const part = parts[index];
+      currentPath = currentPath ? `${currentPath}/${part}` : part;
+
+      if (index === parts.length - 1) {
+        current.push({ type: "file", name: part, path: currentPath, file });
+        continue;
+      }
+
+      let folder = folders.get(currentPath);
+      if (!folder) {
+        folder = { type: "folder", name: part, path: currentPath, children: [] };
+        folders.set(currentPath, folder);
+        current.push(folder);
+      }
+
+      current = folder.children;
+    }
+  }
+
+  return sortTree(root);
+}
+
+function sortTree(nodes) {
+  return nodes
+    .map((node) => node.type === "folder" ? { ...node, children: sortTree(node.children) } : node)
+    .sort((left, right) => {
+      if (left.type !== right.type) return left.type === "folder" ? -1 : 1;
+      return left.name.localeCompare(right.name);
+    });
+}
+
+function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeTheme, reorganizeRequest, prefsReady }) {
   const [pageData, setPageData] = useState(null);
   const [layouts, setLayouts] = useState({});
-  const [constructorVisibility, setConstructorVisibility] = useState(() => readJsonStorage("lld-docs.show-constructors", {}));
-  const [collapsedMethods, setCollapsedMethods] = useState(() => readJsonStorage("lld-docs.collapsed-methods", {}));
+  const [layoutsPageId, setLayoutsPageId] = useState(null);
+  const [layoutsSource, setLayoutsSource] = useState("empty");
+  const [constructorVisibility, setConstructorVisibility] = useState({});
+  const [collapsedMethods, setCollapsedMethods] = useState({});
   const [parentZoom, setParentZoom] = useState(1);
+  const [parentZoomSource, setParentZoomSource] = useState("empty");
   const [hoveredBlockId, setHoveredBlockId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -478,7 +526,12 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
 
   useEffect(() => {
     const activeSelection = mode === "diff" ? selectedDiff?.targetPage : selectedPage;
-    if (!activeSelection) return;
+    if (!activeSelection) {
+      setPageData(null);
+      return;
+    }
+
+    let cancelled = false;
 
     const targetParams = new URLSearchParams({
       module: activeSelection.module,
@@ -487,11 +540,13 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
 
     setLoading(true);
     setError("");
+    setPageData(null);
 
     fetch(`${API_BASE}/api/java/page?${targetParams.toString()}`)
       .then(async (response) => {
         const targetPage = await response.json();
         if (!response.ok) throw new Error(targetPage.error || "Unable to load page");
+        if (cancelled) return;
 
         if (mode !== "diff") {
           setPageData(targetPage);
@@ -507,49 +562,114 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
         const diffResponse = await fetch(`${API_BASE}/api/java/diff?${diffParams.toString()}`);
         const diffPage = await diffResponse.json();
         if (!diffResponse.ok) throw new Error(diffPage.error || "Unable to load diff");
+        if (cancelled) return;
 
         setPageData(mergeTargetWithDiff(targetPage, diffPage));
       })
       .catch((pageError) => {
+        if (cancelled) return;
         setError(pageError.message);
         setPageData(null);
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [selectedPage, selectedDiff, mode]);
 
   useEffect(() => {
-    if (!activeLayoutPageId || !pageData?.files) return;
-    const saved = localStorage.getItem(layoutStorageKey(activeLayoutPageId));
-    if (saved) {
-      setLayouts(JSON.parse(saved));
-      return;
+    if (!prefsReady) return;
+    let cancelled = false;
+
+    async function loadGlobalVisualizerPrefs() {
+      const [storedConstructorVisibility, storedCollapsedMethods] = await Promise.all([
+        fileStorageGetItem("lld-docs.show-constructors"),
+        fileStorageGetItem("lld-docs.collapsed-methods")
+      ]);
+
+      if (cancelled) return;
+      setConstructorVisibility(parseJsonValue(storedConstructorVisibility, {}));
+      setCollapsedMethods(parseJsonValue(storedCollapsedMethods, {}));
     }
-    setLayouts(buildInitialLayouts(pageData.files));
-  }, [activeLayoutPageId, pageData?.files]);
+
+    loadGlobalVisualizerPrefs();
+    return () => {
+      cancelled = true;
+    };
+  }, [prefsReady]);
 
   useEffect(() => {
-    if (!activeLayoutPageId) return;
-    const saved = localStorage.getItem(parentZoomStorageKey(activeLayoutPageId));
-    setParentZoom(saved ? Number(saved) || 1 : 1);
+    setLayouts({});
+    setLayoutsPageId(null);
+    setLayoutsSource("empty");
+    setParentZoomSource("empty");
   }, [activeLayoutPageId]);
 
   useEffect(() => {
-    if (!activeLayoutPageId || Object.keys(layouts).length === 0) return;
-    localStorage.setItem(layoutStorageKey(activeLayoutPageId), JSON.stringify(layouts));
-  }, [layouts, activeLayoutPageId]);
+    if (!prefsReady || !activeLayoutPageId || !pageData?.files) return;
+    if (pageData.id !== activeLayoutPageId) return;
+    let cancelled = false;
+
+    async function loadLayouts() {
+      const saved = await fileStorageGetItem(layoutStorageKey(activeLayoutPageId));
+      if (cancelled) return;
+      if (saved) {
+        setLayouts(parseJsonValue(saved, {}));
+        setLayoutsPageId(activeLayoutPageId);
+        setLayoutsSource("saved");
+        return;
+      }
+      setLayouts(buildInitialLayouts(pageData.files));
+      setLayoutsPageId(activeLayoutPageId);
+      setLayoutsSource("generated");
+    }
+
+    loadLayouts();
+    return () => {
+      cancelled = true;
+    };
+  }, [prefsReady, activeLayoutPageId, pageData?.files]);
 
   useEffect(() => {
-    if (!activeLayoutPageId) return;
-    localStorage.setItem(parentZoomStorageKey(activeLayoutPageId), String(parentZoom));
-  }, [parentZoom, activeLayoutPageId]);
+    if (!prefsReady || !activeLayoutPageId) return;
+    let cancelled = false;
+
+    async function loadParentZoom() {
+      const saved = await fileStorageGetItem(parentZoomStorageKey(activeLayoutPageId));
+      if (!cancelled) {
+        setParentZoom(saved ? Number(saved) || 1 : 1);
+        setParentZoomSource(saved ? "saved" : "generated");
+      }
+    }
+
+    loadParentZoom();
+    return () => {
+      cancelled = true;
+    };
+  }, [prefsReady, activeLayoutPageId]);
 
   useEffect(() => {
-    localStorage.setItem("lld-docs.show-constructors", JSON.stringify(constructorVisibility));
-  }, [constructorVisibility]);
+    if (!prefsReady || layoutsSource === "generated" || !activeLayoutPageId || layoutsPageId !== activeLayoutPageId || Object.keys(layouts).length === 0) return;
+    fileStorageSetItem(layoutStorageKey(activeLayoutPageId), JSON.stringify(layouts));
+  }, [layouts, layoutsPageId, layoutsSource, activeLayoutPageId, prefsReady]);
 
   useEffect(() => {
-    localStorage.setItem("lld-docs.collapsed-methods", JSON.stringify(collapsedMethods));
-  }, [collapsedMethods]);
+    if (!prefsReady || parentZoomSource === "generated" || !activeLayoutPageId) return;
+    fileStorageSetItem(parentZoomStorageKey(activeLayoutPageId), String(parentZoom));
+  }, [parentZoom, parentZoomSource, activeLayoutPageId, prefsReady]);
+
+  useEffect(() => {
+    if (!prefsReady) return;
+    fileStorageSetItem("lld-docs.show-constructors", JSON.stringify(constructorVisibility));
+  }, [constructorVisibility, prefsReady]);
+
+  useEffect(() => {
+    if (!prefsReady) return;
+    fileStorageSetItem("lld-docs.collapsed-methods", JSON.stringify(collapsedMethods));
+  }, [collapsedMethods, prefsReady]);
 
   useEffect(() => {
     function handleZoom(event) {
@@ -563,6 +683,7 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
         setLayouts((current) => {
           const layout = current[hoveredBlockId];
           if (!layout) return current;
+          setLayoutsSource("user");
           return {
             ...current,
             [hoveredBlockId]: {
@@ -574,6 +695,7 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
         return;
       }
 
+      setParentZoomSource("user");
       setParentZoom((current) => clampParentZoom(current + direction * 0.1));
     }
 
@@ -581,7 +703,8 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
     return () => window.removeEventListener("keydown", handleZoom);
   }, [hoveredBlockId]);
 
-  const files = pageData?.files || [];
+  const isCurrentVisualizerPage = pageData?.id === activeLayoutPageId;
+  const files = isCurrentVisualizerPage ? pageData?.files || [] : [];
 
   useEffect(() => {
     if (mode !== "page" || !selectedPage || !reorganizeRequest) return;
@@ -607,16 +730,21 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
     }));
   }
 
-  function reorganizeFromPreviousPackage(targetPage) {
+  async function reorganizeFromPreviousPackage(targetPage) {
     const previousPage = findPreviousPage(javaModules, targetPage);
     if (!previousPage || !activeLayoutPageId || files.length === 0) return;
 
-    const previousLayouts = readJsonStorage(layoutStorageKey(previousPage.id), {});
+    const previousLayouts = await readJsonFileStorage(layoutStorageKey(previousPage.id), {});
     const nextLayouts = buildLayoutsFromPreviousPackage(files, previousLayouts);
     setLayouts(nextLayouts);
+    setLayoutsPageId(activeLayoutPageId);
+    setLayoutsSource("user");
 
-    const previousZoom = localStorage.getItem(parentZoomStorageKey(previousPage.id));
-    if (previousZoom) setParentZoom(Number(previousZoom) || 1);
+    const previousZoom = await fileStorageGetItem(parentZoomStorageKey(previousPage.id));
+    if (previousZoom) {
+      setParentZoom(Number(previousZoom) || 1);
+      setParentZoomSource("user");
+    }
   }
 
   return (
@@ -625,13 +753,17 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
 
       <CodeWorkspace
         files={files}
-        deletedFiles={pageData?.deletedFiles || []}
+        deletedFiles={isCurrentVisualizerPage ? pageData?.deletedFiles || [] : []}
         layouts={layouts}
         activePageId={activeLayoutPageId}
         constructorVisibility={constructorVisibility}
         collapsedMethods={collapsedMethods}
         parentZoom={parentZoom}
-        onLayoutChange={(fileId, layout) => setLayouts((current) => ({ ...current, [fileId]: layout }))}
+        onLayoutChange={(fileId, layout) => {
+          if (layoutsPageId !== activeLayoutPageId) return;
+          setLayoutsSource("user");
+          setLayouts((current) => ({ ...current, [fileId]: layout }));
+        }}
         onHoverBlock={setHoveredBlockId}
         onToggleConstructors={toggleConstructors}
         onToggleMethodFold={toggleMethodFold}
@@ -931,9 +1063,13 @@ function methodFoldStorageKey(pageId, fileId, methodKey) {
   return `${pageId || "unknown"}::${fileId}::${methodKey}`;
 }
 
-function readJsonStorage(key, fallback) {
+async function readJsonFileStorage(key, fallback) {
+  return parseJsonValue(await fileStorageGetItem(key), fallback);
+}
+
+function parseJsonValue(value, fallback) {
   try {
-    return JSON.parse(localStorage.getItem(key) || "null") || fallback;
+    return JSON.parse(value || "null") || fallback;
   } catch {
     return fallback;
   }
@@ -1244,4 +1380,9 @@ function normalizeCodeTheme(value) {
   return "github-dark";
 }
 
-createRoot(document.getElementById("root")).render(<App />);
+if (typeof document !== "undefined") {
+  const root = document.getElementById("root");
+  if (root) {
+    createRoot(root).render(<App />);
+  }
+}

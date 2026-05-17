@@ -5,29 +5,32 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="64a0acb2-1dfb-413c-a6e2-8247ba411467" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/easycode.ignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/B_strategy/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/B_strategy/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/B_strategy/Main_Interactive.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/B_strategy/Main_Interactive.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/B_strategy/model/board/ClassicBoard.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/B_strategy/model/board/ClassicBoard.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/B_strategy/model/board/TicTacToeBoard.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/B_strategy/model/board/TicTacToeBoard.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/B_strategy/model/board/winstrategy/ClassicWinStrategy.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/B_strategy/model/board/winstrategy/WinStrategy.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/B_strategy/model/game/AIGame1V1.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/B_strategy/model/game/AIGame1V1.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/B_strategy/model/game/ClassicGame1v1.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/B_strategy/model/game/ClassicGame1v1.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/B_strategy/model/game/TicTacToeGame.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/B_strategy/model/game/TicTacToeGame.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/C_command/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/C_command/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/C_command/Main_Interactive.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/C_command/Main_Interactive.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/C_command/model/board/ClassicBoard.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/C_command/model/board/ClassicBoard.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/C_command/model/board/TicTacToeBoard.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/C_command/model/board/TicTacToeBoard.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/C_command/model/board/winstrategy/ClassicWinStrategy.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/C_command/model/board/winstrategy/WinStrategy.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/C_command/model/game/AIGame1V1.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/C_command/model/game/AIGame1V1.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/C_command/model/game/ClassicGame1v1.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/C_command/model/game/ClassicGame1v1.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/01_TicTacToe/src/C_command/model/game/TicTacToeGame.java" beforeDir="false" afterPath="$PROJECT_DIR$/01_TicTacToe/src/C_command/model/game/TicTacToeGame.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/02_Chess/02_Chess.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/03_BookMyShow/03_BookMyShow.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/src/Main.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/src/database/Datastore.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/src/model/Move.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/src/model/Player.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/src/model/board/Board.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/src/model/board/ClassicBoard.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/src/model/enums/BoardType.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/src/model/enums/GameStatus.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/src/model/game/ClassicGame.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/src/model/game/Game.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/src/model/game/factory/GameFactory.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/src/model/piece/Bishop.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/src/model/piece/King.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/src/model/piece/Knight.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/src/model/piece/Pawn.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/src/model/piece/Piece.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/src/model/piece/Queen.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/src/model/piece/Rook.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/src/service/Facade.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Template.md" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -35,7 +38,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="8078" />
+    <option name="cachedIndexableFilesCount" value="8196" />
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -52,28 +55,34 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Application.B_strategy.Main.executor&quot;: &quot;Run&quot;,
-    &quot;Application.C_command.Main.executor&quot;: &quot;Run&quot;,
-    &quot;Application.Main.executor&quot;: &quot;Run&quot;,
-    &quot;Application.Main_Interactive.executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/vishn/OneDrive/Desktop/workspace/InterviewPrep/LLD_AND_MULTITHREADING&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
-    &quot;two.files.diff.last.used.file&quot;: &quot;C:/Users/vishn/OneDrive/Desktop/workspace/InterviewPrep/LLD_AND_MULTITHREADING/01_TicTacToe/src/A_basic/model/game/ClassicGame1v1.java&quot;,
-    &quot;two.files.diff.last.used.folder&quot;: &quot;C:/Users/vishn/OneDrive/Desktop/workspace/InterviewPrep/LLD_AND_MULTITHREADING/01_TicTacToe/src/A_basic&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.B_strategy.Main.executor": "Run",
+    "Application.C_command.Main.executor": "Run",
+    "Application.Main.executor": "Run",
+    "Application.Main_Interactive.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "main",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/vishn/OneDrive/Desktop/workspace/InterviewPrep/LLD_AND_MULTITHREADING/src",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "settings.editor.selected.configurable": "ml.llm.LLMConfigurable",
+    "two.files.diff.last.used.file": "C:/Users/vishn/OneDrive/Desktop/workspace/InterviewPrep/LLD_AND_MULTITHREADING/01_TicTacToe/src/A_basic/model/game/ClassicGame1v1.java",
+    "two.files.diff.last.used.folder": "C:/Users/vishn/OneDrive/Desktop/workspace/InterviewPrep/LLD_AND_MULTITHREADING/01_TicTacToe/src/A_basic"
   }
-}</component>
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\vishn\OneDrive\Desktop\workspace\InterviewPrep\LLD_AND_MULTITHREADING\src" />
+    </key>
+  </component>
   <component name="RunManager" selected="Application.C_command.Main">
     <configuration name="B_strategy.Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="B_strategy.Main" />
@@ -154,5 +163,9 @@
       <updated>1777803344655</updated>
     </task>
     <servers />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
 </project>

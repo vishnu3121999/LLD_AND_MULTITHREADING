@@ -1,0 +1,33 @@
+export const metadata = {
+  title: "LLD Cheatsheets | LLD Playbook"
+}
+
+<main className="site-container py-10">
+
+# LLD Cheatsheets
+
+## Fast Clarifying Questions
+
+- Is this offline or online?
+- Is persistence required?
+- Can multiple users modify the same resource concurrently?
+- Is payment, notification, or history in scope?
+- Which behavior is expected to vary?
+
+## Design Pattern Triggers
+
+- Strategy: an algorithm varies.
+- Factory: object creation depends on type.
+- State: valid operations depend heavily on current state.
+- Observer: multiple systems react to one event.
+- Command: actions need undo, replay, or audit.
+
+## Concurrency Checks
+
+- Find write APIs.
+- Identify shared mutable entities.
+- Look for check-then-update logic.
+- Lock the smallest safe critical section.
+- Re-check state inside the lock.
+
+</main>

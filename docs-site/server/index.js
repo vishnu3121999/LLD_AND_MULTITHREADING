@@ -173,6 +173,7 @@ app.get("/api/java/page", async (request, response) => {
         fileName: path.basename(filePath),
         relativePath: path.relative(packagePath, filePath).replaceAll(path.sep, "/"),
         absolutePath: filePath,
+        rawCode: source,
         code: cleaned.code,
         codeWithConstructors: withConstructors.code,
         hasConstructors: withConstructors.removed.constructors > 0
