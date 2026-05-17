@@ -42,7 +42,7 @@ select {
   font: inherit;
 }
 
-button {
+.app-shell button {
   border: 1px solid var(--line);
   border-radius: 7px;
   background: var(--surface-strong);
@@ -50,7 +50,7 @@ button {
   cursor: pointer;
 }
 
-button:disabled {
+.app-shell button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
 }

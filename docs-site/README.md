@@ -28,7 +28,9 @@ Copy `.env.example` to `.env.local` and fill keys as needed:
 - PostHog for analytics
 - Resend for newsletter contacts
 
-Without keys, auth, checkout, search, and newsletter features run in local demo/fallback mode.
+Auth is server-enforced for `/workspace`, `/solve`, `/api/java/*`, and checkout. Without Supabase URL and anon key, those protected routes redirect to `/auth` or return an auth configuration error.
+
+Search and newsletter still have local/demo fallbacks when their provider keys are missing.
 
 ## Content
 

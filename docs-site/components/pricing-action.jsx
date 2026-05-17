@@ -19,6 +19,11 @@ export function PricingAction({ plan = "premium" }) {
     const payload = await response.json();
     setLoading(false);
 
+    if (response.status === 401) {
+      window.location.href = "/auth?next=/pricing";
+      return;
+    }
+
     if (payload.url) {
       window.location.href = payload.url;
       return;

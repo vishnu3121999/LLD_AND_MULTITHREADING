@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Code2, Search, UserRound } from "lucide-react";
 import { navItems } from "../lib/site-data";
 import { cn } from "../lib/utils";
+import { getSupabaseBrowserClient } from "../lib/supabase-browser";
 import { Button } from "./ui/button";
 import { ThemeToggle } from "./theme-toggle";
 
@@ -44,14 +46,40 @@ export function SiteHeader() {
               Search
             </Link>
           </Button>
-          <Button asChild size="sm">
-            <Link href="/auth">
-              <UserRound size={16} aria-hidden="true" />
-              Sign in
-            </Link>
-          </Button>
+          <HeaderAuthButton pathname={pathname} />
         </div>
       </div>
     </header>
+  );
+}
+
+function HeaderAuthButton({ pathname }) {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const supabase = getSupabaseBrowserClient();
+    if (!supabase) return undefined;
+
+    supabase.auth.getSession().then(({ data }) => {
+      setUser(data.session?.user || null);
+    });
+
+    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+    });
+
+    return () => {
+      subscription.subscription.unsubscribe();
+    };
+  }, []);
+
+  const next = pathname && pathname !== "/auth" ? `?next=${encodeURIComponent(pathname)}` : "";
+  return (
+    <Button asChild size="sm">
+      <Link href={`/auth${next}`}>
+        <UserRound size={16} aria-hidden="true" />
+        {user?.email ? "Account" : "Sign in"}
+      </Link>
+    </Button>
   );
 }
