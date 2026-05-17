@@ -22,7 +22,7 @@ import { fileStorageGetItem, fileStorageSetItem, migrateLegacyBrowserStorage } f
 
 hljs.registerLanguage("java", java);
 
-const API_BASE = process.env.NEXT_PUBLIC_JAVA_API_BASE || "http://127.0.0.1:5174";
+const API_BASE = "";
 const SITE_THEME_STORAGE_KEY = "lld-playbook.site-theme";
 const MIN_BLOCK_WIDTH = 140;
 const MIN_BLOCK_HEIGHT = 90;

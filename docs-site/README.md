@@ -1,6 +1,6 @@
 # LLD Playbook Docs Site
 
-Next.js documentation and interview-prep site with the existing Java source visualizer preserved.
+Next.js documentation and interview-prep site with the Java source visualizer running through Next.js route handlers.
 
 ## Run
 
@@ -12,14 +12,11 @@ npm.cmd run dev
 
 Open `http://127.0.0.1:5173`.
 
-The dev script starts:
-
-- Next.js frontend on `http://127.0.0.1:5173`
-- Existing Java/docs API on `http://127.0.0.1:5174`
+The dev script starts the Next.js app on `http://127.0.0.1:5173`. Java workspace APIs are served from the same app under `/api/java/*`.
 
 ## Java Visualizer
 
-Open `/workspace`. The backend recursively reads `.java` files and removes imports, constructors, getters, and setters before sending code blocks to the UI.
+Open `/workspace`. The Next.js Java API recursively reads `.java` files from `content/java-modules`, removes imports, constructors, getters, and setters for the visualizer view, and returns raw files for the editor-style reader view.
 
 ## Integrations
 
@@ -38,6 +35,7 @@ Without keys, auth, checkout, search, and newsletter features run in local demo/
 - `/lld-template` renders the root `template.md`.
 - `/problems` renders structured solved LLD problems from `lib/site-data.js`.
 - `/roadmaps` and `/cheatsheets` are MDX pages.
+- Java examples live under `content/java-modules/<module>/src/<page>`.
 
 ## Local Data Files
 
@@ -48,9 +46,3 @@ docs-site/content/local-data/browser-state.json
 ```
 
 On first load, old `localStorage` keys that start with `lld-docs.` or `lld-playbook.` are migrated into that file and then removed from the browser.
-
-Module docs created from the workspace Docs tab are saved as HTML versions under:
-
-```text
-docs-site/content/module-docs/<module>/<version>.html
-```

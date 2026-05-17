@@ -6,6 +6,9 @@ const withMDX = createMDX({
 
 export default withMDX({
   pageExtensions: ["js", "jsx", "md", "mdx"],
+  outputFileTracingIncludes: {
+    "/api/java/**/*": ["./content/java-modules/**/*"]
+  },
   turbopack: {
     root: process.cwd()
   },
