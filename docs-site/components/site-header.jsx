@@ -13,6 +13,8 @@ import { ThemeToggle } from "./theme-toggle";
 export function SiteHeader() {
   const pathname = usePathname();
 
+  if (pathname?.startsWith("/lld-template")) return null;
+
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
       <div className="site-container flex min-h-16 items-center justify-between gap-4">

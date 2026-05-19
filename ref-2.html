@@ -1,0 +1,1878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LLD Interview Playbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0d0f14;
+    --bg2: #13161d;
+    --bg3: #1a1e28;
+    --bg4: #21263300;
+    --border: #2a2f3e;
+    --border2: #343a4d;
+    --text: #e2e6f0;
+    --text2: #8b93a8;
+    --text3: #5a6175;
+    --accent: #5b8af0;
+    --accent2: #3d6cd4;
+    --gold: #e8a84c;
+    --green: #4ecb8d;
+    --red: #e05a6b;
+    --purple: #9b6dff;
+    --teal: #38b2c8;
+    --mono: 'JetBrains Mono', monospace;
+    --display: 'Syne', sans-serif;
+    --body: 'Lora', serif;
+    --radius: 10px;
+    --sidebar: 260px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    font-size: 16px;
+    line-height: 1.75;
+    min-height: 100vh;
+  }
+
+  /* ---- LAYOUT ---- */
+  .layout {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ---- SIDEBAR ---- */
+  .sidebar {
+    width: var(--sidebar);
+    min-height: 100vh;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    position: fixed;
+    top: 0; left: 0; bottom: 0;
+    overflow-y: auto;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 40px;
+  }
+
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+  .sidebar-logo {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+
+  .sidebar-logo .label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .sidebar-logo .title {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.2;
+  }
+
+  .sidebar-search {
+    padding: 10px 16px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-search input {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 12px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .sidebar-search input:focus { border-color: var(--accent); }
+  .sidebar-search input::placeholder { color: var(--text3); }
+
+  .nav-section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 14px 20px 6px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 20px;
+    color: var(--text2);
+    font-family: var(--display);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    transition: all 0.15s;
+    cursor: pointer;
+  }
+
+  .nav-item:hover, .nav-item.active {
+    color: var(--accent);
+    background: rgba(91, 138, 240, 0.06);
+    border-left-color: var(--accent);
+  }
+
+  .nav-item .num {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    min-width: 18px;
+  }
+
+  /* ---- MAIN ---- */
+  .main {
+    margin-left: var(--sidebar);
+    flex: 1;
+    max-width: 900px;
+    padding: 48px 56px 100px;
+    min-height: 100vh;
+  }
+
+  /* ---- PAGE HEADER ---- */
+  .page-header {
+    margin-bottom: 56px;
+  }
+
+  .page-header .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .page-header h1 {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: clamp(32px, 5vw, 48px);
+    line-height: 1.08;
+    letter-spacing: -1px;
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+
+  .page-header h1 span {
+    color: var(--accent);
+  }
+
+  .page-header .subtitle {
+    font-family: var(--body);
+    font-style: italic;
+    font-size: 17px;
+    color: var(--text2);
+    max-width: 560px;
+    line-height: 1.7;
+  }
+
+  .header-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 20px;
+  }
+
+  .tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+
+  .tag-blue { background: rgba(91,138,240,0.15); color: var(--accent); border: 1px solid rgba(91,138,240,0.25); }
+  .tag-gold { background: rgba(232,168,76,0.12); color: var(--gold); border: 1px solid rgba(232,168,76,0.22); }
+  .tag-green { background: rgba(78,203,141,0.1); color: var(--green); border: 1px solid rgba(78,203,141,0.2); }
+  .tag-purple { background: rgba(155,109,255,0.1); color: var(--purple); border: 1px solid rgba(155,109,255,0.2); }
+
+  /* ---- HOW TO USE BLOCK ---- */
+  .how-to-use {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    margin-bottom: 48px;
+  }
+
+  .section-eyebrow {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .section-title {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--text);
+    margin-bottom: 20px;
+    letter-spacing: -0.3px;
+  }
+
+  .flow-steps {
+    display: grid;
+    gap: 0;
+  }
+
+  .flow-step {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  .flow-step:last-child { border-bottom: none; }
+
+  .step-num {
+    width: 28px;
+    height: 28px;
+    background: rgba(91,138,240,0.15);
+    border: 1px solid rgba(91,138,240,0.3);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .step-text {
+    font-family: var(--display);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.5;
+    padding-top: 4px;
+  }
+
+  .interview-quote {
+    background: linear-gradient(135deg, rgba(91,138,240,0.08), rgba(155,109,255,0.06));
+    border: 1px solid rgba(91,138,240,0.2);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 16px 20px;
+    margin: 20px 0;
+    font-style: italic;
+    color: var(--text2);
+    font-size: 15px;
+    position: relative;
+  }
+
+  .interview-quote::before {
+    content: "Say this";
+    position: absolute;
+    top: -1px; right: 12px;
+    font-family: var(--mono);
+    font-size: 9px;
+    font-style: normal;
+    color: var(--accent);
+    background: var(--bg2);
+    padding: 2px 8px;
+    border-radius: 0 0 4px 4px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border: 1px solid rgba(91,138,240,0.2);
+    border-top: none;
+  }
+
+  /* ---- SECTION ---- */
+  .section {
+    margin-bottom: 40px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--bg2);
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 28px;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+
+  .section-header:hover { background: var(--bg3); }
+
+  .section-header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .section-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .icon-blue { background: rgba(91,138,240,0.15); color: var(--accent); border: 1px solid rgba(91,138,240,0.25); }
+  .icon-gold { background: rgba(232,168,76,0.12); color: var(--gold); border: 1px solid rgba(232,168,76,0.22); }
+  .icon-green { background: rgba(78,203,141,0.1); color: var(--green); border: 1px solid rgba(78,203,141,0.2); }
+  .icon-purple { background: rgba(155,109,255,0.1); color: var(--purple); border: 1px solid rgba(155,109,255,0.2); }
+  .icon-red { background: rgba(224,90,107,0.1); color: var(--red); border: 1px solid rgba(224,90,107,0.2); }
+  .icon-teal { background: rgba(56,178,200,0.1); color: var(--teal); border: 1px solid rgba(56,178,200,0.2); }
+
+  .section-header-title {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 17px;
+    color: var(--text);
+  }
+
+  .section-header-sub {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+
+  .chevron {
+    width: 20px;
+    height: 20px;
+    color: var(--text3);
+    transition: transform 0.25s;
+    flex-shrink: 0;
+  }
+
+  .section.open .chevron { transform: rotate(180deg); }
+
+  .section-body {
+    display: none;
+    padding: 28px;
+  }
+
+  .section.open .section-body { display: block; }
+
+  /* ---- CONTENT ELEMENTS ---- */
+  h3.sub-title {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text);
+    margin: 28px 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  h3.sub-title:first-child { margin-top: 0; }
+
+  h4.mini-title {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--gold);
+    margin: 20px 0 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  p.body-text {
+    color: var(--text2);
+    font-size: 15px;
+    line-height: 1.8;
+    margin-bottom: 14px;
+  }
+
+  p.body-text strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  /* ---- CODE BLOCK ---- */
+  .code-block {
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    margin: 16px 0;
+    overflow: hidden;
+  }
+
+  .code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .code-lang {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .code-copy {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    cursor: pointer;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: transparent;
+    border: 1px solid var(--border);
+    transition: all 0.15s;
+  }
+
+  .code-copy:hover { color: var(--accent); border-color: var(--accent); }
+
+  pre {
+    padding: 20px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.65;
+    color: #c8d3f0;
+  }
+
+  pre::-webkit-scrollbar { height: 4px; }
+  pre::-webkit-scrollbar-track { background: transparent; }
+  pre::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+  code.inline {
+    font-family: var(--mono);
+    font-size: 13px;
+    background: rgba(91,138,240,0.1);
+    color: var(--accent);
+    padding: 1px 6px;
+    border-radius: 4px;
+    border: 1px solid rgba(91,138,240,0.15);
+  }
+
+  /* ---- CALLOUT ---- */
+  .callout {
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 16px 0;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .callout-info { background: rgba(91,138,240,0.07); border: 1px solid rgba(91,138,240,0.18); }
+  .callout-warn { background: rgba(232,168,76,0.07); border: 1px solid rgba(232,168,76,0.18); }
+  .callout-success { background: rgba(78,203,141,0.07); border: 1px solid rgba(78,203,141,0.18); }
+  .callout-danger { background: rgba(224,90,107,0.07); border: 1px solid rgba(224,90,107,0.18); }
+
+  .callout-icon {
+    font-size: 14px;
+    margin-top: 1px;
+    flex-shrink: 0;
+    font-family: var(--mono);
+    font-weight: 700;
+  }
+
+  .callout-info .callout-icon { color: var(--accent); }
+  .callout-warn .callout-icon { color: var(--gold); }
+  .callout-success .callout-icon { color: var(--green); }
+  .callout-danger .callout-icon { color: var(--red); }
+
+  .callout-text {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text2);
+  }
+
+  .callout-info .callout-text { color: #a8baf5; }
+  .callout-warn .callout-text { color: #e8c882; }
+  .callout-success .callout-text { color: #7dd4a8; }
+  .callout-danger .callout-text { color: #e89098; }
+
+  /* ---- TABLE ---- */
+  .table-wrap {
+    overflow-x: auto;
+    margin: 16px 0;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+
+  thead {
+    background: var(--bg3);
+    border-bottom: 1px solid var(--border);
+  }
+
+  th {
+    padding: 10px 16px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text2);
+    letter-spacing: 0.5px;
+    font-size: 11px;
+    text-transform: uppercase;
+  }
+
+  td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text2);
+    font-size: 13px;
+    vertical-align: top;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  tr:hover td { background: rgba(91,138,240,0.04); }
+
+  td:first-child { color: var(--text); font-weight: 500; }
+
+  /* ---- GRID CARDS ---- */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin: 16px 0;
+  }
+
+  .card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    transition: border-color 0.15s;
+  }
+
+  .card:hover { border-color: var(--border2); }
+
+  .card-head {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--text);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .card-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dot-blue { background: var(--accent); }
+  .dot-gold { background: var(--gold); }
+  .dot-green { background: var(--green); }
+  .dot-purple { background: var(--purple); }
+  .dot-red { background: var(--red); }
+  .dot-teal { background: var(--teal); }
+
+  .card-items {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .card-items li {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text2);
+    padding-left: 12px;
+    position: relative;
+  }
+
+  .card-items li::before {
+    content: "-";
+    position: absolute;
+    left: 0;
+    color: var(--text3);
+  }
+
+  /* ---- TWO COL ---- */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 16px 0;
+  }
+
+  .comparison-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px;
+  }
+
+  .comparison-card.good { border-top: 2px solid var(--green); }
+  .comparison-card.bad { border-top: 2px solid var(--red); }
+
+  .comparison-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    font-weight: 700;
+  }
+
+  .comparison-card.good .comparison-label { color: var(--green); }
+  .comparison-card.bad .comparison-label { color: var(--red); }
+
+  /* ---- LIST ---- */
+  .styled-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 12px 0;
+  }
+
+  .styled-list li {
+    font-size: 14px;
+    color: var(--text2);
+    padding-left: 20px;
+    position: relative;
+    line-height: 1.6;
+  }
+
+  .styled-list li::before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 9px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  /* ---- RULE TABLE ---- */
+  .rule-row {
+    display: flex;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: flex-start;
+  }
+
+  .rule-row:last-child { border-bottom: none; }
+
+  .rule-key {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    background: rgba(91,138,240,0.1);
+    border: 1px solid rgba(91,138,240,0.2);
+    border-radius: 5px;
+    padding: 3px 10px;
+    white-space: nowrap;
+    margin-top: 1px;
+    min-width: 130px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .rule-val {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text2);
+    padding-top: 3px;
+    line-height: 1.6;
+  }
+
+  /* ---- CHECKLIST ---- */
+  .checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 12px 0;
+  }
+
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text2);
+    font-family: var(--display);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+
+  .check-item:hover { border-color: var(--border2); color: var(--text); }
+
+  .check-item.done { opacity: 0.55; text-decoration: line-through; }
+
+  .check-box {
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid var(--border2);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 0px;
+    transition: all 0.15s;
+  }
+
+  .check-item.done .check-box {
+    background: var(--green);
+    border-color: var(--green);
+  }
+
+  .check-box svg { display: none; }
+  .check-item.done .check-box svg { display: block; }
+
+  /* ---- MENTAL MODEL ---- */
+  .mental-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+    margin: 16px 0;
+  }
+
+  .mental-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 18px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    transition: border-color 0.15s;
+  }
+
+  .mental-card:hover { border-color: var(--accent); }
+
+  .mental-num {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--border2);
+    min-width: 28px;
+    line-height: 1;
+    margin-top: 2px;
+  }
+
+  .mental-q {
+    font-family: var(--display);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .mental-a {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+  }
+
+  /* ---- LAYER DIAGRAM ---- */
+  .layer-diagram {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 16px 0;
+    max-width: 400px;
+  }
+
+  .layer-item {
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    text-align: center;
+    position: relative;
+  }
+
+  .layer-item::after {
+    content: "";
+    display: block;
+    width: 2px;
+    height: 10px;
+    background: var(--border2);
+    margin: 0 auto;
+    margin-top: 2px;
+  }
+
+  .layer-item:last-child::after { display: none; }
+
+  .layer-1 { background: rgba(91,138,240,0.14); color: var(--accent); border: 1px solid rgba(91,138,240,0.25); }
+  .layer-2 { background: rgba(155,109,255,0.1); color: var(--purple); border: 1px solid rgba(155,109,255,0.2); }
+  .layer-3 { background: rgba(78,203,141,0.1); color: var(--green); border: 1px solid rgba(78,203,141,0.2); }
+  .layer-4 { background: rgba(232,168,76,0.1); color: var(--gold); border: 1px solid rgba(232,168,76,0.2); }
+  .layer-5 { background: rgba(224,90,107,0.1); color: var(--red); border: 1px solid rgba(224,90,107,0.2); }
+
+  /* ---- PROGRESS ---- */
+  .progress-bar-wrap {
+    height: 2px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+    position: fixed;
+    top: 0; left: var(--sidebar); right: 0;
+    z-index: 200;
+  }
+
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--purple));
+    width: 0%;
+    transition: width 0.1s;
+  }
+
+  /* ---- DIVIDER ---- */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 24px 0;
+  }
+
+  /* ---- TOOLTIP ---- */
+  .tip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dashed var(--text3);
+    cursor: help;
+  }
+
+  /* ---- BADGE ---- */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 99px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-left: 8px;
+  }
+
+  .badge-new { background: rgba(78,203,141,0.15); color: var(--green); border: 1px solid rgba(78,203,141,0.25); }
+  .badge-todo { background: rgba(232,168,76,0.12); color: var(--gold); border: 1px solid rgba(232,168,76,0.22); }
+  .badge-important { background: rgba(224,90,107,0.1); color: var(--red); border: 1px solid rgba(224,90,107,0.2); }
+
+  /* ---- RESPONSIVE ---- */
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; padding: 32px 24px 80px; }
+    .two-col { grid-template-columns: 1fr; }
+    .progress-bar-wrap { left: 0; }
+  }
+
+  /* Syntax highlight pseudo */
+  .kw { color: #a78bfa; }
+  .cl { color: #60d4c4; }
+  .fn { color: #93c5fd; }
+  .st { color: #86efac; }
+  .cm { color: #4b5563; }
+  .nu { color: var(--gold); }
+</style>
+</head>
+<body>
+
+<div class="progress-bar-wrap"><div class="progress-bar" id="progress"></div></div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="label">Interview Prep</div>
+    <div class="title">LLD Playbook</div>
+  </div>
+  <div class="sidebar-search">
+    <input type="text" placeholder="Search sections..." id="sidebarSearch" />
+  </div>
+  <div class="nav-section-label">Navigation</div>
+  <a class="nav-item" href="#how-to-use"><span class="num">00</span>How to Use</a>
+  <a class="nav-item" href="#requirements"><span class="num">01</span>Requirements</a>
+  <a class="nav-item" href="#usecases"><span class="num">02</span>Use Case Diagram</a>
+  <a class="nav-item" href="#layers"><span class="num">03</span>Class Diagram / Layering</a>
+  <a class="nav-item" href="#entities"><span class="num">04</span>Core Entities</a>
+  <a class="nav-item" href="#inheritance"><span class="num">05</span>Inheritance &amp; Interfaces</a>
+  <a class="nav-item" href="#extensibility"><span class="num">06</span>Extensibility Design</a>
+  <a class="nav-item" href="#service"><span class="num">07</span>Service / Facade</a>
+  <a class="nav-item" href="#datastore"><span class="num">08</span>Datastore / Repository</a>
+  <a class="nav-item" href="#creation"><span class="num">09</span>Object Creation</a>
+  <a class="nav-item" href="#nfr"><span class="num">10</span>Non-Functional</a>
+  <a class="nav-item" href="#exceptions"><span class="num">11</span>Exception Handling</a>
+  <a class="nav-item" href="#concurrency"><span class="num">12</span>Concurrency</a>
+  <a class="nav-item" href="#mistakes"><span class="num">13</span>Mistakes to Avoid</a>
+  <a class="nav-item" href="#problems"><span class="num">14</span>Problem Modeling</a>
+  <a class="nav-item" href="#comms"><span class="num">15</span>Communication</a>
+  <a class="nav-item" href="#checklist"><span class="num">16</span>Final Checklist</a>
+  <a class="nav-item" href="#mental"><span class="num">17</span>Mental Model</a>
+</aside>
+
+<main class="main">
+
+  <!-- PAGE HEADER -->
+  <header class="page-header">
+    <div class="eyebrow">Verbose Playbook v1.0</div>
+    <h1>LLD Interview<br /><span>Template</span></h1>
+    <p class="subtitle">Convert vague problem statements into clean object-oriented designs. Justify trade-offs. Write code that holds up under scrutiny.</p>
+    <div class="header-tags">
+      <span class="tag tag-blue">Object-Oriented Design</span>
+      <span class="tag tag-gold">Design Patterns</span>
+      <span class="tag tag-green">Java Examples</span>
+      <span class="tag tag-purple">Concurrency</span>
+    </div>
+  </header>
+
+  <!-- HOW TO USE -->
+  <div class="how-to-use" id="how-to-use">
+    <div class="section-eyebrow">Section 00</div>
+    <div class="section-title">How to Use This Playbook</div>
+    <p class="body-text">Do <strong>not</strong> start with classes immediately. First understand the problem, clarify the operating mode, identify the core entities, decide responsibilities — then design APIs. Follow this flow:</p>
+    <div class="flow-steps">
+      <div class="flow-step"><div class="step-num">01</div><div class="step-text">Clarify requirements</div></div>
+      <div class="flow-step"><div class="step-num">02</div><div class="step-text">Identify actors and use cases</div></div>
+      <div class="flow-step"><div class="step-num">03</div><div class="step-text">Identify core entities and relationships</div></div>
+      <div class="flow-step"><div class="step-num">04</div><div class="step-text">Decide system boundary: offline / server-side / production service</div></div>
+      <div class="flow-step"><div class="step-num">05</div><div class="step-text">Draw the class diagram</div></div>
+      <div class="flow-step"><div class="step-num">06</div><div class="step-text">Define service / facade APIs</div></div>
+      <div class="flow-step"><div class="step-num">07</div><div class="step-text">Walk through important flows</div></div>
+      <div class="flow-step"><div class="step-num">08</div><div class="step-text">Add extensibility points</div></div>
+      <div class="flow-step"><div class="step-num">09</div><div class="step-text">Handle exceptions, edge cases, concurrency</div></div>
+      <div class="flow-step"><div class="step-num">10</div><div class="step-text">Write code for the most important parts</div></div>
+    </div>
+    <div class="interview-quote">I will first clarify functional requirements and assumptions, then model the core entities, then expose the main operations through a service/facade layer, and finally discuss extensibility, concurrency, and edge cases.</div>
+  </div>
+
+  <!-- SECTION 01: REQUIREMENTS -->
+  <div class="section open" id="requirements">
+    <div class="section-header" onclick="toggle(this)">
+      <div class="section-header-left">
+        <div class="section-icon icon-blue">01</div>
+        <div>
+          <div class="section-header-title">Requirements <span class="badge badge-important">Foundation</span></div>
+          <div class="section-header-sub">System-specific + common non-functional checks</div>
+        </div>
+      </div>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="section-body">
+      <p class="body-text">Most bad designs happen because the candidate starts coding before fixing the scope. Requirements fall into two buckets: <strong>System-Specific</strong> and <strong>Common Miscellaneous</strong>.</p>
+
+      <h3 class="sub-title">1.1 System-Specific Requirements</h3>
+      <p class="body-text">These divide into two categories:</p>
+
+      <div class="two-col">
+        <div class="card">
+          <div class="card-head"><div class="card-dot dot-blue"></div>A. Physical / Structural</div>
+          <ul class="card-items">
+            <li>What objects exist in the real world?</li>
+            <li>What contains what?</li>
+            <li>One-to-one, one-to-many, many-to-many?</li>
+            <li>Can a child object exist independently?</li>
+            <li>Will it be queried independently?</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-dot dot-gold"></div>B. Action-Based</div>
+          <ul class="card-items">
+            <li>Who performs this action?</li>
+            <li>What input is required?</li>
+            <li>What output is returned?</li>
+            <li>Which entities are read / modified?</li>
+            <li>What can go wrong?</li>
+          </ul>
+        </div>
+      </div>
+
+      <h4 class="mini-title">Parking Lot — Actions by Actor</h4>
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-head"><div class="card-dot dot-blue"></div>User</div>
+          <ul class="card-items">
+            <li>Enter parking lot</li>
+            <li>Get ticket</li>
+            <li>Park vehicle</li>
+            <li>Pay fee</li>
+            <li>Exit parking lot</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-dot dot-gold"></div>Admin</div>
+          <ul class="card-items">
+            <li>Add floor</li>
+            <li>Add spot</li>
+            <li>Configure pricing</li>
+            <li>Mark spot unavailable</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-dot dot-teal"></div>System</div>
+          <ul class="card-items">
+            <li>Assign nearest spot</li>
+            <li>Calculate fee</li>
+            <li>Update spot status</li>
+            <li>Generate ticket</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3 class="sub-title">1.2 Common Miscellaneous Requirements</h3>
+
+      <h4 class="mini-title">1.2.1 Offline vs Online System</h4>
+      <div class="two-col">
+        <div class="comparison-card">
+          <div class="comparison-label">Offline System</div>
+          <ul class="styled-list">
+            <li>Runs locally in one process</li>
+            <li>No API controller needed</li>
+            <li>No external database needed</li>
+            <li><code class="inline">main()</code> acts as UI/client</li>
+            <li>Objects held directly in memory</li>
+          </ul>
+          <div class="callout callout-success" style="margin-top:12px">
+            <div class="callout-icon">eg.</div>
+            <div class="callout-text">TicTacToe CLI, Chess local game, Snake and Ladder</div>
+          </div>
+        </div>
+        <div class="comparison-card">
+          <div class="comparison-label">Online System</div>
+          <ul class="styled-list">
+            <li>Controllers expose APIs</li>
+            <li>Services contain business logic</li>
+            <li>Multiple concurrent users</li>
+            <li>Thread-safety matters</li>
+            <li>IDs required for core entities</li>
+          </ul>
+          <div class="callout callout-success" style="margin-top:12px">
+            <div class="callout-icon">eg.</div>
+            <div class="callout-text">Parking Lot API, BookMyShow, Uber, Food Delivery</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="layer-diagram">
+        <div class="layer-item layer-1">Client / UI</div>
+        <div class="layer-item layer-2">Controller / API Layer</div>
+        <div class="layer-item layer-3">Service / Facade Layer</div>
+        <div class="layer-item layer-4">Repository / Datastore Layer</div>
+        <div class="layer-item layer-5">Database / In-memory Store</div>
+      </div>
+
+      <h4 class="mini-title">Offline vs In-Memory vs Persistent</h4>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>System Type</th><th>Storage Type</th><th>Example</th></tr></thead>
+          <tbody>
+            <tr><td>Offline + In-memory</td><td>Local game in one process</td><td>TicTacToe CLI</td></tr>
+            <tr><td>Offline + Persistent</td><td>Local app with saved state</td><td>Desktop expense tracker</td></tr>
+            <tr><td>Online + In-memory</td><td>API simulation for interview</td><td>Parking lot with maps</td></tr>
+            <tr><td>Online + Persistent</td><td>Production service</td><td>BookMyShow with DB</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h4 class="mini-title">1.2.2 Concurrency &amp; Thread Safety</h4>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-head"><div class="card-dot dot-red"></div>Matters When</div>
+          <ul class="card-items">
+            <li>Multiple users book same seat</li>
+            <li>Multiple drivers accept same ride</li>
+            <li>Multiple vehicles compete for same spot</li>
+            <li>Multiple payments update same booking</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-dot dot-green"></div>May Not Matter When</div>
+          <ul class="card-items">
+            <li>Clearly offline and single-player</li>
+            <li>Game loop processes one move at a time</li>
+            <li>Interviewer says: assume one request at a time</li>
+          </ul>
+        </div>
+      </div>
+
+      <h4 class="mini-title">1.2.3 History, Undo, and Replay</h4>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-head"><div class="card-dot dot-purple"></div>Command Pattern</div>
+          <ul class="card-items">
+            <li>Each action is an object with execute/undo</li>
+            <li>Useful for undo/redo and audit logs</li>
+            <li>Memory efficient if undo logic is simple</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-dot dot-teal"></div>Memento Pattern</div>
+          <ul class="card-items">
+            <li>Saves snapshots of object state</li>
+            <li>Useful for board games, editor state</li>
+            <li>Simpler if state is small</li>
+          </ul>
+        </div>
+      </div>
+
+      <h4 class="mini-title">1.2.5 Exception Handling</h4>
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-head"><div class="card-dot dot-red"></div>IllegalStateException</div>
+          <ul class="card-items">
+            <li>Move after game is over</li>
+            <li>Exit without payment</li>
+            <li>Dispense before payment</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-dot dot-gold"></div>IllegalArgumentException</div>
+          <ul class="card-items">
+            <li>Negative amount</li>
+            <li>Invalid board position</li>
+            <li>Invalid vehicle number</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-dot dot-blue"></div>NotFoundException</div>
+          <ul class="card-items">
+            <li>User not found</li>
+            <li>Ticket not found</li>
+            <li>Booking not found</li>
+          </ul>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-dot dot-purple"></div>Custom Domain</div>
+          <ul class="card-items">
+            <li>ParkingFullException</li>
+            <li>SeatAlreadyBookedException</li>
+            <li>InsufficientBalanceException</li>
+          </ul>
+        </div>
+      </div>
+
+      <h4 class="mini-title">1.2.6 Notifications / Observer Pattern</h4>
+      <div class="callout callout-info">
+        <div class="callout-icon">i</div>
+        <div class="callout-text">Use Observer when multiple subscribers need to react to the same event. <strong>Do not overuse</strong> for simple one-to-one responses — if a service method directly returns a result, no observer is needed.</div>
+      </div>
+      <div class="interview-quote">If the event has multiple independent subscribers, I will use Observer/EventBus. If it is only a direct response to the caller, I will simply return the result.</div>
+    </div>
+  </div>
+
+  <!-- SECTION 03: LAYERING -->
+  <div class="section" id="layers">
+    <div class="section-header" onclick="toggle(this)">
+      <div class="section-header-left">
+        <div class="section-icon icon-gold">03</div>
+        <div>
+          <div class="section-header-title">Class Diagram / Layering</div>
+          <div class="section-header-sub">Layer responsibilities and production vs interview design</div>
+        </div>
+      </div>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="section-body">
+      <h3 class="sub-title">Layer Responsibilities</h3>
+      <div class="divider"></div>
+      <div class="rule-row"><div class="rule-key">Controller</div><div class="rule-val">Receive requests, validate format, convert DTOs, call service, map to HTTP responses. No business logic.</div></div>
+      <div class="rule-row"><div class="rule-key">Service / Facade</div><div class="rule-val">Expose use-case methods, orchestrate entities, apply business rules, handle consistency, call strategies/factories.</div></div>
+      <div class="rule-row"><div class="rule-key">Core Entities</div><div class="rule-val">Hold domain state, encapsulate simple operations on own fields, maintain entity invariants.</div></div>
+      <div class="rule-row"><div class="rule-key">Strategies</div><div class="rule-val">Encapsulate algorithms that can vary. Avoid large if-else blocks. Make behavior extensible.</div></div>
+      <div class="rule-row"><div class="rule-key">Factories</div><div class="rule-val">Encapsulate complex object creation. Create subtypes based on a type flag.</div></div>
+      <div class="rule-row"><div class="rule-key">Datastore / Repo</div><div class="rule-val">Store and retrieve entities. Hide in-memory vs DB details. Provide lookup methods.</div></div>
+      <div class="rule-row"><div class="rule-key">Main / Driver</div><div class="rule-val">Instantiate everything, create sample objects, simulate API calls or user input.</div></div>
+
+      <h3 class="sub-title" style="margin-top:28px">Main / Driver Example</h3>
+      <div class="code-block">
+        <div class="code-header"><div class="code-lang">Java</div><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+        <pre><span class="kw">public class</span> <span class="cl">Main</span> {
+    <span class="kw">public static void</span> <span class="fn">main</span>(<span class="cl">String</span>[] args) {
+        <span class="cl">DataStore</span> dataStore = <span class="kw">new</span> <span class="cl">InMemoryDataStore</span>();
+        <span class="cl">SpotAssignmentStrategy</span> assignmentStrategy = <span class="kw">new</span> <span class="cl">NearestSpotStrategy</span>();
+        <span class="cl">FeeCalculationStrategy</span> feeStrategy = <span class="kw">new</span> <span class="cl">HourlyFeeStrategy</span>();
+
+        <span class="cl">ParkingLotService</span> service = <span class="kw">new</span> <span class="cl">ParkingLotService</span>(
+            dataStore, assignmentStrategy, feeStrategy
+        );
+
+        <span class="cl">Vehicle</span> vehicle = <span class="cl">VehicleFactory</span>.<span class="fn">createVehicle</span>(<span class="cl">VehicleType</span>.CAR, <span class="st">"V1"</span>, <span class="st">"AP01AB1234"</span>);
+        service.<span class="fn">parkVehicle</span>(vehicle);
+    }
+}</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 04: ENTITIES -->
+  <div class="section" id="entities">
+    <div class="section-header" onclick="toggle(this)">
+      <div class="section-header-left">
+        <div class="section-icon icon-green">04</div>
+        <div>
+          <div class="section-header-title">Designing Core Entities <span class="badge badge-important">Critical</span></div>
+          <div class="section-header-sub">Domain modeling, fields, methods, IDs, and references</div>
+        </div>
+      </div>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="section-body">
+      <h3 class="sub-title">Entity Categories</h3>
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-head"><div class="card-dot dot-blue"></div>Infrastructure</div>
+          <ul class="card-items"><li>ParkingLot, Floor, Spot</li><li>Theatre, Screen, Seat</li><li>Board, Cell</li><li>Vending Machine, Slot</li></ul>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-dot dot-gold"></div>User Entities</div>
+          <ul class="card-items"><li>User, Admin, Player</li><li>Driver, Rider</li><li>Optional in simple offline problems</li></ul>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-dot dot-purple"></div>Transaction / Connector</div>
+          <ul class="card-items"><li>Ticket, Booking, Move</li><li>RideRequest, Payment</li><li>Often the most important — represent state transitions</li></ul>
+        </div>
+      </div>
+
+      <h3 class="sub-title">Entity Identification Checklist</h3>
+      <p class="body-text">For every candidate entity, ask:</p>
+      <div class="card-grid">
+        <div class="card"><div class="card-head"><div class="card-dot dot-green"></div>Has identity?</div></div>
+        <div class="card"><div class="card-head"><div class="card-dot dot-green"></div>Has state?</div></div>
+        <div class="card"><div class="card-head"><div class="card-dot dot-green"></div>Has behavior?</div></div>
+        <div class="card"><div class="card-head"><div class="card-dot dot-green"></div>Queried independently?</div></div>
+        <div class="card"><div class="card-head"><div class="card-dot dot-green"></div>Stored separately?</div></div>
+        <div class="card"><div class="card-head"><div class="card-dot dot-green"></div>Has a lifecycle / status?</div></div>
+        <div class="card"><div class="card-head"><div class="card-dot dot-green"></div>Participates in relationships?</div></div>
+        <div class="card"><div class="card-head"><div class="card-dot dot-green"></div>Needs history?</div></div>
+      </div>
+
+      <h3 class="sub-title">Methods: Entity vs Service</h3>
+      <div class="two-col">
+        <div class="comparison-card good">
+          <div class="comparison-label">Put in Entity</div>
+          <ul class="styled-list">
+            <li>Acts on its own fields</li>
+            <li>Protects invariants</li>
+            <li>Not a multi-entity use case</li>
+          </ul>
+          <div class="code-block" style="margin-top:12px">
+            <div class="code-header"><div class="code-lang">Java</div></div>
+            <pre><span class="fn">spot</span>.<span class="fn">isAvailable</span>();
+<span class="fn">spot</span>.<span class="fn">occupy</span>(vehicleId);
+<span class="fn">spot</span>.<span class="fn">release</span>();</pre>
+          </div>
+        </div>
+        <div class="comparison-card bad">
+          <div class="comparison-label">Put in Service</div>
+          <ul class="styled-list">
+            <li>Coordinates multiple entities</li>
+            <li>Calls datastore / repository</li>
+            <li>Represents a use case</li>
+            <li>Depends on strategies</li>
+          </ul>
+          <div class="code-block" style="margin-top:12px">
+            <div class="code-header"><div class="code-lang">Java</div></div>
+            <pre><span class="fn">service</span>.<span class="fn">parkVehicle</span>(vehicle);
+<span class="fn">service</span>.<span class="fn">exitVehicle</span>(ticketId);</pre>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="sub-title">Prefer Behavior Methods over Setters</h3>
+      <div class="two-col">
+        <div class="comparison-card bad">
+          <div class="comparison-label">Avoid This</div>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">Java</div></div>
+            <pre>spot.<span class="fn">setAvailable</span>(<span class="kw">false</span>);
+booking.<span class="fn">setStatus</span>(CONFIRMED);</pre>
+          </div>
+        </div>
+        <div class="comparison-card good">
+          <div class="comparison-label">Prefer This</div>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">Java</div></div>
+            <pre>spot.<span class="fn">occupy</span>(vehicleId);
+booking.<span class="fn">confirm</span>();</pre>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="sub-title">Object Reference vs ID Reference</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Use Object Ref When</th><th>Use ID When</th></tr></thead>
+          <tbody>
+            <tr><td>Strong composition</td><td>Stored independently</td></tr>
+            <tr><td>Child does not exist independently</td><td>Can be queried independently</td></tr>
+            <tr><td>Not queried independently</td><td>One-to-many or many-to-many</td></tr>
+            <tr><td>Offline / in-memory system</td><td>DB-friendly design needed</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="interview-quote">For a pure in-memory version I can keep object references, but for DB-friendly design I will store IDs between aggregate roots.</div>
+    </div>
+  </div>
+
+  <!-- SECTION 05: INHERITANCE -->
+  <div class="section" id="inheritance">
+    <div class="section-header" onclick="toggle(this)">
+      <div class="section-header-left">
+        <div class="section-icon icon-purple">05</div>
+        <div>
+          <div class="section-header-title">Inheritance, Interfaces &amp; Abstract Classes</div>
+          <div class="section-header-sub">When to use what</div>
+        </div>
+      </div>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="section-body">
+      <div class="callout callout-info">
+        <div class="callout-icon">R</div>
+        <div class="callout-text"><strong>Simple Rule:</strong> Core entity with common state → abstract class. Pure behavior variation → interface. Fixed values with no behavior → enum.</div>
+      </div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-head"><div class="card-dot dot-blue"></div>Abstract Class</div>
+          <ul class="card-items">
+            <li>Subclasses share common state</li>
+            <li>Subclasses share common helper methods</li>
+            <li>Clear is-a relationship</li>
+            <li>Reduce duplicated fields/getters</li>
+          </ul>
+          <div class="code-block" style="margin-top:12px">
+            <div class="code-header"><div class="code-lang">Java</div></div>
+            <pre><span class="kw">abstract class</span> <span class="cl">Vehicle</span> {
+    <span class="kw">protected</span> <span class="cl">String</span> id;
+    <span class="kw">protected</span> <span class="cl">VehicleType</span> type;
+    <span class="kw">public abstract</span> <span class="cl">VehicleType</span> <span class="fn">getType</span>();
+}
+<span class="kw">class</span> <span class="cl">Car</span> <span class="kw">extends</span> <span class="cl">Vehicle</span> { ... }</pre>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-dot dot-purple"></div>Interface</div>
+          <ul class="card-items">
+            <li>Represent behavior / capability</li>
+            <li>No shared state</li>
+            <li>Multiple inheritance of type</li>
+            <li>Strategy or policy</li>
+          </ul>
+          <div class="code-block" style="margin-top:12px">
+            <div class="code-header"><div class="code-lang">Java</div></div>
+            <pre><span class="kw">interface</span> <span class="cl">FeeCalculationStrategy</span> {
+    <span class="cl">Money</span> <span class="fn">calculateFee</span>(<span class="cl">Ticket</span> ticket);
+}
+<span class="kw">interface</span> <span class="cl">SpotAssignmentStrategy</span> {
+    <span class="cl">ParkingSpot</span> <span class="fn">findSpot</span>(...);
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="sub-title">Common Mapping</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Entity</th><th>Use</th><th>Reason</th></tr></thead>
+          <tbody>
+            <tr><td>Vehicle, Piece, ParkingSpot</td><td>Abstract Class</td><td>Common state (id, color, type)</td></tr>
+            <tr><td>FeeStrategy, PaymentStrategy</td><td>Interface</td><td>Pure behavior variation</td></tr>
+            <tr><td>VehicleType, BookingStatus</td><td>Enum</td><td>Fixed values, no behavior</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 07: SERVICE FACADE -->
+  <div class="section" id="service">
+    <div class="section-header" onclick="toggle(this)">
+      <div class="section-header-left">
+        <div class="section-icon icon-teal">07</div>
+        <div>
+          <div class="section-header-title">Service / Facade Design</div>
+          <div class="section-header-sub">Use-case methods, field structure, method template</div>
+        </div>
+      </div>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="section-body">
+      <h3 class="sub-title">Typical Service Fields</h3>
+      <div class="code-block">
+        <div class="code-header"><div class="code-lang">Java</div><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+        <pre><span class="kw">class</span> <span class="cl">ParkingLotService</span> {
+    <span class="kw">private final</span> <span class="cl">DataStore</span> dataStore;
+    <span class="kw">private final</span> <span class="cl">SpotAssignmentStrategy</span> spotAssignmentStrategy;
+    <span class="kw">private final</span> <span class="cl">FeeCalculationStrategy</span> feeCalculationStrategy;
+    <span class="kw">private final</span> <span class="cl">PaymentService</span> paymentService;
+    <span class="kw">private final</span> <span class="cl">EventPublisher</span> eventPublisher;
+}</pre>
+      </div>
+
+      <h3 class="sub-title">Service Method Template</h3>
+      <div class="flow-steps">
+        <div class="flow-step"><div class="step-num">01</div><div class="step-text">Fetch all required entities</div></div>
+        <div class="flow-step"><div class="step-num">02</div><div class="step-text">Validate inputs and entity existence</div></div>
+        <div class="flow-step"><div class="step-num">03</div><div class="step-text">Validate current state</div></div>
+        <div class="flow-step"><div class="step-num">04</div><div class="step-text">Execute business logic</div></div>
+        <div class="flow-step"><div class="step-num">05</div><div class="step-text">Update all affected entities</div></div>
+        <div class="flow-step"><div class="step-num">06</div><div class="step-text">Persist changes</div></div>
+        <div class="flow-step"><div class="step-num">07</div><div class="step-text">Publish events if required</div></div>
+        <div class="flow-step"><div class="step-num">08</div><div class="step-text">Return response</div></div>
+      </div>
+
+      <h3 class="sub-title">parkVehicle() Example</h3>
+      <div class="code-block">
+        <div class="code-header"><div class="code-lang">Java</div><button class="code-copy" onclick="copyCode(this)">Copy</button></div>
+        <pre><span class="kw">public</span> <span class="cl">Ticket</span> <span class="fn">parkVehicle</span>(<span class="cl">String</span> lotId, <span class="cl">Vehicle</span> vehicle) {
+    <span class="cl">ParkingLot</span> lot = dataStore.<span class="fn">getParkingLot</span>(lotId)
+        .<span class="fn">orElseThrow</span>(() -> <span class="kw">new</span> <span class="cl">NotFoundException</span>(<span class="st">"Lot not found"</span>));
+
+    <span class="cl">ParkingSpot</span> spot = spotAssignmentStrategy.<span class="fn">findSpot</span>(lot, vehicle)
+        .<span class="fn">orElseThrow</span>(() -> <span class="kw">new</span> <span class="cl">ParkingFullException</span>(<span class="st">"No spot available"</span>));
+
+    spot.<span class="fn">occupy</span>(vehicle.<span class="fn">getId</span>());
+
+    <span class="cl">Ticket</span> ticket = <span class="kw">new</span> <span class="cl">Ticket</span>(
+        idGenerator.<span class="fn">generate</span>(), vehicle.<span class="fn">getId</span>(),
+        spot.<span class="fn">getId</span>(), <span class="cl">LocalDateTime</span>.<span class="fn">now</span>()
+    );
+
+    dataStore.<span class="fn">saveVehicle</span>(vehicle);
+    dataStore.<span class="fn">saveSpot</span>(spot);
+    dataStore.<span class="fn">saveTicket</span>(ticket);
+
+    <span class="kw">return</span> ticket;
+}</pre>
+      </div>
+      <div class="interview-quote">The service will throw domain exceptions, and the controller/main layer will catch them and convert them into user-friendly responses.</div>
+    </div>
+  </div>
+
+  <!-- SECTION 12: CONCURRENCY -->
+  <div class="section" id="concurrency">
+    <div class="section-header" onclick="toggle(this)">
+      <div class="section-header-left">
+        <div class="section-icon icon-red">12</div>
+        <div>
+          <div class="section-header-title">Concurrency Checks <span class="badge badge-important">Senior Signal</span></div>
+          <div class="section-header-sub">Race conditions, locks, atomic operations</div>
+        </div>
+      </div>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="section-body">
+      <div class="callout callout-warn">
+        <div class="callout-icon">!</div>
+        <div class="callout-text">Concurrency is one of the strongest signals of senior-level thinking in LLD. Race conditions usually happen in <strong>check-and-update</strong> operations.</div>
+      </div>
+      <h3 class="sub-title">Common Race Condition Scenarios</h3>
+      <div class="card-grid">
+        <div class="card"><div class="card-head"><div class="card-dot dot-red"></div>BookMyShow</div><ul class="card-items"><li>Two users book the same seat simultaneously</li></ul></div>
+        <div class="card"><div class="card-head"><div class="card-dot dot-red"></div>Uber</div><ul class="card-items"><li>Two drivers accept the same ride request</li></ul></div>
+        <div class="card"><div class="card-head"><div class="card-dot dot-red"></div>Parking Lot</div><ul class="card-items"><li>Two vehicles assigned the same spot</li></ul></div>
+        <div class="card"><div class="card-head"><div class="card-dot dot-red"></div>Vending Machine</div><ul class="card-items"><li>Two users buy the last unit of an item</li></ul></div>
+      </div>
+
+      <h3 class="sub-title">Identification Template</h3>
+      <div class="code-block">
+        <div class="code-header"><div class="code-lang">text</div></div>
+        <pre>API: acceptRide(driverId, rideId)
+Modified entities:
+- RideRequest: REQUESTED → ACCEPTED
+- Driver: AVAILABLE → BUSY
+
+Race risk:
+- Two drivers may accept same ride
+- Same driver may accept two rides
+
+Protection:
+- Lock ride request and driver
+- Re-check status inside lock</pre>
+      </div>
+
+      <h3 class="sub-title">Double-Checked Locking</h3>
+      <div class="two-col">
+        <div class="comparison-card bad">
+          <div class="comparison-label">Unsafe</div>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">Java</div></div>
+            <pre><span class="kw">if</span> (seat.<span class="fn">isAvailable</span>()) {
+  <span class="kw">synchronized</span> (seat) {
+    seat.<span class="fn">book</span>(userId); <span class="cm">// stale!</span>
+  }
+}</pre>
+          </div>
+        </div>
+        <div class="comparison-card good">
+          <div class="comparison-label">Safe</div>
+          <div class="code-block">
+            <div class="code-header"><div class="code-lang">Java</div></div>
+            <pre><span class="kw">if</span> (seat.<span class="fn">isAvailable</span>()) {
+  <span class="kw">synchronized</span> (seat) {
+    <span class="kw">if</span> (!seat.<span class="fn">isAvailable</span>())
+      <span class="kw">throw new</span> <span class="cl">SeatAlreadyBookedException</span>();
+    seat.<span class="fn">book</span>(userId);
+  }
+}</pre>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="sub-title">ConcurrentHashMap vs Manual Locking</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Approach</th><th>Good For</th><th>Limitation</th></tr></thead>
+          <tbody>
+            <tr><td>ConcurrentHashMap</td><td>Independent key-based operations, high read/write concurrency</td><td>Does not make multi-step business logic safe</td></tr>
+            <tr><td>Manual Locking</td><td>Multi-step operations, updating multiple objects together</td><td>Lower throughput, must acquire locks in consistent order</td></tr>
+            <tr><td>synchronized method</td><td>Simple interview answer, prevents races</td><td>Blocks all unrelated operations</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="interview-quote">The risky part is the check-and-update section. Two requests may pass the check using stale state. I will protect this critical section by locking the affected entity or using an atomic update.</div>
+    </div>
+  </div>
+
+  <!-- SECTION 13: MISTAKES -->
+  <div class="section" id="mistakes">
+    <div class="section-header" onclick="toggle(this)">
+      <div class="section-header-left">
+        <div class="section-icon icon-red">13</div>
+        <div>
+          <div class="section-header-title">Mistakes to Avoid</div>
+          <div class="section-header-sub">Common anti-patterns in LLD interviews</div>
+        </div>
+      </div>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="section-body">
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-head"><div class="card-dot dot-red"></div>Forgetting Related Entities</div>
+          <ul class="card-items"><li>Always loop through all affected entities per write API</li><li>E.g., parking = spot + ticket + vehicle + availability count</li></ul>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-dot dot-red"></div>Too Many Setters</div>
+          <ul class="card-items"><li>Setters expose raw state, bypass invariants</li><li>Prefer booking.confirm() over booking.setStatus(CONFIRMED)</li></ul>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-dot dot-red"></div>Logic in Controller</div>
+          <ul class="card-items"><li>Controllers should only delegate to services</li><li>No pricing, locking, or booking logic in @PostMapping methods</li></ul>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-dot dot-red"></div>Overusing Patterns</div>
+          <ul class="card-items"><li>Factory for every class</li><li>Strategy for never-varying behavior</li><li>Singleton for every service</li><li>Observer for simple responses</li></ul>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-dot dot-red"></div>Ignoring Partial Failure</div>
+          <ul class="card-items"><li>Update multiple entities atomically</li><li>Validate first, then update in a small critical section</li></ul>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-dot dot-red"></div>All Logic in Service</div>
+          <ul class="card-items"><li>Service orchestrates; entities protect their own invariants</li><li>Anemic entities with only setters = bad design</li></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 10: NFR PATTERNS -->
+  <div class="section" id="nfr">
+    <div class="section-header" onclick="toggle(this)">
+      <div class="section-header-left">
+        <div class="section-icon icon-gold">10</div>
+        <div>
+          <div class="section-header-title">Pattern Reference</div>
+          <div class="section-header-sub">Creation patterns summary and when to apply each</div>
+        </div>
+      </div>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="section-body">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Need</th><th>Pattern</th></tr></thead>
+          <tbody>
+            <tr><td>Create subtype based on type</td><td>Factory</td></tr>
+            <tr><td>Many optional constructor parameters</td><td>Builder</td></tr>
+            <tr><td>One shared configuration-like instance</td><td>Singleton</td></tr>
+            <tr><td>Vary algorithm independently</td><td>Strategy</td></tr>
+            <tr><td>Notify multiple subscribers</td><td>Observer</td></tr>
+            <tr><td>Manage state-specific behavior</td><td>State</td></tr>
+            <tr><td>Undo / replay operations</td><td>Command / Memento</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout callout-warn">
+        <div class="callout-icon">!</div>
+        <div class="callout-text">Do not force a pattern. First identify the <strong>problem</strong>, then apply the pattern that solves it. Patterns introduced without justification hurt more than help.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 14: PROBLEMS -->
+  <div class="section" id="problems">
+    <div class="section-header" onclick="toggle(this)">
+      <div class="section-header-left">
+        <div class="section-icon icon-teal">14</div>
+        <div>
+          <div class="section-header-title">Problem-Specific Modeling Notes</div>
+          <div class="section-header-sub">Parking Lot, Chess, TicTacToe, BookMyShow, Uber</div>
+        </div>
+      </div>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="section-body">
+      <h3 class="sub-title">14.1 Parking Lot</h3>
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-head"><div class="card-dot dot-blue"></div>Key Entities</div>
+          <ul class="card-items"><li>ParkingLot, ParkingFloor</li><li>ParkingSpot, Vehicle</li><li>Ticket, Payment, Receipt</li><li>Gate, User/Admin</li></ul>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-dot dot-gold"></div>Key Strategies</div>
+          <ul class="card-items"><li>SpotAssignmentStrategy</li><li>FeeCalculationStrategy</li><li>PaymentStrategy</li></ul>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-dot dot-red"></div>Concurrency Risk</div>
+          <ul class="card-items"><li>Two vehicles, same spot</li><li>Protect: spot assignment + occupation</li></ul>
+        </div>
+      </div>
+      <p class="body-text" style="margin-top:12px"><strong>Relationships:</strong> ParkingLot → many Floor → many Spot. Ticket → Vehicle. Ticket → ParkingSpot.</p>
+
+      <h3 class="sub-title">14.2 Chess</h3>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-head"><div class="card-dot dot-purple"></div>Option A — AI as Player</div>
+          <ul class="card-items"><li>abstract Player → HumanPlayer, AIPlayer</li><li>Game rules are the same</li><li>Cleaner for most interviews</li></ul>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-dot dot-gold"></div>Option B — AI Game Type</div>
+          <ul class="card-items"><li>abstract Game → HumanVsHuman, HumanVsAI</li><li>Better if game flow differs significantly</li></ul>
+        </div>
+      </div>
+
+      <h3 class="sub-title">14.4 BookMyShow</h3>
+      <div class="callout callout-info">
+        <div class="callout-icon">i</div>
+        <div class="callout-text">Do NOT store booking status on physical <code class="inline">Seat</code>. Use <code class="inline">ShowSeat</code> — it represents a seat's availability for a specific show. The same physical seat exists across many shows.</div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Entity</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td>Seat</td><td>Physical seat in a screen</td></tr>
+            <tr><td>ShowSeat</td><td>Availability of that seat for a specific show</td></tr>
+            <tr><td>Booking</td><td>User's confirmed reservation of ShowSeats</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 15: COMMUNICATION -->
+  <div class="section" id="comms">
+    <div class="section-header" onclick="toggle(this)">
+      <div class="section-header-left">
+        <div class="section-icon icon-purple">15</div>
+        <div>
+          <div class="section-header-title">Interview Communication Templates</div>
+          <div class="section-header-sub">Ready-to-use lines for key moments</div>
+        </div>
+      </div>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="section-body">
+      <div class="interview-quote">I will start by clarifying the requirements. Then I will identify actors and use cases. After that I will design the core entities and expose operations through a service/facade layer. Finally I will discuss extensibility, edge cases, and concurrency.</div>
+      <div class="interview-quote">I will use an in-memory datastore for simplicity, but I will keep it behind an interface so that we can replace it with SQL/NoSQL storage later without changing business logic.</div>
+      <div class="interview-quote">We can introduce a factory here, but since this object has no subtypes and construction is simple, direct construction is cleaner and follows KISS.</div>
+      <div class="interview-quote">This logic is likely to vary independently of the entity, so I will extract it as a strategy. That allows us to add a new algorithm without modifying the service.</div>
+      <div class="interview-quote">Right now simple state checks are enough. If the number of states and transitions grows, I would refactor this into the State Pattern to avoid large conditionals.</div>
+      <div class="interview-quote">The risky part is the check-and-update section. Two requests may pass the check using stale state. I will protect this critical section by locking the affected entity or using an atomic update.</div>
+    </div>
+  </div>
+
+  <!-- SECTION 16: CHECKLIST -->
+  <div class="section" id="checklist">
+    <div class="section-header" onclick="toggle(this)">
+      <div class="section-header-left">
+        <div class="section-icon icon-green">16</div>
+        <div>
+          <div class="section-header-title">Final LLD Checklist <span class="badge badge-new">Interactive</span></div>
+          <div class="section-header-sub">Click items to mark as done</div>
+        </div>
+      </div>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="section-body">
+      <h3 class="sub-title">Requirements</h3>
+      <div class="checklist" id="cl1">
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Clarified offline vs online?</div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Identified actors?</div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Listed core use cases?</div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Asked about concurrency?</div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Asked about history / undo?</div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Asked about notifications?</div>
+      </div>
+      <h3 class="sub-title">Entities</h3>
+      <div class="checklist">
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Identified infrastructure, user, and transaction entities?</div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Defined fields and relationships?</div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Decided object reference vs ID reference?</div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Avoided unnecessary getters / setters?</div>
+      </div>
+      <h3 class="sub-title">Extensibility</h3>
+      <div class="checklist">
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Used abstract class for core entities with shared state?</div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Used interface for strategies?</div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Used enum for fixed simple types?</div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Avoided unnecessary patterns?</div>
+      </div>
+      <h3 class="sub-title">Concurrency</h3>
+      <div class="checklist">
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Identified check-and-update operations?</div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Protected shared mutable state?</div>
+        <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Avoided assuming ConcurrentHashMap solves all races?</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 17: MENTAL MODEL -->
+  <div class="section" id="mental">
+    <div class="section-header" onclick="toggle(this)">
+      <div class="section-header-left">
+        <div class="section-icon icon-blue">17</div>
+        <div>
+          <div class="section-header-title">Quick Mental Model</div>
+          <div class="section-header-sub">The 7-question framework for any LLD problem</div>
+        </div>
+      </div>
+      <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="section-body">
+      <div class="mental-grid">
+        <div class="mental-card"><div class="mental-num">1</div><div><div class="mental-q">What exists?</div><div class="mental-a">Entities</div></div></div>
+        <div class="mental-card"><div class="mental-num">2</div><div><div class="mental-q">Who uses it?</div><div class="mental-a">Actors</div></div></div>
+        <div class="mental-card"><div class="mental-num">3</div><div><div class="mental-q">What can they do?</div><div class="mental-a">Use Cases / APIs</div></div></div>
+        <div class="mental-card"><div class="mental-num">4</div><div><div class="mental-q">What changes together?</div><div class="mental-a">Service Transactions</div></div></div>
+        <div class="mental-card"><div class="mental-num">5</div><div><div class="mental-q">What varies?</div><div class="mental-a">Strategy / Factory / Abstract Class</div></div></div>
+        <div class="mental-card"><div class="mental-num">6</div><div><div class="mental-q">What can go wrong?</div><div class="mental-a">Exceptions / Edge Cases</div></div></div>
+        <div class="mental-card"><div class="mental-num">7</div><div><div class="mental-q">What happens concurrently?</div><div class="mental-a">Locks / Atomic Ops</div></div></div>
+        <div class="mental-card"><div class="mental-num">8</div><div><div class="mental-q">What should be remembered?</div><div class="mental-a">History / Audit / Undo</div></div></div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  // Toggle sections
+  function toggle(header) {
+    const section = header.parentElement;
+    section.classList.toggle('open');
+  }
+
+  // Toggle checklist items
+  function toggleCheck(item) {
+    item.classList.toggle('done');
+  }
+
+  // Copy code
+  function copyCode(btn) {
+    const pre = btn.closest('.code-block').querySelector('pre');
+    navigator.clipboard.writeText(pre.innerText).then(() => {
+      btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = 'Copy'; }, 1800);
+    });
+  }
+
+  // Scroll progress
+  window.addEventListener('scroll', () => {
+    const total = document.body.scrollHeight - window.innerHeight;
+    const pct = (window.scrollY / total) * 100;
+    document.getElementById('progress').style.width = pct + '%';
+  });
+
+  // Active nav item on scroll
+  const navItems = document.querySelectorAll('.nav-item');
+  const sections = document.querySelectorAll('.section, .how-to-use');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        navItems.forEach(n => n.classList.remove('active'));
+        const active = document.querySelector(`.nav-item[href="#${id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { threshold: 0.3 });
+
+  sections.forEach(s => observer.observe(s));
+
+  // Sidebar search
+  document.getElementById('sidebarSearch').addEventListener('input', function () {
+    const q = this.value.toLowerCase();
+    navItems.forEach(item => {
+      item.style.display = item.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,10 +1,10 @@
-# Verbose LLD Interview Template / Playbook
+# Verbose LLD Interview Template / Playbook - Good
 
 This template is meant to be used in an LLD interview where you need to convert a vague system statement into a clean object-oriented design, justify trade-offs, and optionally write code. The goal is not to mechanically force every design pattern, but to show that you can identify requirements, model the domain, separate responsibilities, handle edge cases, and evolve the design when the interviewer adds new constraints.
 
 ---
 
-## 0. How to Use This Template in an Interview
+## 0. How to Use This Template in an Interview - Needs Refinement
 
 In an LLD interview, do not start with classes immediately. First understand the problem, clarify the operating mode, identify the core entities, decide responsibilities, and then design APIs/services. A good flow is:
 
@@ -33,7 +33,7 @@ Requirements are the foundation of LLD. Most bad designs happen because the cand
 
 ## 1.1 System-Specific Requirements
 
-These are requirements that are unique to the problem being asked.
+These are requirements that are unique to the problem being asked. (TODO - these fall into two categories)
 
 ### A. Physical / Structural Requirements
 
@@ -47,19 +47,19 @@ Examples:
 - Each floor has multiple parking spots.
 - Spots can have different sizes: bike, compact, large, EV, handicapped, etc.
 - A vehicle has a type and registration number.
-- A ticket is issued when a vehicle enters.
-- Payment is calculated when the vehicle exits.
+- A ticket is issued when a vehicle enters. - (TODO)
+- Payment is calculated when the vehicle exits. - (TODO)
 
-#### Chess
+#### Chess (TODO - Didnt review)
 
 - A game has one board.
 - A board has 64 cells.
 - Each cell may or may not contain a piece.
 - Pieces have colors and movement rules.
 - A game has two players.
-- The system tracks current turn, game status, and move history.
+- The system tracks current turn, game status, and move history. 
 
-#### Vending Machine
+#### Vending Machine (TODO - Didnt review)
 
 - A vending machine has inventory slots.
 - Each slot contains an item type and quantity.
@@ -67,7 +67,7 @@ Examples:
 - The user selects an item.
 - The machine dispenses the item and returns change.
 
-When clarifying physical structure, ask:
+When clarifying physical structure, ask: (TODO - last 2 points feel too much)
 
 - What are the main objects in the real world?
 - What contains what?
@@ -79,9 +79,11 @@ When clarifying physical structure, ask:
 
 ### B. Action-Based Requirements
 
-These describe what different actors can do.
+These describe what different actors can do. 
+Often these actions are clubbed together and methioned in a single line.
+So first find the actions and they club them into flows.
 
-Examples:
+Examples: (TODO - Didnt review)
 
 #### Parking Lot
 
@@ -161,6 +163,8 @@ An offline system means the program runs locally in one process. Examples:
 - Chess local game.
 - Snake and Ladder.
 - Splitwise local machine coding version.
+- Vending Machine
+- ATM
 
 Characteristics:
 
