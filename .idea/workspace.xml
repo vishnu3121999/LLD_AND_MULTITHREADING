@@ -3,39 +3,15 @@
   <component name="AutoImportSettings">
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
-  <component name="AutomaticModuleUnloader">
-    <loaded-modules>
-      <module name="01_TicTacToe" />
-      <module name="LLD_AND_MULTITHREADING" />
-      <module name="02_Chess" />
-    </loaded-modules>
-  </component>
   <component name="ChangeListManager">
-    <list default="true" id="64a0acb2-1dfb-413c-a6e2-8247ba411467" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_BookMyShow/03_BookMyShow.iml" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/03_BookMyShow/03_BookMyShow.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_BookMyShow/src/A_basic/Main.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_BookMyShow/src/A_basic/model/Booking.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_BookMyShow/src/A_basic/model/Movie.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_BookMyShow/src/A_basic/model/Screen.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_BookMyShow/src/A_basic/model/Seat.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_BookMyShow/src/A_basic/model/Show.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_BookMyShow/src/A_basic/model/ShowSeat.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_BookMyShow/src/A_basic/model/Theatre.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_BookMyShow/src/A_basic/model/User.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_BookMyShow/src/A_basic/model/enums/BookingStatus.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_BookMyShow/src/A_basic/model/enums/SeatType.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_BookMyShow/src/A_basic/service/BookMyShowFacade.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/03_BookMyShow/src/A_basic/service/BookingService.java" beforeDir="false" />
-    </list>
+    <list default="true" id="64a0acb2-1dfb-413c-a6e2-8247ba411467" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="8196" />
+    <option name="cachedIndexableFilesCount" value="33828" />
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -56,6 +32,7 @@
   "keyToString": {
     "Application.B_strategy.Main.executor": "Run",
     "Application.C_command.Main.executor": "Run",
+    "Application.G_Composite.Main.executor": "Run",
     "Application.Main (1).executor": "Run",
     "Application.Main.executor": "Run",
     "Application.Main_Interactive.executor": "Run",
@@ -82,6 +59,9 @@
       <recent name="C:\Users\vishn\OneDrive\Desktop\workspace\InterviewPrep\LLD_AND_MULTITHREADING\docs-site\content\java-modules\01_TicTacToe" />
       <recent name="C:\Users\vishn\OneDrive\Desktop\workspace\InterviewPrep\LLD_AND_MULTITHREADING\docs-site" />
       <recent name="C:\Users\vishn\OneDrive\Desktop\workspace\InterviewPrep\LLD_AND_MULTITHREADING\src" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\vishn\OneDrive\Desktop\workspace\InterviewPrep\LLD_AND_MULTITHREADING\docs-site\content\java-modules\01_TicTacToe" />
     </key>
   </component>
   <component name="RunManager" selected="Application.Main">
