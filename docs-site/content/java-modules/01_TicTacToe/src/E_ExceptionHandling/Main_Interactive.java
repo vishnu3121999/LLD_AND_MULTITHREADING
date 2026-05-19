@@ -1,5 +1,7 @@
 package E_ExceptionHandling;
 
+import E_ExceptionHandling.datastore.IDatastore;
+import E_ExceptionHandling.datastore.InMemoryDatastore;
 import E_ExceptionHandling.model.Player;
 import E_ExceptionHandling.model.board.ClassicBoard;
 import E_ExceptionHandling.model.board.TicTacToeBoard;
@@ -22,7 +24,8 @@ public class Main_Interactive {
 
             TicTacToeBoard board = new ClassicBoard(3);
             TicTacToeGame game = new ClassicGame1v1(board, playerX, playerO, new ClassicWinStrategy());
-            TicTacToeFacade facade = new TicTacToeFacade(game);
+            IDatastore datastore = new InMemoryDatastore(game);
+            TicTacToeFacade facade = new TicTacToeFacade(datastore);
             facade.addObserver(new ConsoleGameObserver("observer-1"));
 
             Scanner scanner = new Scanner(System.in);

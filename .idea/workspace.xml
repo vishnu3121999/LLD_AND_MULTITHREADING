@@ -4,7 +4,30 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="64a0acb2-1dfb-413c-a6e2-8247ba411467" name="Changes" comment="" />
+    <list default="true" id="64a0acb2-1dfb-413c-a6e2-8247ba411467" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/A_basic/datastore/IDatastore.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/A_basic/datastore/IDatastore.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/A_basic/datastore/InMemoryDatastore.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/A_basic/datastore/InMemoryDatastore.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/B_strategy/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/B_strategy/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/B_strategy/Main_Interactive.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/B_strategy/Main_Interactive.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/B_strategy/service/TicTacToeFacade.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/B_strategy/service/TicTacToeFacade.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/C_command/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/C_command/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/C_command/Main_Interactive.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/C_command/Main_Interactive.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/C_command/service/TicTacToeFacade.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/C_command/service/TicTacToeFacade.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/D_Observer/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/D_Observer/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/D_Observer/Main_Interactive.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/D_Observer/Main_Interactive.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/D_Observer/service/TicTacToeFacade.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/D_Observer/service/TicTacToeFacade.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/E_ExceptionHandling/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/E_ExceptionHandling/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/E_ExceptionHandling/Main_Interactive.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/E_ExceptionHandling/Main_Interactive.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/E_ExceptionHandling/service/TicTacToeFacade.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/E_ExceptionHandling/service/TicTacToeFacade.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/F_Concurrency/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/F_Concurrency/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/F_Concurrency/Main_Interactive.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/F_Concurrency/Main_Interactive.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/F_Concurrency/service/TicTacToeFacade.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/F_Concurrency/service/TicTacToeFacade.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/G_Composite/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/G_Composite/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/G_Composite/Main_Interactive.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/G_Composite/Main_Interactive.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/G_Composite/service/TicTacToeFacade.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/G_Composite/service/TicTacToeFacade.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/local-data/browser-state.json" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/local-data/browser-state.json" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />

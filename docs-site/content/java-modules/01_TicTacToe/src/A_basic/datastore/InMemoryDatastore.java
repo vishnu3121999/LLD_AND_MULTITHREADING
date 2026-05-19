@@ -13,4 +13,9 @@ public class InMemoryDatastore implements IDatastore {
     public TicTacToeGame getGame() {
         return game;
     }
+
+    @Override
+    public int x() {
+        return 0;
+    }
 }

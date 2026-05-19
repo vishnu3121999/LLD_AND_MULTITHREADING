@@ -1,5 +1,7 @@
 package C_command;
 
+import C_command.datastore.IDatastore;
+import C_command.datastore.InMemoryDatastore;
 import C_command.model.Player;
 import C_command.model.board.ClassicBoard;
 import C_command.model.board.TicTacToeBoard;
@@ -21,7 +23,8 @@ public class Main_Interactive {
 
         TicTacToeBoard board = new ClassicBoard(3);
         TicTacToeGame game = new ClassicGame1v1(board, playerX, playerO, new ClassicWinStrategy());
-        TicTacToeFacade facade = new TicTacToeFacade(game);
+        IDatastore datastore = new InMemoryDatastore(game);
+        TicTacToeFacade facade = new TicTacToeFacade(datastore);
 
         Scanner scanner = new Scanner(System.in);
 

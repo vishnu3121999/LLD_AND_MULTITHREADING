@@ -1,5 +1,7 @@
 package D_Observer;
 
+import D_Observer.datastore.IDatastore;
+import D_Observer.datastore.InMemoryDatastore;
 import D_Observer.model.Player;
 import D_Observer.model.board.ClassicBoard;
 import D_Observer.model.board.TicTacToeBoard;
@@ -17,7 +19,8 @@ public class Main {
 
         TicTacToeBoard board = new ClassicBoard(3);
         TicTacToeGame game = new ClassicGame1v1(board, playerX, playerO, new ClassicWinStrategy());
-        TicTacToeFacade facade = new TicTacToeFacade(game);
+        IDatastore datastore = new InMemoryDatastore(game);
+        TicTacToeFacade facade = new TicTacToeFacade(datastore);
         facade.addObserver(new ConsoleGameObserver("observer-1"));
 
         facade.startGame();

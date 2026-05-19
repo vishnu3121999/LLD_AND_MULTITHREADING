@@ -1,0 +1,1363 @@
+Here’s the cleaned, nicely formatted version. I also converted the embedded diagram/code image into text.
+
+# LLD Interview Design Template
+
+## 1. Requirements
+
+### System-Specific Requirements
+
+Capture requirements that are unique to the problem.
+
+Examples:
+
+* **Physical structure-based points**
+
+  * Example: Parking Lot → multiple floors → slots with different sizes.
+* **Action-based points**
+
+  * What actions can users, admins, or the system perform?
+  * Example: A user can enter, park, pay, and exit.
+
+---
+
+### Common Miscellaneous Requirements
+
+These are optional, but useful to ask or mention.
+
+#### Offline or Online?
+
+Check with the interviewer.
+
+##### Online
+
+* API-based design.
+
+##### Offline
+
+* Parallelism = 1.
+* Design it like an API-based system only.
+* If asked for an interactive version, run a `while` loop inside `main`.
+* No need to store machine/game data in a datastore.
+* Store it directly in the service facade or main object.
+
+---
+
+#### Extensibility
+
+##### Core Entities
+
+Think about whether the in-memory app can later be moved to persistence.
+
+Example:
+
+```text
+IState
+InMemoryState
+PersistentState
+```
+
+Important note:
+
+* In-memory vs persistent is different from online vs offline.
+* For every core entity, mention possible sibling classes at this step itself.
+
+##### Behaviour
+
+Identify business logic that may need to be extensible.
+
+Use:
+
+```text
+Strategy + Factory
+```
+
+---
+
+#### Store Full History and Support Undo
+
+Use:
+
+```text
+Memento Pattern
+Command Pattern
+```
+
+---
+
+#### Notification Broadcasts
+
+Ask:
+
+```text
+Are notification broadcasts needed?
+```
+
+If yes, use:
+
+```text
+Observer Pattern
+```
+
+---
+
+#### Exception Handling
+
+Common exception categories:
+
+##### IllegalStateException
+
+Used for incorrect order of actions.
+
+Example:
+
+```text
+Withdraw before inserting card
+Cancel ride before booking
+Move before game starts
+```
+
+Ask the interviewer:
+
+```text
+Can we assume the UI hides certain actions based on current state,
+or should the backend explicitly handle invalid actions?
+```
+
+If UI cannot handle it:
+
+1. First, do corner-case handling manually.
+2. Later, replace it with the State design pattern if needed.
+
+##### IllegalArgumentException
+
+Used for invalid input values.
+
+Examples:
+
+```text
+amount <= 0
+invalid regex
+invalid enum value
+```
+
+##### NoSuchElementException
+
+Used when an entity is not found.
+
+Example:
+
+```text
+User not found
+Booking not found
+Slot not found
+```
+
+##### Custom Exceptions
+
+Examples:
+
+```text
+CapacityFullException
+PaymentFailedException
+RideAlreadyAcceptedException
+```
+
+---
+
+#### Edge Cases
+
+Mention mistakes and corner cases explicitly.
+
+---
+
+#### Concurrency and Thread Safety
+
+Ask whether concurrency matters.
+
+If yes, think about:
+
+* Concurrent data structures.
+* Synchronization.
+* Atomic operations.
+* Locking on the correct object.
+* Race conditions between methods.
+
+---
+
+# 2. Use Case Diagram
+
+## Actors
+
+Common actors:
+
+```text
+User
+Admin
+System
+```
+
+## Use Cases
+
+Mention use cases actor-wise.
+
+Example:
+
+```text
+User:
+- Register
+- Login
+- Book
+- Cancel
+- Pay
+
+Admin:
+- Add resource
+- Remove resource
+- Update configuration
+
+System:
+- Send notification
+- Expire booking
+- Auto-assign resource
+```
+
+---
+
+# 3. Class Diagram
+
+## 3.1 Identifying Layers / Structure
+
+Think in terms of:
+
+```text
+Production vs In-memory
+Production vs Current Design
+```
+
+### Layer Split
+
+| Layer         | Responsibility                |
+| ------------- | ----------------------------- |
+| Controller    | Server code / API entry point |
+| Service       | Business logic                |
+| Factories     | Object creation logic         |
+| Strategies    | Extensible behaviour          |
+| Core Entities | Domain models                 |
+| Main          | Client code / UI simulation   |
+| Datastore     | Database abstraction          |
+
+Library code can be imported by both servers and clients.
+
+---
+
+## 3.2 Offline or Online Design
+
+### Online
+
+Use API-based design.
+
+```text
+Controller → Service → Datastore
+```
+
+### Offline
+
+Parallelism is usually 1.
+
+Design it like API-based design only.
+
+If asked for interactive version:
+
+```text
+Run a while loop inside main.
+```
+
+No need for complex maps in datastore for offline games.
+
+You can store objects directly.
+
+---
+
+# 4. Designing Each Layer
+
+## 4.1 Core Entities, Models, and Enums
+
+### How to Identify Core Entities
+
+Core entities usually fall into these categories:
+
+#### 1. Entities that compose the infrastructure
+
+Examples:
+
+```text
+Game
+Board
+ParkingLot
+Floor
+Slot
+```
+
+#### 2. Entities that represent users
+
+Examples:
+
+```text
+User
+Admin
+Driver
+Passenger
+Vehicle
+```
+
+#### 3. Entities that connect users to infrastructure
+
+Examples:
+
+```text
+Ticket
+Booking
+Move
+RideRequest
+Payment
+```
+
+---
+
+### Things to Decide for Each Core Entity
+
+For every entity, identify:
+
+```text
+Fields
+Methods
+Relationships
+Reverse links
+```
+
+Methods inside entities should mostly act on the entity’s own fields.
+
+---
+
+## 4.2 Extensible Class Design
+
+This is mostly optional. Do not overthink unless the problem clearly needs extensibility.
+
+### Fields
+
+#### Same fields across siblings
+
+Move common fields and getters/setters to the parent class.
+
+Example:
+
+```text
+Vehicle
+- id
+- numberPlate
+```
+
+#### Extra fields in siblings
+
+Ask:
+
+```text
+Do we need to expose those fields outside using getters/setters?
+```
+
+If no:
+
+* Nothing complicated is needed.
+* Treat them as internal fields.
+* Initialize them through constructor.
+
+If yes:
+
+* Consider abstraction carefully.
+
+---
+
+### Methods
+
+#### Same methods
+
+Move common methods to parent.
+
+#### Extra methods
+
+If only some siblings have extra methods, you may need:
+
+```text
+Multi-level inheritance
+```
+
+But use it only when necessary.
+
+---
+
+# 5. Services
+
+## Facade Service
+
+The facade exposes methods to the client/API.
+
+### Fields inside Facade
+
+```text
+Datastore datastore;
+OtherService otherService;
+Strategy strategy;
+Factory factory;
+CommandManager commandManager;
+```
+
+### Admin Methods
+
+Example:
+
+```java
+boolean registerUser(User user);
+boolean registerEntity(Entity entity);
+```
+
+### User Methods
+
+Example:
+
+```java
+Booking book(...);
+void cancel(...);
+void pay(...);
+```
+
+### System Methods
+
+Example:
+
+```java
+void expireBooking(...);
+void sendNotification(...);
+void autoAssign(...);
+```
+
+---
+
+# 6. Database / Datastore
+
+Use inheritance or interfaces for different storage types.
+
+Example:
+
+```text
+Datastore
+InMemoryDatastore
+SqlDatastore
+PersistentDatastore
+```
+
+---
+
+## Offline Game Case
+
+If it is an offline game:
+
+* No need to store core entities as maps.
+* Store objects directly.
+* Store history if undo/replay is needed.
+
+---
+
+## In-memory Datastore vs SQL Database Design
+
+Mention that current design uses in-memory datastore, but it can later be replaced with persistent storage.
+
+Example:
+
+```text
+interface Datastore
+class InMemoryDatastore implements Datastore
+class SqlDatastore implements Datastore
+```
+
+---
+
+# 7. Client / Main
+
+The `main` class behaves like UI/client code.
+
+## Responsibilities
+
+* Instantiate datastore.
+* Instantiate services.
+* Instantiate factories and strategies if required.
+* Create objects and pass them to the service layer.
+
+Example:
+
+```java
+User user = new User(id, "vishnu");
+service.registerUser(user);
+```
+
+---
+
+## Object Creation
+
+### Simple Objects
+
+Create directly.
+
+```java
+User user = new User(id, "vishnu");
+```
+
+### Inheritance-Based Objects
+
+Use factory.
+
+```java
+Vehicle vehicle = vehicleFactory.createVehicle(type, id, number);
+```
+
+Create IDs in `main` and pass them to factory.
+
+This helps with logging because simple IDs are easier to read than random IDs.
+
+---
+
+## Offline
+
+Can have both variations:
+
+```text
+API calls inside try-catch
+Interactive while loop
+```
+
+## Online
+
+Simulate API calls.
+
+---
+
+# 8. Extensibility List
+
+Extensibility can be divided into:
+
+```text
+Entities → Abstract Class
+Behaviour → Interface / Strategy
+```
+
+---
+
+## 8.1 Entity Extensibility
+
+Ask:
+
+```text
+Can this entity have multiple siblings?
+Is this entity part of the extensibility list?
+```
+
+### If No
+
+Model it as a simple object.
+
+### If Yes
+
+Possible choices:
+
+---
+
+### Option 1: Multiple Simple Classes
+
+Usually not good.
+
+Reason:
+
+```text
+Cannot enable polymorphism.
+```
+
+---
+
+### Option 2: Inheritance
+
+Good when:
+
+* You want to avoid code duplication.
+* You want polymorphism.
+
+---
+
+## Interface vs Abstract Class
+
+### Abstract Class
+
+Use when:
+
+* State is common.
+* Fields are common.
+* Some common method implementation is required.
+
+For core entities, at least `id` is usually common, so abstract class is often better.
+
+### Interface
+
+Use when:
+
+* No state exists.
+* Only behaviour changes.
+
+Usually best for strategies.
+
+---
+
+## Simple Rule
+
+```text
+Extensible core entity with state → Abstract class
+Behaviour change only → Interface / Strategy
+Single field state and no behaviour → Enum
+```
+
+---
+
+## Abstract Class Usage
+
+```java
+public abstract class Vehicle {
+    protected String id;
+    protected String number;
+
+    protected Vehicle(String id, String number) {
+        this.id = id;
+        this.number = number;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public abstract boolean canParkIn(Slot slot);
+}
+```
+
+### Abstract Class Contains
+
+```text
+protected fields
+protected constructor
+public getters/setters
+public shared methods
+public abstract methods
+```
+
+### Child Class
+
+```java
+public class Car extends Vehicle {
+    public Car(String id, String number) {
+        super(id, number);
+    }
+
+    @Override
+    public boolean canParkIn(Slot slot) {
+        return slot.getSize() == SlotSize.MEDIUM;
+    }
+}
+```
+
+Use `super` only when calling the parent constructor.
+
+Access protected fields directly inside the child.
+
+---
+
+# 9. Behaviour Extensibility
+
+Ask:
+
+```text
+Does any core entity method have behaviour that can vary?
+```
+
+If yes, use Strategy.
+
+---
+
+## Should the Method Be Inside Entity or Service?
+
+### Keep Method Inside Entity When
+
+The method:
+
+* Performs simple operations.
+* Uses only the entity’s own fields.
+* Is not business functionality.
+* Behaviour never changes.
+
+Example:
+
+```text
+distance calculation inside Location class
+```
+
+Reason:
+
+* Better encapsulation.
+* No need to expose fields outside.
+
+---
+
+### Move Method to Service When
+
+The method:
+
+* Involves business logic.
+* Uses multiple entities.
+* May change in future.
+* Needs strategies.
+
+Example:
+
+```text
+price calculation for a ticket
+```
+
+Use:
+
+```text
+FeeCalculator
+PricingStrategy
+```
+
+---
+
+## For Inheritance
+
+If method behaviour varies across siblings, keep it inside the entity itself.
+
+Example:
+
+```text
+canMove() of Chess Piece
+```
+
+Reason:
+
+* Keeping it in service may lead to if-else conditions.
+* If-else violates Open/Closed Principle.
+* Using strategies for every sibling may create too many classes and violate KISS.
+
+---
+
+# 10. Handling NFRs
+
+## 10.1 Creation
+
+Bring in design patterns only when needed.
+
+Common patterns:
+
+```text
+Singleton
+Factory
+Builder
+```
+
+---
+
+## Do Not Create Simple Objects with Factories
+
+For simple objects with no complexity or inheritance, say:
+
+```text
+We can create these objects using a factory,
+but that would be overkill and against the KISS principle.
+```
+
+---
+
+## When to Use Factory
+
+### For Inheritance
+
+Use factory to create child objects based on type.
+
+Example:
+
+```java
+Vehicle vehicle = vehicleFactory.createVehicle(vehicleType);
+```
+
+---
+
+### Inside Service Classes
+
+Use factory for runtime selection based on type.
+
+Example:
+
+```text
+Payment type
+Vehicle type
+Notification type
+```
+
+Without factory, clients may have switch blocks everywhere.
+
+That violates Open/Closed Principle because adding a new type requires updating all switch blocks.
+
+Factory helps with:
+
+```text
+Code duplication reduction
+Open/Closed Principle
+```
+
+---
+
+### Inside Driver / Startup
+
+Use factory only if creation logic is complex.
+
+Example:
+
+```text
+Creating Temporal stub
+Parsing config file
+Creating configured object
+```
+
+Factory helps remove duplication here.
+
+This case is less about Open/Closed and more about clean object creation.
+
+---
+
+## 10.2 Builder
+
+Use Builder for request objects or objects with many optional fields.
+
+Example:
+
+```java
+RideRequest request = RideRequest.builder()
+    .source(source)
+    .destination(destination)
+    .vehicleType(vehicleType)
+    .build();
+```
+
+---
+
+## 10.3 Command / Memento
+
+Use when you need:
+
+```text
+Undo
+Redo
+Replay
+History tracking
+```
+
+---
+
+## 10.4 Observer
+
+Use when you need to broadcast events.
+
+Do not use Observer for simple 1-to-1 communication.
+
+For 1-to-1, the event/data can be passed as a response.
+
+Use Observer for server-to-client or system-wide broadcasts.
+
+Possible subscribers:
+
+```text
+PushNotificationService
+WebSocketService
+MonitoringService
+EmailService
+```
+
+---
+
+# 11. Exception Handling
+
+## Rule
+
+```text
+Throw anywhere, catch only in main/controller.
+```
+
+---
+
+## 11.1 IllegalStateException
+
+### Class State-Based
+
+Throw it in the class where the state lies.
+
+Do not expose state just for throwing exceptions in the facade.
+
+Example:
+
+```text
+If Game state lies in Game class,
+throw invalid move exception from Game.
+```
+
+For VM/ATM, state often lies in the facade itself, so State Pattern works naturally.
+
+---
+
+### Incorrect Order of Facade Calls
+
+Example:
+
+```text
+insertCard()
+enterPin()
+withdraw()
+```
+
+In machines like ATM/Vending Machine, users can click any button anytime.
+
+So you need explicit validations.
+
+Later, this can be optimized using State Pattern.
+
+---
+
+## 11.2 State Pattern
+
+Use State Pattern when many methods depend on current state.
+
+Example:
+
+```text
+ATM
+Vending Machine
+Elevator
+```
+
+Important point:
+
+Some invalid flows can be hidden by UI.
+
+Example:
+
+```text
+In ride booking, the UI will not show Book Ride and Cancel Ride together.
+```
+
+So you may not need to handle every impossible action.
+
+But in physical machines like ATM/VM:
+
+```text
+User can press any button anytime.
+```
+
+So explicit ordering validation is needed.
+
+---
+
+## Question
+
+```text
+Will you use State Pattern for Tic-Tac-Toe?
+```
+
+Think carefully.
+
+Usually, full State Pattern may be overkill for Tic-Tac-Toe unless the interviewer explicitly wants strict state transitions.
+
+---
+
+## 11.3 IllegalArgumentException
+
+Use for invalid method parameters.
+
+Examples:
+
+```text
+amount <= 0
+invalid coordinates
+invalid regex
+invalid enum
+```
+
+---
+
+## 11.4 NoSuchElementException
+
+Use for null checks or missing elements in datastore.
+
+Examples:
+
+```text
+User not found
+Ticket not found
+Ride not found
+```
+
+---
+
+## 11.5 Custom Exceptions
+
+Example:
+
+```text
+CapacityFullException
+RideAlreadyAcceptedException
+PaymentFailedException
+```
+
+---
+
+# 12. Concurrency Checks
+
+## 12.1 Concurrent Data Structures
+
+Use concurrent data structures when multiple threads access and modify shared data.
+
+Example:
+
+```text
+ConcurrentHashMap
+BlockingQueue
+AtomicInteger
+```
+
+---
+
+## Why Use Concurrent Data Structures?
+
+Even if the operation looks simple, internally it may be:
+
+```text
+check + write
+read + update
+```
+
+Example:
+
+```java
+map.put(key, value);
+```
+
+This is not always just one conceptual operation.
+
+---
+
+## Concurrent Data Structures vs Manual Locking
+
+Concurrent data structures are usually more efficient.
+
+Example:
+
+```text
+ConcurrentHashMap locks only buckets/segments,
+while manual locking may lock the whole map.
+```
+
+But:
+
+```text
+Concurrent data structures are more expensive than normal collections.
+Do not overuse them.
+```
+
+---
+
+## 12.2 Synchronization for Facade Methods
+
+Ask:
+
+```text
+Should only write APIs be synchronized?
+```
+
+Usually, write APIs need more care.
+
+---
+
+## Locking at Beginning of Method
+
+This is usually okay.
+
+```java
+synchronized void acceptRide(...) {
+    // check
+    // update
+}
+```
+
+---
+
+## Locking in Middle of Method
+
+If you do checks before locking, then use double-checked locking style.
+
+Reason:
+
+```text
+Another thread may modify the state between your first check and the lock.
+```
+
+---
+
+## Embedded Diagram Converted to Text: Double-Checked Locking
+
+```java
+public final class Singleton {
+
+    private static volatile Singleton instance;
+
+    public static Singleton getInstance() {
+        if (instance == null) {                // First read
+            synchronized (Singleton.class) {
+                if (instance == null) {        // Second read after lock
+                    instance = new Singleton(); // Write
+                }
+            }
+        }
+
+        return instance;
+    }
+}
+```
+
+Important:
+
+```text
+Use volatile for singleton instance.
+```
+
+Why?
+
+```text
+Without volatile, one thread may see a partially initialized object
+or may not see the latest write because of visibility/reordering issues.
+```
+
+---
+
+## 12.3 How to Identify What to Synchronize
+
+For each core entity, identify where it is modified.
+
+For each method:
+
+```text
+Find all variables getting updated.
+Check whether those variables are read/validated before update.
+```
+
+Race condition usually happens when method logic is:
+
+```text
+check state
+then update state
+```
+
+If two threads pass the check at the same time, both may update incorrectly.
+
+---
+
+## 12.4 Race Condition Case 1: Same Method
+
+Example:
+
+```text
+Two drivers accepting the same ride at once.
+```
+
+Flow:
+
+```text
+Thread 1 checks ride is available.
+Thread 2 checks ride is available.
+Thread 1 accepts ride.
+Thread 2 also accepts ride.
+```
+
+Problem:
+
+```text
+Same ride got accepted twice.
+```
+
+So methods that do check-and-update need locking.
+
+---
+
+## 12.5 Race Condition Case 2: Different Methods
+
+Example:
+
+```text
+One thread accepts ride.
+Another thread cancels ride.
+```
+
+Both methods modify the same object.
+
+If both methods do check-and-update, race condition is possible.
+
+Example in Uber:
+
+```text
+Booking is modified in acceptRide()
+Booking is also modified in cancelRide()
+```
+
+So both methods should lock on the same booking object.
+
+---
+
+## Embedded Image Converted to Text: Race Possibilities
+
+```text
+Two races can happen:
+
+1. Two drivers accept the same ride at the same time.
+2. A passenger cancels the same ride while the driver is accepting.
+```
+
+---
+
+## 12.6 Volatile Variables
+
+Ask whether `volatile` is needed.
+
+Use `volatile` when:
+
+```text
+One thread writes a variable.
+Other threads need to immediately see the latest value.
+```
+
+But volatile does not make compound operations atomic.
+
+Example:
+
+```java
+count++;
+```
+
+This is still not atomic even if `count` is volatile.
+
+Use:
+
+```text
+AtomicInteger
+synchronized
+Lock
+```
+
+---
+
+# 13. Mistakes to Avoid
+
+## 13.1 Forgetting to Update Related Entities
+
+For every write API, check whether all required entities are updated.
+
+How to do this:
+
+```text
+Loop through all core entities mentally.
+Check if this API impacts each entity.
+```
+
+Example:
+
+```text
+Booking created
+User booking list updated
+Slot status updated
+Payment status updated
+History updated
+```
+
+---
+
+## 13.2 Exceptions Causing Inconsistent State
+
+If an exception is thrown after some updates, the system may become inconsistent.
+
+Example:
+
+```text
+Slot marked booked
+But ticket creation failed
+```
+
+Now the system is inconsistent.
+
+---
+
+## 13.3 Solution for Entity Not Found / Null Checks
+
+For all entities required by a method:
+
+```text
+Fetch all entities at the beginning.
+Validate all of them first.
+Only then perform updates.
+```
+
+Example:
+
+```java
+User user = datastore.getUser(userId);
+Slot slot = datastore.getSlot(slotId);
+
+if (user == null) throw new NoSuchElementException("User not found");
+if (slot == null) throw new NoSuchElementException("Slot not found");
+
+// perform updates after validation
+```
+
+---
+
+## 13.4 Custom Runtime Exceptions
+
+For custom runtime exceptions, you may need to revert previous steps.
+
+Options:
+
+```text
+Manual rollback
+Transaction
+Compensating action
+```
+
+---
+
+## 13.5 Atomicity Within Methods
+
+Ask:
+
+```text
+How do we achieve atomicity within methods?
+```
+
+Possible answers:
+
+```text
+Synchronize the method
+Lock the entity being modified
+Use database transactions
+Use compare-and-set / atomic variables
+Use rollback on failure
+```
+
+---

@@ -1,6 +1,7 @@
 package B_strategy;
 
-import B_strategy.model.Move;
+import B_strategy.datastore.IDatastore;
+import B_strategy.datastore.InMemoryDatastore;
 import B_strategy.model.Player;
 import B_strategy.model.board.ClassicBoard;
 import B_strategy.model.board.TicTacToeBoard;
@@ -22,7 +23,8 @@ public class Main_Interactive {
 
         TicTacToeBoard board = new ClassicBoard(3);
         TicTacToeGame game = new ClassicGame1v1(board, playerX, playerO, new ClassicWinStrategy());
-        TicTacToeFacade facade = new TicTacToeFacade(game);
+        IDatastore datastore = new InMemoryDatastore(game);
+        TicTacToeFacade facade = new TicTacToeFacade(datastore);
 
         Scanner scanner = new Scanner(System.in);
 
