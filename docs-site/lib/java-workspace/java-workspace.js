@@ -4,15 +4,8 @@ import { cleanJavaSource } from "./java-cleaner";
 
 const javaModulesDir = path.join(process.cwd(), "content", "java-modules");
 const ignoredDirs = new Set(["out", "target", "build", ".git", ".idea", ".vscode"]);
-const cache = {
-  modules: null,
-  pages: new Map(),
-  diffs: new Map()
-};
 
 export async function getJavaModules() {
-  if (cache.modules) return cache.modules;
-
   const entries = await safeReadDir(javaModulesDir);
   const modules = [];
 
@@ -50,8 +43,7 @@ export async function getJavaModules() {
     }
   }
 
-  cache.modules = modules.sort((left, right) => left.name.localeCompare(right.name));
-  return cache.modules;
+  return modules.sort((left, right) => left.name.localeCompare(right.name));
 }
 
 export async function getJavaPage(moduleName, packageName) {
@@ -60,9 +52,6 @@ export async function getJavaPage(moduleName, packageName) {
   if (!safeModule || !safePackage) {
     throw badRequest("module and package query params are required");
   }
-
-  const cacheKey = `${safeModule}::${safePackage}`;
-  if (cache.pages.has(cacheKey)) return cache.pages.get(cacheKey);
 
   const packagePath = resolvePackagePath(safeModule, safePackage);
   if (!await isDirectory(packagePath)) {
@@ -85,7 +74,6 @@ export async function getJavaPage(moduleName, packageName) {
     count: files.length,
     files
   };
-  cache.pages.set(cacheKey, page);
   return page;
 }
 
@@ -96,9 +84,6 @@ export async function getJavaDiff(moduleName, fromPackage, toPackage) {
   if (!safeModule || !safeFrom || !safeTo) {
     throw badRequest("module, from, and to query params are required");
   }
-
-  const cacheKey = `${safeModule}::${safeFrom}::${safeTo}`;
-  if (cache.diffs.has(cacheKey)) return cache.diffs.get(cacheKey);
 
   const fromPath = resolvePackagePath(safeModule, safeFrom);
   const toPath = resolvePackagePath(safeModule, safeTo);
@@ -161,7 +146,6 @@ export async function getJavaDiff(moduleName, fromPackage, toPackage) {
     count: files.length,
     files
   };
-  cache.diffs.set(cacheKey, diff);
   return diff;
 }
 

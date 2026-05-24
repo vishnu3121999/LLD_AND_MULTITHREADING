@@ -60,5 +60,5 @@ function authFailureResponse(request, reason, status) {
 }
 
 export const config = {
-  matcher: ["/problems/:path*", "/workspace/:path*", "/solve/:path*", "/api/java/:path*"]
+  matcher: ["/problems/:path*", "/solve/:path*"]
 };

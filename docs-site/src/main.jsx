@@ -617,7 +617,7 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
       const saved = await fileStorageGetItem(layoutStorageKey(activeLayoutPageId));
       if (cancelled) return;
       if (saved) {
-        setLayouts(parseJsonValue(saved, {}));
+        setLayouts(mergeLayoutsWithFiles(pageData.files, parseJsonValue(saved, {})));
         setLayoutsPageId(activeLayoutPageId);
         setLayoutsSource("saved");
         return;
@@ -1023,6 +1023,13 @@ function buildLayoutsFromPreviousPackage(files, previousLayouts) {
   return Object.fromEntries(files.map((file, index) => {
     const previousLayout = previousLayouts[file.id];
     return [file.id, previousLayout ? { ...previousLayout } : defaultLayout(index)];
+  }));
+}
+
+function mergeLayoutsWithFiles(files, savedLayouts) {
+  return Object.fromEntries(files.map((file, index) => {
+    const savedLayout = savedLayouts[file.id];
+    return [file.id, savedLayout ? { ...savedLayout } : defaultLayout(index)];
   }));
 }
 

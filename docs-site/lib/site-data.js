@@ -1,6 +1,7 @@
 export const navItems = [
   { href: "/", label: "Home" },
   { href: "/lld-template", label: "Template" },
+  { href: "/template-minimal", label: "Minimal" },
   { href: "/problems", label: "Problems" },
   { href: "/patterns", label: "Patterns" },
   { href: "/solve", label: "Practice" },

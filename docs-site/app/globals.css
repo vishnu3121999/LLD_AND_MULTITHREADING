@@ -995,4 +995,101 @@
     -webkit-user-select: none;
     user-select: none;
   }
+
+  .minimal-template-prose {
+    @apply max-w-none text-[15px] leading-8 text-slate-700;
+  }
+
+  .minimal-template-prose > :first-child {
+    @apply mt-0;
+  }
+
+  .minimal-template-prose > :last-child {
+    @apply mb-0;
+  }
+
+  .minimal-template-prose h1,
+  .minimal-template-prose h2,
+  .minimal-template-prose h3,
+  .minimal-template-prose h4,
+  .minimal-template-prose h5 {
+    @apply scroll-mt-24 font-semibold tracking-normal text-slate-950;
+  }
+
+  .minimal-template-prose h1 {
+    @apply mb-4 mt-8 text-3xl;
+  }
+
+  .minimal-template-prose h2 {
+    @apply mb-3 mt-8 border-t border-slate-200 pt-6 text-2xl;
+  }
+
+  .minimal-template-prose h3 {
+    @apply mb-2 mt-7 text-xl text-slate-900;
+  }
+
+  .minimal-template-prose h4,
+  .minimal-template-prose h5 {
+    @apply mb-2 mt-5 text-sm uppercase text-emerald-800;
+  }
+
+  .minimal-template-prose p {
+    @apply my-4;
+  }
+
+  .minimal-template-prose strong {
+    @apply font-semibold text-slate-950;
+  }
+
+  .minimal-template-prose ul,
+  .minimal-template-prose ol {
+    @apply my-4 space-y-2 pl-6;
+  }
+
+  .minimal-template-prose li {
+    @apply pl-1;
+  }
+
+  .minimal-template-prose li::marker {
+    @apply text-emerald-700;
+  }
+
+  .minimal-template-prose hr {
+    @apply my-8 border-slate-200;
+  }
+
+  .minimal-template-prose code {
+    @apply rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[0.9em] text-slate-950;
+  }
+
+  .minimal-template-prose pre {
+    @apply my-5 overflow-auto rounded-md border border-slate-800 bg-slate-950 p-4 text-sm leading-7 text-slate-100 shadow-sm;
+  }
+
+  .minimal-template-prose pre code {
+    @apply bg-transparent p-0 text-slate-100;
+  }
+
+  .minimal-template-prose blockquote {
+    @apply my-5 border-l-4 border-emerald-600 bg-emerald-50 px-4 py-3 text-slate-800;
+  }
+
+  .minimal-template-prose table {
+    @apply my-5 block w-full overflow-x-auto rounded-md border border-slate-200 text-sm;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .minimal-template-prose th,
+  .minimal-template-prose td {
+    @apply border-b border-slate-200 px-3 py-2 text-left align-top;
+  }
+
+  .minimal-template-prose th {
+    @apply bg-slate-950 font-semibold text-white;
+  }
+
+  .minimal-template-prose img {
+    @apply my-5 max-h-[520px] rounded-md border border-slate-200 object-contain;
+  }
 }

@@ -152,7 +152,7 @@ export function AuthPanel() {
       <div className="mb-6">
         <h2 className="text-xl font-semibold tracking-normal text-slate-950">{mode === "signin" ? "Sign in" : "Create account"}</h2>
         <p className="mt-2 text-sm leading-6 text-slate-600">
-          Use the same account to access protected workspace tools and future premium content.
+          Use the same account to access protected tools and future premium content.
         </p>
       </div>
 

@@ -12,13 +12,13 @@ export default function AuthPage() {
         <Badge variant="blue">Supabase auth</Badge>
         <h1 className="mt-4 text-4xl font-semibold tracking-normal text-slate-950">Sign In To Continue</h1>
         <p className="mt-3 max-w-3xl text-lg leading-8 text-slate-600">
-          Workspace tools and Java source APIs are protected by server-verified Supabase sessions.
+          Protected areas are guarded by server-verified Supabase sessions.
         </p>
 
         <div className="mt-8 rounded-lg border border-slate-200 bg-white p-5">
           <h2 className="text-base font-semibold tracking-normal text-slate-950">Protected after sign-in</h2>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {["Java workspace", "Practice solver", "Java source APIs", "Stripe checkout session"].map((item) => (
+            {["Practice solver", "Stripe checkout session"].map((item) => (
               <div key={item} className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">{item}</div>
             ))}
           </div>

@@ -1,5 +1,6 @@
 const LEGACY_PREFIXES = ["lld-docs.", "lld-playbook."];
 let migrationPromise;
+const writeQueues = new Map();
 
 export async function migrateLegacyBrowserStorage() {
   if (typeof window === "undefined") return;
@@ -18,11 +19,29 @@ export async function fileStorageGetItem(key) {
 }
 
 export async function fileStorageSetItem(key, value) {
-  await fetch("/api/local-data", {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ key, value })
-  });
+  const previousWrite = writeQueues.get(key) || Promise.resolve();
+  const nextWrite = previousWrite
+    .catch(() => {})
+    .then(async () => {
+      try {
+        await fetch("/api/local-data", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key, value })
+        });
+      } catch {
+        // Storage is best-effort; keep the UI responsive if the local API is unavailable.
+      }
+    });
+
+  writeQueues.set(key, nextWrite);
+  nextWrite.finally(() => {
+    if (writeQueues.get(key) === nextWrite) {
+      writeQueues.delete(key);
+    }
+  }).catch(() => {});
+
+  await nextWrite;
 }
 
 export async function fileStorageRemoveItem(key) {

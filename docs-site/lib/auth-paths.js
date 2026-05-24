@@ -1,5 +1,5 @@
-export const PROTECTED_PAGE_PATHS = ["/workspace", "/solve"];
-export const PROTECTED_API_PATHS = ["/api/java"];
+export const PROTECTED_PAGE_PATHS = ["/solve"];
+export const PROTECTED_API_PATHS = [];
 
 export function isProtectedPage(pathname) {
   return PROTECTED_PAGE_PATHS.some((path) => pathname === path || pathname.startsWith(`${path}/`));
