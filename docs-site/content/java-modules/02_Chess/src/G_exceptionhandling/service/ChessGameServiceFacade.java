@@ -14,12 +14,10 @@ import java.util.NoSuchElementException;
 
 public class ChessGameServiceFacade {
     private final IDatastore datastore;
-    private final GameCaretaker gameCaretaker;
     private final List<GameObserver> observers;
 
     public ChessGameServiceFacade(IDatastore datastore) {
         this.datastore = datastore;
-        this.gameCaretaker = new GameCaretaker();
         this.observers = new ArrayList<>();
     }
 
@@ -36,6 +34,7 @@ public class ChessGameServiceFacade {
             throw new IllegalStateException("Game already exists: " + gameId);
         }
         datastore.saveGame(gameId, new ClassicGame(gameId, whitePlayer, blackPlayer));
+        datastore.saveGameCaretaker(gameId, new GameCaretaker(gameId));
     }
 
     public void startGame(String gameId) {
@@ -46,11 +45,12 @@ public class ChessGameServiceFacade {
 
     public boolean move(String gameId, Player player, Position from, Position to) {
         ChessGame game = getRequiredGame(gameId);
+        GameCaretaker gameCaretaker = getRequiredGameCaretaker(gameId);
         Move move = new Move(player, from, to);
         GameMemento beforeMove = game.createMemento();
         boolean success = game.move(move);
         if (success) {
-            gameCaretaker.save(gameId, beforeMove);
+            gameCaretaker.save(beforeMove);
             notifyMoveCompleted(gameId, move, game);
         }
         return success;
@@ -58,7 +58,8 @@ public class ChessGameServiceFacade {
 
     public boolean undoLastMove(String gameId) {
         ChessGame game = getRequiredGame(gameId);
-        GameMemento memento = gameCaretaker.undo(gameId);
+        GameCaretaker gameCaretaker = getRequiredGameCaretaker(gameId);
+        GameMemento memento = gameCaretaker.undo();
         if (memento == null) {
             throw new NoSuchElementException("No move history exists for game: " + gameId);
         }
@@ -91,6 +92,14 @@ public class ChessGameServiceFacade {
             throw new NoSuchElementException("Game not found: " + gameId);
         }
         return game;
+    }
+
+    private GameCaretaker getRequiredGameCaretaker(String gameId) {
+        GameCaretaker gameCaretaker = datastore.getGameCaretaker(gameId);
+        if (gameCaretaker == null) {
+            throw new NoSuchElementException("Move history not found for game: " + gameId);
+        }
+        return gameCaretaker;
     }
 }
 

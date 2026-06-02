@@ -8,3 +8,4 @@ public interface IDatastore {
     CommandInvoker getCommandInvoker();
     void save();
 }
+

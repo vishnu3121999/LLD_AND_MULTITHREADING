@@ -14,12 +14,10 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ChessGameServiceFacade {
     private final IDatastore datastore;
-    private final GameCaretaker gameCaretaker;
     private final List<GameObserver> observers;
 
     public ChessGameServiceFacade(IDatastore datastore) {
         this.datastore = datastore;
-        this.gameCaretaker = new GameCaretaker();
         this.observers = new CopyOnWriteArrayList<>();
     }
 
@@ -37,6 +35,7 @@ public class ChessGameServiceFacade {
                 throw new IllegalStateException("Game already exists: " + gameId);
             }
             datastore.saveGame(gameId, new ClassicGame(gameId, whitePlayer, blackPlayer));
+            datastore.saveGameCaretaker(gameId, new GameCaretaker(gameId));
         }
     }
 
@@ -44,35 +43,40 @@ public class ChessGameServiceFacade {
         ChessGame game = getRequiredGame(gameId);
         synchronized (game) {
             game.start();
-            notifyGameStarted(gameId, game);
         }
+        notifyGameStarted(gameId, game);
     }
 
     public boolean move(String gameId, Player player, Position from, Position to) {
         ChessGame game = getRequiredGame(gameId);
+        GameCaretaker gameCaretaker = getRequiredGameCaretaker(gameId);
+        Move move = new Move(player, from, to);
+        boolean success;
         synchronized (game) {
-            Move move = new Move(player, from, to);
             GameMemento beforeMove = game.createMemento();
-            boolean success = game.move(move);
+            success = game.move(move);
             if (success) {
-                gameCaretaker.save(gameId, beforeMove);
-                notifyMoveCompleted(gameId, move, game);
+                gameCaretaker.save(beforeMove);
             }
-            return success;
         }
+        if (success) {
+            notifyMoveCompleted(gameId, move, game);
+        }
+        return success;
     }
 
     public boolean undoLastMove(String gameId) {
         ChessGame game = getRequiredGame(gameId);
+        GameCaretaker gameCaretaker = getRequiredGameCaretaker(gameId);
         synchronized (game) {
-            GameMemento memento = gameCaretaker.undo(gameId);
+            GameMemento memento = gameCaretaker.undo();
             if (memento == null) {
                 throw new NoSuchElementException("No move history exists for game: " + gameId);
             }
             game.restore(memento);
-            notifyMoveUndone(gameId, game);
-            return true;
         }
+        notifyMoveUndone(gameId, game);
+        return true;
     }
 
     private void notifyGameStarted(String gameId, ChessGame game) {
@@ -99,6 +103,14 @@ public class ChessGameServiceFacade {
             throw new NoSuchElementException("Game not found: " + gameId);
         }
         return game;
+    }
+
+    private GameCaretaker getRequiredGameCaretaker(String gameId) {
+        GameCaretaker gameCaretaker = datastore.getGameCaretaker(gameId);
+        if (gameCaretaker == null) {
+            throw new NoSuchElementException("Move history not found for game: " + gameId);
+        }
+        return gameCaretaker;
     }
 }
 

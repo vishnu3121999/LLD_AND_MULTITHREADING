@@ -3,6 +3,7 @@ export function cleanJavaSource(source, fileBaseName, options = {}) {
     removeConstructors: true,
     removeGetters: true,
     removeSetters: true,
+    hideEntityListHelpers: false,
     ...options
   };
 
@@ -59,6 +60,12 @@ function findRemovableMembers(source, masked, className, settings) {
       if (settings.removeConstructors) ranges.push([removalStart, removalEnd]);
       constructors += 1;
       index = close;
+    } else if (isToStringMethod(methodName, parameters, returnType)) {
+      ranges.push([removalStart, removalEnd]);
+      index = close;
+    } else if (settings.hideEntityListHelpers && isEntityListHelper(methodName, parameters, returnType, body)) {
+      ranges.push([removalStart, removalEnd]);
+      index = close;
     } else if (isGetter(methodName, parameters, returnType, body)) {
       if (settings.removeGetters) ranges.push([removalStart, removalEnd]);
       getters += 1;
@@ -66,6 +73,9 @@ function findRemovableMembers(source, masked, className, settings) {
     } else if (isSetter(methodName, parameters, returnType, body)) {
       if (settings.removeSetters) ranges.push([removalStart, removalEnd]);
       setters += 1;
+      index = close;
+    } else if (isMapHelper(methodName, parameters, body)) {
+      ranges.push([removalStart, removalEnd]);
       index = close;
     }
   }
@@ -195,7 +205,10 @@ function extractReturnType(signature, methodName) {
 function isGetter(methodName, parameters, returnType, body) {
   if (parameters.length !== 0 || returnType === "void") return false;
   if (!/^get[A-Z_$]|^is[A-Z_$]/.test(methodName)) return false;
-  return /^return\s+(this\.)?[A-Za-z_$][\w$]*\s*;$/.test(body.replace(/\s+/g, " "));
+  const normalized = body.replace(/\s+/g, " ");
+  return /^return\s+(this\.)?[A-Za-z_$][\w$]*\s*;$/.test(normalized)
+    || /^return\s+Collections\.unmodifiableList\(\s*(this\.)?[A-Za-z_$][\w$]*\s*\)\s*;$/.test(normalized)
+    || /^return\s+List\.copyOf\(\s*(this\.)?[A-Za-z_$][\w$]*\s*\)\s*;$/.test(normalized);
 }
 
 function isSetter(methodName, parameters, returnType, body) {
@@ -204,6 +217,75 @@ function isSetter(methodName, parameters, returnType, body) {
 
   const normalized = body.replace(/\s+/g, " ");
   return /^(this\.)?[A-Za-z_$][\w$]*\s*=\s*[A-Za-z_$][\w$]*\s*;(\s*return\s+this\s*;)?$/.test(normalized);
+}
+
+function isToStringMethod(methodName, parameters, returnType) {
+  return methodName === "toString" && parameters.length === 0 && returnType === "String";
+}
+
+function isMapHelper(methodName, parameters, body) {
+  const normalized = body.replace(/\s+/g, " ").trim();
+
+  if (/^get(?:[A-Z_$].*)?$/.test(methodName) && parameters.length === 1) {
+    return /^return\s+(this\.)?[A-Za-z_$][\w$]*\.get\(\s*[A-Za-z_$][\w$]*\s*\)\s*;$/.test(normalized);
+  }
+
+  if (/^put(?:[A-Z_$].*)?$/.test(methodName) && parameters.length === 2) {
+    return /^(this\.)?[A-Za-z_$][\w$]*\.put\(\s*[A-Za-z_$][\w$]*\s*,\s*[A-Za-z_$][\w$]*\s*\)\s*;$/.test(normalized);
+  }
+
+  if (/^contains(?:[A-Z_$].*)?$/.test(methodName) && parameters.length === 1) {
+    return /^return\s+(this\.)?[A-Za-z_$][\w$]*\.containsKey\(\s*[A-Za-z_$][\w$]*\s*\)\s*;$/.test(normalized);
+  }
+
+  if (/^remove(?:[A-Z_$].*)?$/.test(methodName) && parameters.length === 1) {
+    return /^return\s+(this\.)?[A-Za-z_$][\w$]*\.remove\(\s*[A-Za-z_$][\w$]*\s*\)\s*;$/.test(normalized);
+  }
+
+  if ((methodName === "values" || /^get[A-Z_$].*List$/.test(methodName)) && parameters.length === 0) {
+    return /^return\s+new\s+ArrayList<>\(\s*(this\.)?[A-Za-z_$][\w$]*\.values\(\s*\)\s*\)\s*;$/.test(normalized);
+  }
+
+  return false;
+}
+
+function isEntityListHelper(methodName, parameters, returnType, body) {
+  return isEntityListAddHelper(methodName, parameters, returnType, body)
+    || isEntityListGetter(methodName, parameters, returnType, body);
+}
+
+function isEntityListAddHelper(methodName, parameters, returnType, body) {
+  if (!/^add[A-Z_$]/.test(methodName)) return false;
+  if (returnType !== "void" || parameters.length !== 1) return false;
+
+  const parameterName = extractParameterName(parameters[0]);
+  if (!parameterName) return false;
+
+  const normalized = body.replace(/\s+/g, " ").trim();
+  return new RegExp(`^(this\\.)?[A-Za-z_$][\\w$]*List\\.add\\(\\s*${escapeRegex(parameterName)}\\s*\\)\\s*;$`).test(normalized);
+}
+
+function isEntityListGetter(methodName, parameters, returnType, body) {
+  if (!/^get[A-Z_$].*List$/.test(methodName)) return false;
+  if (parameters.length !== 0 || !returnType.startsWith("List<")) return false;
+
+  const normalized = body.replace(/\s+/g, " ").trim();
+  return /^return\s+Collections\.unmodifiableList\(\s*(this\.)?[A-Za-z_$][\w$]*List\s*\)\s*;$/.test(normalized)
+    || /^return\s+List\.copyOf\(\s*(this\.)?[A-Za-z_$][\w$]*List\s*\)\s*;$/.test(normalized);
+}
+
+function extractParameterName(parameter) {
+  return parameter
+    .replace(/@\w+(?:\([^)]*\))?\s*/g, "")
+    .replace(/\bfinal\s+/g, "")
+    .trim()
+    .split(/\s+/)
+    .at(-1)
+    ?.replace(/\[\]$/, "") || "";
+}
+
+function escapeRegex(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function lineStart(source, start) {

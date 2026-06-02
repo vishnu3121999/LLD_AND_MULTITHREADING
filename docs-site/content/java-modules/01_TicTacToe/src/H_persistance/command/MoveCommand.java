@@ -9,9 +9,13 @@ public class MoveCommand implements Command {
     private boolean executed;
 
     public MoveCommand(TicTacToeGame game, Move move) {
+        this(game, move, false);
+    }
+
+    public MoveCommand(TicTacToeGame game, Move move, boolean executed) {
         this.game = game;
         this.move = move;
-        this.executed = false;
+        this.executed = executed;
     }
 
     @Override

@@ -18,7 +18,6 @@ public class ClassicGame1v1 extends TicTacToeGame {
             throw new IllegalStateException("Game already started");
         }
         gameState = GameState.IN_PROGRESS;
-        notifyObservers("Game started");
     }
 
     public synchronized boolean applyMove(Move move) {
@@ -37,13 +36,10 @@ public class ClassicGame1v1 extends TicTacToeGame {
         if (winStrategy.hasWinner(board.getGrid())) {
             gameState = GameState.WON;
             winner = currentPlayer;
-            notifyObservers(currentPlayer.getName() + " won the game");
         } else if (board.isFull()) {
             gameState = GameState.DRAW;
-            notifyObservers("Game ended in a draw");
         } else {
             currentPlayer = (currentPlayer == playerX) ? playerO : playerX;
-            notifyObservers("Move applied by " + move.getSymbol());
         }
         return true;
     }
@@ -56,7 +52,6 @@ public class ClassicGame1v1 extends TicTacToeGame {
         currentPlayer = getPlayerForSymbol(move.getSymbol(), playerX, playerO);
         winner = null;
         gameState = GameState.IN_PROGRESS;
-        notifyObservers("Move undone");
     }
 
     public ClassicGame1v1(TicTacToeBoard board, Player playerX, Player playerO, WinStrategy winStrategy) {
@@ -67,5 +62,6 @@ public class ClassicGame1v1 extends TicTacToeGame {
         currentPlayer = random.nextBoolean() ? playerX : playerO;
     }
 }
+
 
 

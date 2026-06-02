@@ -22,3 +22,4 @@ public class InMemoryDatastore implements IDatastore {
         return commandInvoker;
     }
 }
+

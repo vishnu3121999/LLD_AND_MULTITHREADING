@@ -21,11 +21,12 @@ Added only in later packages:
 - `G_exceptionhandling`: game-state, turn validation, and `IlligalMoveException`
 - `H_concurrency`: minimal per-game synchronization for online moves and undo
 - `I_AdditionalFeatures`: check, checkmate, stalemate, castling, en passant, and auto queen promotion
+- `J_flyweight`: shared immutable piece flyweights by type and color
+- `K_persistence`: durable Postgres-backed game and undo-history snapshots
 
 Still not included:
 
 - Timers
-- Durable persistence
 - Player matchmaking/session handling
 - Algebraic notation
 
@@ -131,10 +132,8 @@ Tradeoff:
 Main idea:
 
 ```text
-PieceFactory = creates pieces
 MovementStrategyFactory = maps PieceType to MovementStrategy
 MoveValidator uses MovementStrategyFactory
-ClassicBoard uses PieceFactory
 ChessBoard = abstract chess board parent
 ClassicBoard = concrete 8x8 classic chess board
 ChessGame = abstract chess game parent
@@ -263,10 +262,11 @@ Main idea:
 
 ```text
 Builds on G_exceptionhandling
-ConcurrentHashMap stores games
+ConcurrentHashMap stores games and caretakers in separate maps
+synchronized(datastore) protects game creation because no per-game object exists yet
 synchronized(game) protects start, move, undo, memento save, and restore
 CopyOnWriteArrayList protects observer iteration
-GameCaretaker uses concurrent collections
+GameCaretaker remains simple because it is accessed under the game lock
 ```
 
 Best for:
@@ -277,8 +277,8 @@ Best for:
 
 Tradeoff:
 
-- Observer callbacks run inside the game lock in this simple version.
-- A production service may separate mutation locks from notification dispatch.
+- Observer callbacks run after the game lock is released, so callbacks cannot block the critical section.
+- Observers receive the live game object, so a production service may prefer immutable event snapshots.
 
 ## I_AdditionalFeatures: Add Fuller Chess Rules
 
@@ -304,6 +304,54 @@ Tradeoff:
 - More rule objects and more simulation.
 - Special moves require extra state beyond the board.
 
+## J_flyweight: Share Immutable Piece Objects
+
+Main idea:
+
+```text
+Builds on I_AdditionalFeatures
+Piece stays immutable: type + color only
+PieceFlyweightFactory pre-creates one Piece for each PieceType + Color
+ClassicBoard and SpecialMoveService use PieceFlyweightFactory directly instead of allocating every time
+```
+
+Best for:
+
+- Showing Flyweight without changing board, move, or rule logic
+- Reducing duplicate immutable piece objects across boards/games
+- Keeping extrinsic state outside Piece; position still lives in the board
+
+Tradeoff:
+
+- Memory savings are small for one chess game.
+- This is mainly useful when many games, simulations, or analysis boards exist.
+
+## K_persistence: Persist Games In Postgres
+
+Main idea:
+
+```text
+Builds on J_flyweight
+PostgresDataStore implements IDatastore using Spring Data JPA repositories
+ChessGameEntity stores game metadata + board snapshot
+GameCaretakerEntity stores undo-history memento snapshots
+Service saves the game and caretaker after start, move, and undo mutations
+Service locks by gameId instead of relying on loaded game-object identity
+```
+
+Best for:
+
+- Showing how an online chess game can survive process restarts
+- Keeping the service API unchanged while swapping datastore implementations
+- Keeping SQL and connection handling out of the datastore class
+- Persisting board state and memento history without changing move validation
+- Avoiding datastore-side object caches; Postgres is the source of truth
+
+Tradeoff:
+
+- Requires Spring Data JPA, a JPA provider, and a Postgres driver at runtime.
+- Snapshot columns are simple for LLD, but less queryable than fully normalized board-cell tables.
+
 ## Recommendation
 
 Use this progression when explaining:
@@ -312,13 +360,15 @@ Use this progression when explaining:
 A_basicV1: Start with natural OOP.
 A_basicV2: Move board-dependent behavior out of entities.
 B_Strategy: Separate movement algorithms.
-C_Factory: Centralize object creation.
+C_Factory: Centralize movement strategy creation.
 D_Memento: Add undo by storing and restoring game snapshots.
 E_Observer: React to game events without direct UI calls from Main.
 F_COR: Split move validation into a chain of small rule handlers.
 G_exceptionhandling: Add game-state/current-turn checks and convert COR failures into IlligalMoveException.
 H_concurrency: Add only the synchronization required for online moves.
 I_AdditionalFeatures: Add check, checkmate, stalemate, and special moves.
+J_flyweight: Share immutable piece objects across boards/games.
+K_persistence: Store game state and undo history in Postgres.
 ```
 
 For your preferred principle, the best baseline is:
@@ -339,7 +389,6 @@ For the next evolution step, add:
 MoveHistory
 Command pattern for undo
 Timers
-Durable persistence
 Algebraic notation
 Matchmaking/session management
 ```

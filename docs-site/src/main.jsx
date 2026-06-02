@@ -951,7 +951,7 @@ function DraggableCodeBlock({ file, layout, showConstructors, hasConstructorTogg
           className={`constructor-toggle-button ${showConstructors && canToggleConstructors ? "active" : ""} ${canToggleConstructors ? "" : "unavailable"}`}
           type="button"
           aria-pressed={showConstructors && canToggleConstructors}
-          title={canToggleConstructors ? showConstructors ? "Hide constructors" : "Show constructors" : "No constructors found"}
+          title={canToggleConstructors ? showConstructors ? "Hide full code" : "Show full code" : "Full code already visible"}
           onPointerDown={(event) => event.stopPropagation()}
           onClick={(event) => {
             event.stopPropagation();
@@ -959,7 +959,7 @@ function DraggableCodeBlock({ file, layout, showConstructors, hasConstructorTogg
             onToggleConstructors();
           }}
         >
-          C
+          F
         </button>
       )}
       <pre

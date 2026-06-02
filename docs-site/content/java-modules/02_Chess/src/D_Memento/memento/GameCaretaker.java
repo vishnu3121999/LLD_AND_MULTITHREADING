@@ -2,19 +2,26 @@ package D_Memento.memento;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.HashMap;
-import java.util.Map;
 
 public class GameCaretaker {
-    private final Map<String, Deque<GameMemento>> historyByGameId = new HashMap<>();
+    private final String gameId;
+    private final Deque<GameMemento> history;
 
-    public void save(String gameId, GameMemento memento) {
-        historyByGameId.computeIfAbsent(gameId, ignored -> new ArrayDeque<>()).push(memento);
+    public GameCaretaker(String gameId) {
+        this.gameId = gameId;
+        this.history = new ArrayDeque<>();
     }
 
-    public GameMemento undo(String gameId) {
-        Deque<GameMemento> history = historyByGameId.get(gameId);
-        if (history == null || history.isEmpty()) {
+    public String getGameId() {
+        return gameId;
+    }
+
+    public void save(GameMemento memento) {
+        history.push(memento);
+    }
+
+    public GameMemento undo() {
+        if (history.isEmpty()) {
             return null;
         }
         return history.pop();

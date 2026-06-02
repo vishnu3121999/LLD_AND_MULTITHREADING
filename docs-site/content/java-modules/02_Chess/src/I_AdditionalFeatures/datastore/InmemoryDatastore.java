@@ -1,5 +1,6 @@
 package I_AdditionalFeatures.datastore;
 
+import I_AdditionalFeatures.memento.GameCaretaker;
 import I_AdditionalFeatures.service.ChessGame;
 
 import java.util.Map;
@@ -7,9 +8,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class InmemoryDatastore implements IDatastore {
     private final Map<String, ChessGame> games;
+    private final Map<String, GameCaretaker> gameCaretakers;
 
     public InmemoryDatastore() {
         this.games = new ConcurrentHashMap<>();
+        this.gameCaretakers = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -20,6 +23,16 @@ public class InmemoryDatastore implements IDatastore {
     @Override
     public ChessGame getGame(String gameId) {
         return games.get(gameId);
+    }
+
+    @Override
+    public void saveGameCaretaker(String gameId, GameCaretaker gameCaretaker) {
+        gameCaretakers.put(gameId, gameCaretaker);
+    }
+
+    @Override
+    public GameCaretaker getGameCaretaker(String gameId) {
+        return gameCaretakers.get(gameId);
     }
 }
 

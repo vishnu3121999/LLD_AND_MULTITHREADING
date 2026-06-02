@@ -7,3 +7,4 @@ public interface IDatastore {
     TicTacToeGame getGame();
     CommandInvoker getCommandInvoker();
 }
+

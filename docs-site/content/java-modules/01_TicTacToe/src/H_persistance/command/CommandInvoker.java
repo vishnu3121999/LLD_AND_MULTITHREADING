@@ -1,6 +1,7 @@
 package H_persistance.command;
 
 import H_persistance.model.Move;
+import H_persistance.model.game.TicTacToeGame;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -14,7 +15,7 @@ public class CommandInvoker {
         this.history = new ArrayDeque<>();
     }
 
-    public synchronized boolean execute(Command command) {
+    public boolean execute(Command command) {
         boolean success = command.execute();
         if (success) {
             history.addLast(command);
@@ -22,14 +23,15 @@ public class CommandInvoker {
         return success;
     }
 
-    public synchronized boolean undoLast() {
+    public boolean undoLast() {
         if (history.isEmpty()) {
             return false;
         }
+        // removeLast() will throw NoSuchElementException if empty, so we dont need to throw ourselves
         return history.removeLast().undo();
     }
 
-    public synchronized List<Move> getMoveHistory() {
+    public List<Move> getMoveHistory() {
         List<Move> moves = new ArrayList<>();
         for (Command command : history) {
             if (command instanceof MoveCommand) {
@@ -37,5 +39,12 @@ public class CommandInvoker {
             }
         }
         return moves;
+    }
+
+    public void restoreMoveHistory(List<Move> moves, TicTacToeGame game) {
+        history.clear();
+        for (Move move : moves) {
+            history.addLast(new MoveCommand(game, move, true));
+        }
     }
 }

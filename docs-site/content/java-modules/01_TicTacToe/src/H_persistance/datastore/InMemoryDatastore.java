@@ -27,3 +27,4 @@ public class InMemoryDatastore implements IDatastore {
         // Nothing to flush for in-memory storage.
     }
 }
+

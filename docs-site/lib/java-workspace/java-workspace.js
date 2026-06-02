@@ -190,9 +190,18 @@ async function findJavaFiles(directory) {
 async function buildJavaFilePayload(filePath, packagePath, { includeRawCode = false } = {}) {
   const source = await readFile(filePath, "utf8");
   const fileBaseName = path.basename(filePath, ".java");
-  const cleaned = cleanJavaSource(source, fileBaseName);
-  const withConstructors = cleanJavaSource(source, fileBaseName, { removeConstructors: false });
   const relativePath = path.relative(packagePath, filePath).replaceAll(path.sep, "/");
+  const hideEntityListHelpers = relativePath.split("/").includes("model");
+  const cleaned = cleanJavaSource(source, fileBaseName, {
+    hideEntityListHelpers
+  });
+  const full = cleanJavaSource(source, fileBaseName, {
+    removeConstructors: false,
+    removeGetters: false,
+    removeSetters: false,
+    hideEntityListHelpers
+  });
+  const hasHiddenCode = full.code !== cleaned.code;
 
   return {
     id: relativePath,
@@ -200,8 +209,8 @@ async function buildJavaFilePayload(filePath, packagePath, { includeRawCode = fa
     relativePath,
     ...(includeRawCode ? { rawCode: source } : {}),
     code: cleaned.code,
-    codeWithConstructors: withConstructors.code,
-    hasConstructors: withConstructors.removed.constructors > 0,
+    codeWithConstructors: full.code,
+    hasConstructors: hasHiddenCode,
     removed: cleaned.removed
   };
 }

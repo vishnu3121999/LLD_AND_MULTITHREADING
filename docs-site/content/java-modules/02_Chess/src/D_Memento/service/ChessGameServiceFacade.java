@@ -9,15 +9,14 @@ import D_Memento.model.Position;
 
 public class ChessGameServiceFacade {
     private final IDatastore datastore;
-    private final GameCaretaker gameCaretaker;
 
     public ChessGameServiceFacade(IDatastore datastore) {
         this.datastore = datastore;
-        this.gameCaretaker = new GameCaretaker();
     }
 
     public void createGame(String gameId, Player whitePlayer, Player blackPlayer) {
         datastore.saveGame(gameId, new ClassicGame(gameId, whitePlayer, blackPlayer));
+        datastore.saveGameCaretaker(gameId, new GameCaretaker(gameId));
     }
 
     public void startGame(String gameId) {
@@ -28,10 +27,11 @@ public class ChessGameServiceFacade {
 
     public boolean move(String gameId, Player player, Position from, Position to) {
         ChessGame game = datastore.getGame(gameId);
+        GameCaretaker gameCaretaker = datastore.getGameCaretaker(gameId);
         GameMemento beforeMove = game.createMemento();
         boolean success = game.move(new Move(player, from, to));
         if (success) {
-            gameCaretaker.save(gameId, beforeMove);
+            gameCaretaker.save(beforeMove);
             game.getBoard().print();
         }
         return success;
@@ -39,7 +39,8 @@ public class ChessGameServiceFacade {
 
     public boolean undoLastMove(String gameId) {
         ChessGame game = datastore.getGame(gameId);
-        GameMemento memento = gameCaretaker.undo(gameId);
+        GameCaretaker gameCaretaker = datastore.getGameCaretaker(gameId);
+        GameMemento memento = gameCaretaker.undo();
         if (memento == null) {
             return false;
         }

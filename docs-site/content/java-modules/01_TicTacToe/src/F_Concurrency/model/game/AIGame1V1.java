@@ -8,25 +8,19 @@ import F_Concurrency.model.enums.Symbol;
 import F_Concurrency.model.game.winstrategy.WinStrategy;
 import F_Concurrency.exception.InvalidMoveException;
 
-import java.util.Random;
-
 public class AIGame1V1 extends TicTacToeGame {
-    Player player;
-    int difficulty;
-
-    boolean aiFirstMove;
-    Symbol aiSymbol;
+    private final Player humanPlayer;
+    private final int difficulty;
+    private final boolean aiFirstMove;
+    private final Symbol aiSymbol;
 
     public AIGame1V1(TicTacToeBoard board, Player player, int difficulty, boolean aiFirstMove, WinStrategy winStrategy) {
         super(board, GameState.NOT_STARTED, winStrategy);
+        this.humanPlayer = player;
         this.difficulty = difficulty;
-
-        Random random = new Random();
-        this.aiFirstMove = random.nextBoolean();
-        if (player.getSymbol().equals(Symbol.O)) {
-            aiSymbol = Symbol.X;
-        } else aiSymbol = Symbol.O;
-        currentPlayer = player;
+        this.aiFirstMove = aiFirstMove;
+        this.aiSymbol = player.getSymbol().equals(Symbol.O) ? Symbol.X : Symbol.O;
+        currentPlayer = humanPlayer;
     }
 
     @Override
@@ -38,7 +32,6 @@ public class AIGame1V1 extends TicTacToeGame {
         if (aiFirstMove) {
             applyAIMove();
         }
-        notifyObservers("Game started");
     }
 
     @Override
@@ -52,7 +45,7 @@ public class AIGame1V1 extends TicTacToeGame {
         }
         if (winStrategy.hasWinner(board.getGrid())) {
             gameState = GameState.WON;
-            winner = player;
+            winner = humanPlayer;
         } else if (board.isFull()) {
             gameState = GameState.DRAW;
         }
@@ -64,8 +57,6 @@ public class AIGame1V1 extends TicTacToeGame {
         } else if (board.isFull()) {
             gameState = GameState.DRAW;
         }
-
-        notifyObservers("Move applied");
         return true;
     }
 
@@ -76,14 +67,11 @@ public class AIGame1V1 extends TicTacToeGame {
         }
         gameState = GameState.IN_PROGRESS;
         winner = null;
-        notifyObservers("Move undone");
     }
 
-    Move applyAIMove(){
-//       Move move = callEngine(difficulty,aiSymbol);
-//       board.applyMove(move);
+    private Move applyAIMove() {
+        // Move aiMove = callEngine(difficulty, aiSymbol);
+        // board.applyMove(aiMove);
         return null;
     }
 }
-
-

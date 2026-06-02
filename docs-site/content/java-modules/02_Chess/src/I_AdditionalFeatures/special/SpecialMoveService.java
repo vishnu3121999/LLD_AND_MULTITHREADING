@@ -1,6 +1,5 @@
 package I_AdditionalFeatures.special;
 
-import I_AdditionalFeatures.factory.PieceFactory;
 import I_AdditionalFeatures.model.Color;
 import I_AdditionalFeatures.model.Move;
 import I_AdditionalFeatures.model.Piece;
@@ -11,11 +10,9 @@ import I_AdditionalFeatures.service.ChessGame;
 
 public class SpecialMoveService {
     private final CheckDetector checkDetector;
-    private final PieceFactory pieceFactory;
 
     public SpecialMoveService(CheckDetector checkDetector) {
         this.checkDetector = checkDetector;
-        this.pieceFactory = new PieceFactory();
     }
 
     public boolean isLegalSpecialMove(ChessGame game, Move move) {
@@ -134,7 +131,7 @@ public class SpecialMoveService {
 
         if ((piece.getColor() == Color.WHITE && move.getTo().getRow() == 0)
                 || (piece.getColor() == Color.BLACK && move.getTo().getRow() == game.getBoard().getSize() - 1)) {
-            game.getBoard().setPiece(move.getTo(), pieceFactory.create(PieceType.QUEEN, piece.getColor()));
+            game.getBoard().setPiece(move.getTo(), new Piece(PieceType.QUEEN, piece.getColor()));
         }
     }
 }

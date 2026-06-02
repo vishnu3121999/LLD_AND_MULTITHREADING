@@ -5,27 +5,64 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="64a0acb2-1dfb-413c-a6e2-8247ba411467" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/A_basic/datastore/IDatastore.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/A_basic/datastore/IDatastore.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/A_basic/datastore/InMemoryDatastore.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/A_basic/datastore/InMemoryDatastore.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/B_strategy/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/B_strategy/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/B_strategy/Main_Interactive.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/B_strategy/Main_Interactive.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/B_strategy/service/TicTacToeFacade.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/B_strategy/service/TicTacToeFacade.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/C_command/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/C_command/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/C_command/Main_Interactive.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/C_command/Main_Interactive.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/C_command/service/TicTacToeFacade.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/C_command/service/TicTacToeFacade.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/D_Observer/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/D_Observer/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/D_Observer/Main_Interactive.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/D_Observer/Main_Interactive.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/A_basic/model/game/AIGame1V1.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/A_basic/model/game/AIGame1V1.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/B_strategy/model/game/AIGame1V1.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/B_strategy/model/game/AIGame1V1.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/C_command/model/game/AIGame1V1.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/C_command/model/game/AIGame1V1.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/D_Observer/model/game/AIGame1V1.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/D_Observer/model/game/AIGame1V1.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/D_Observer/model/game/ClassicGame1v1.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/D_Observer/model/game/ClassicGame1v1.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/D_Observer/model/game/TicTacToeGame.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/D_Observer/model/game/TicTacToeGame.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/D_Observer/service/TicTacToeFacade.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/D_Observer/service/TicTacToeFacade.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/E_ExceptionHandling/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/E_ExceptionHandling/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/E_ExceptionHandling/Main_Interactive.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/E_ExceptionHandling/Main_Interactive.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/E_ExceptionHandling/model/game/AIGame1V1.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/E_ExceptionHandling/model/game/AIGame1V1.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/E_ExceptionHandling/model/game/ClassicGame1v1.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/E_ExceptionHandling/model/game/ClassicGame1v1.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/E_ExceptionHandling/model/game/TicTacToeGame.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/E_ExceptionHandling/model/game/TicTacToeGame.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/E_ExceptionHandling/service/TicTacToeFacade.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/E_ExceptionHandling/service/TicTacToeFacade.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/F_Concurrency/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/F_Concurrency/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/F_Concurrency/Main_Interactive.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/F_Concurrency/Main_Interactive.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/F_Concurrency/model/game/AIGame1V1.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/F_Concurrency/model/game/AIGame1V1.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/F_Concurrency/model/game/ClassicGame1v1.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/F_Concurrency/model/game/ClassicGame1v1.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/F_Concurrency/model/game/TicTacToeGame.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/F_Concurrency/model/game/TicTacToeGame.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/F_Concurrency/service/TicTacToeFacade.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/F_Concurrency/service/TicTacToeFacade.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/G_Composite/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/G_Composite/Main.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/G_Composite/Main_Interactive.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/G_Composite/Main_Interactive.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/G_Composite/command/CommandInvoker.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/G_Composite/command/CommandInvoker.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/G_Composite/datastore/IDatastore.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/G_Composite/datastore/IDatastore.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/G_Composite/datastore/InMemoryDatastore.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/G_Composite/datastore/InMemoryDatastore.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/G_Composite/model/game/AIGame1V1.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/G_Composite/model/game/AIGame1V1.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/G_Composite/model/game/ClassicGame1v1.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/G_Composite/model/game/ClassicGame1v1.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/G_Composite/model/game/TicTacToeGame.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/G_Composite/model/game/TicTacToeGame.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/G_Composite/service/TicTacToeFacade.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/G_Composite/service/TicTacToeFacade.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/H_persistance/command/CommandInvoker.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/H_persistance/command/CommandInvoker.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/H_persistance/datastore/FileDataStore.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/H_persistance/datastore/FileDataStore.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/H_persistance/datastore/IDatastore.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/H_persistance/datastore/IDatastore.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/H_persistance/datastore/InMemoryDatastore.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/H_persistance/datastore/InMemoryDatastore.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/H_persistance/model/game/AIGame1V1.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/H_persistance/model/game/AIGame1V1.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/H_persistance/model/game/ClassicGame1v1.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/H_persistance/model/game/ClassicGame1v1.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/H_persistance/model/game/TicTacToeGame.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/H_persistance/model/game/TicTacToeGame.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/H_persistance/service/TicTacToeFacade.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/01_TicTacToe/src/H_persistance/service/TicTacToeFacade.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/APPROACH_COMPARISON.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/APPROACH_COMPARISON.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/D_Memento/datastore/IDatastore.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/D_Memento/datastore/IDatastore.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/D_Memento/datastore/InmemoryDatastore.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/D_Memento/datastore/InmemoryDatastore.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/D_Memento/memento/GameCaretaker.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/D_Memento/memento/GameCaretaker.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/D_Memento/service/ChessGameServiceFacade.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/D_Memento/service/ChessGameServiceFacade.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/E_Observer/datastore/IDatastore.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/E_Observer/datastore/IDatastore.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/E_Observer/datastore/InmemoryDatastore.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/E_Observer/datastore/InmemoryDatastore.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/E_Observer/memento/GameCaretaker.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/E_Observer/memento/GameCaretaker.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/E_Observer/service/ChessGameServiceFacade.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/E_Observer/service/ChessGameServiceFacade.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/F_COR/datastore/IDatastore.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/F_COR/datastore/IDatastore.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/F_COR/datastore/InmemoryDatastore.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/F_COR/datastore/InmemoryDatastore.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/F_COR/memento/GameCaretaker.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/F_COR/memento/GameCaretaker.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/F_COR/service/ChessGameServiceFacade.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/F_COR/service/ChessGameServiceFacade.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/G_exceptionhandling/datastore/IDatastore.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/G_exceptionhandling/datastore/IDatastore.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/G_exceptionhandling/datastore/InmemoryDatastore.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/G_exceptionhandling/datastore/InmemoryDatastore.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/G_exceptionhandling/memento/GameCaretaker.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/G_exceptionhandling/memento/GameCaretaker.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/G_exceptionhandling/service/ChessGameServiceFacade.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/G_exceptionhandling/service/ChessGameServiceFacade.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/H_concurrency/datastore/IDatastore.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/H_concurrency/datastore/IDatastore.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/H_concurrency/datastore/InmemoryDatastore.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/H_concurrency/datastore/InmemoryDatastore.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/H_concurrency/memento/GameCaretaker.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/H_concurrency/memento/GameCaretaker.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/H_concurrency/service/ChessGameServiceFacade.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/H_concurrency/service/ChessGameServiceFacade.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/I_AdditionalFeatures/datastore/IDatastore.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/I_AdditionalFeatures/datastore/IDatastore.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/I_AdditionalFeatures/datastore/InmemoryDatastore.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/I_AdditionalFeatures/datastore/InmemoryDatastore.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/I_AdditionalFeatures/memento/GameCaretaker.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/I_AdditionalFeatures/memento/GameCaretaker.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/I_AdditionalFeatures/service/ChessGameServiceFacade.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/02_Chess/src/I_AdditionalFeatures/service/ChessGameServiceFacade.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docs-site/content/local-data/browser-state.json" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/local-data/browser-state.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -34,7 +71,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="33828" />
+    <option name="cachedIndexableFilesCount" value="34256" />
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -55,6 +92,7 @@
   "keyToString": {
     "Application.B_strategy.Main.executor": "Run",
     "Application.C_command.Main.executor": "Run",
+    "Application.F_COR.Main.executor": "Run",
     "Application.G_Composite.Main.executor": "Run",
     "Application.Main (1).executor": "Run",
     "Application.Main.executor": "Run",
@@ -71,9 +109,9 @@
     "project.structure.last.edited": "Modules",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.2",
-    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "settings.editor.selected.configurable": "ml.llm.AcpAgentsConfigurable",
     "two.files.diff.last.used.file": "C:/Users/vishn/OneDrive/Desktop/workspace/InterviewPrep/LLD_AND_MULTITHREADING/01_TicTacToe/src/A_basic/model/game/ClassicGame1v1.java",
-    "two.files.diff.last.used.folder": "C:/Users/vishn/OneDrive/Desktop/workspace/InterviewPrep/LLD_AND_MULTITHREADING/01_TicTacToe/src/A_basic"
+    "two.files.diff.last.used.folder": "C:/Users/vishn/OneDrive/Desktop/workspace/InterviewPrep/LLD_AND_MULTITHREADING/docs-site/content/java-modules/02_Chess/src/F_COR"
   }
 }]]></component>
   <component name="RecentsManager">
@@ -87,13 +125,13 @@
       <recent name="C:\Users\vishn\OneDrive\Desktop\workspace\InterviewPrep\LLD_AND_MULTITHREADING\docs-site\content\java-modules\01_TicTacToe" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.Main">
-    <configuration name="B_strategy.Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="B_strategy.Main" />
+  <component name="RunManager" selected="Application.F_COR.Main">
+    <configuration name="C_command.Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="C_command.Main" />
       <module name="01_TicTacToe" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="B_strategy.*" />
+          <option name="PATTERN" value="C_command.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -101,12 +139,12 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="C_command.Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="C_command.Main" />
-      <module name="01_TicTacToe" />
+    <configuration name="F_COR.Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="F_COR.Main" />
+      <module name="02_Chess" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="C_command.*" />
+          <option name="PATTERN" value="F_COR.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -164,11 +202,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.F_COR.Main" />
         <item itemvalue="Application.Main" />
         <item itemvalue="Application.G_Composite.Main" />
         <item itemvalue="Application.Main (1)" />
         <item itemvalue="Application.C_command.Main" />
-        <item itemvalue="Application.B_strategy.Main" />
       </list>
     </recent_temporary>
   </component>

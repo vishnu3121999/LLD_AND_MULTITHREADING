@@ -1,7 +1,7 @@
 package H_persistance;
 
-import H_persistance.datastore.FileDataStore;
 import H_persistance.datastore.IDatastore;
+import H_persistance.datastore.InMemoryDatastore;
 import H_persistance.model.Player;
 import H_persistance.model.board.ClassicBoard;
 import H_persistance.model.board.TicTacToeBoard;
@@ -12,8 +12,6 @@ import H_persistance.model.game.winstrategy.ClassicWinStrategy;
 import H_persistance.observer.ConsoleGameObserver;
 import H_persistance.service.TicTacToeFacade;
 
-import java.nio.file.Paths;
-
 public class Main {
     public static void main(String[] args) {
         try {
@@ -22,7 +20,7 @@ public class Main {
 
             TicTacToeBoard board = new ClassicBoard(3);
             TicTacToeGame game = new ClassicGame1v1(board, playerX, playerO, new ClassicWinStrategy());
-            IDatastore datastore = new FileDataStore(game, Paths.get("tic-tac-toe-game-state.txt"));
+            IDatastore datastore = new InMemoryDatastore(game);
             TicTacToeFacade facade = new TicTacToeFacade(datastore);
             facade.addObserver(new ConsoleGameObserver("observer-1"));
 

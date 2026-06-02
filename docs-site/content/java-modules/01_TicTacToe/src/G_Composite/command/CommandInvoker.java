@@ -10,7 +10,7 @@ public class CommandInvoker {
         this.history = new ArrayDeque<>();
     }
 
-    public synchronized boolean execute(Command command) {
+    public boolean execute(Command command) {
         boolean success = command.execute();
         if (success) {
             history.addLast(command);
@@ -18,10 +18,12 @@ public class CommandInvoker {
         return success;
     }
 
-    public synchronized boolean undoLast() {
+    public boolean undoLast() {
         if (history.isEmpty()) {
             return false;
         }
+        // removeLast() will throw NoSuchElementException if empty, so we dont need to throw ourselves
         return history.removeLast().undo();
     }
 }
+

@@ -14,8 +14,4 @@ public class InMemoryDatastore implements IDatastore {
         return game;
     }
 
-    @Override
-    public int x() {
-        return 0;
-    }
 }

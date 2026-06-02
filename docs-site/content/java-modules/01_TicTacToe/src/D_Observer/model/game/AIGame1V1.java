@@ -7,25 +7,19 @@ import D_Observer.model.enums.GameState;
 import D_Observer.model.enums.Symbol;
 import D_Observer.model.game.winstrategy.WinStrategy;
 
-import java.util.Random;
-
 public class AIGame1V1 extends TicTacToeGame {
-    Player player;
-    int difficulty;
-
-    boolean aiFirstMove;
-    Symbol aiSymbol;
+    private final Player humanPlayer;
+    private final int difficulty;
+    private final boolean aiFirstMove;
+    private final Symbol aiSymbol;
 
     public AIGame1V1(TicTacToeBoard board, Player player, int difficulty, boolean aiFirstMove, WinStrategy winStrategy) {
         super(board, GameState.NOT_STARTED, winStrategy);
+        this.humanPlayer = player;
         this.difficulty = difficulty;
-
-        Random random = new Random();
-        this.aiFirstMove = random.nextBoolean();
-        if (player.getSymbol().equals(Symbol.O)) {
-            aiSymbol = Symbol.X;
-        } else aiSymbol = Symbol.O;
-        currentPlayer = player;
+        this.aiFirstMove = aiFirstMove;
+        this.aiSymbol = player.getSymbol().equals(Symbol.O) ? Symbol.X : Symbol.O;
+        currentPlayer = humanPlayer;
     }
 
     @Override
@@ -38,22 +32,28 @@ public class AIGame1V1 extends TicTacToeGame {
 
     @Override
     public boolean applyMove(Move move) {
-        if (!gameState.equals(GameState.IN_PROGRESS)) return false;
+        if (gameState != GameState.IN_PROGRESS) {
+            return false;
+        }
 
-        boolean result = board.applyMove(move);
+        boolean applied = board.applyMove(move);
         if (winStrategy.hasWinner(board.getGrid())) {
             gameState = GameState.WON;
-            winner = player;
-        } else if (board.isFull()) gameState = GameState.DRAW;
+            winner = humanPlayer;
+        } else if (board.isFull()) {
+            gameState = GameState.DRAW;
+        }
 
-        if (result) {
+        if (applied) {
             applyAIMove();
             if (winStrategy.hasWinner(board.getGrid())) {
                 gameState = GameState.WON;
                 winner = null;
-            } else if (board.isFull()) gameState = GameState.DRAW;
+            } else if (board.isFull()) {
+                gameState = GameState.DRAW;
+            }
         }
-        return result;
+        return applied;
     }
 
     @Override
@@ -65,10 +65,9 @@ public class AIGame1V1 extends TicTacToeGame {
         winner = null;
     }
 
-    Move applyAIMove(){
-//       Move move = callEngine(difficulty,aiSymbol);
-//       board.applyMove(move);
+    private Move applyAIMove() {
+        // Move aiMove = callEngine(difficulty, aiSymbol);
+        // board.applyMove(aiMove);
         return null;
     }
 }
-
