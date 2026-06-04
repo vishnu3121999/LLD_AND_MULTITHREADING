@@ -197,7 +197,7 @@ Tradeoff:
 
 ## F_OrchestrationValidation: Preflight Before Multi-Object Updates
 
-Adds one focused idea on top of E:
+Adds one focused idea on top of E_ExceptionHandlingV2:
 
 ```text
 Orchestration validation is used only in the main booking flows with real partial-update risk
@@ -267,7 +267,7 @@ selectSeats() synchronizes on the Show object to prevent overlapping selections 
 pay() synchronizes on the Ticket object to prevent duplicate payment processing for the same ticket
 pay() runs expiry cleanup before the Ticket lock because G_Concurrency1 is not handling cross-method expiry-vs-payment yet
 Admin add methods synchronize on a facade-owned catalogLock for contains-plus-put-plus-parent-list updates
-Admin prerequisite lookups like getRequiredCity(), getRequiredTheater(), getRequiredScreen(), and getRequiredMovie() stay outside catalogLock; failing because the parent was not created yet is request ordering, not an inconsistent-state race
+Admin prerequisite datastore lookups stay outside catalogLock; failing because the parent was not created yet is request ordering, not an inconsistent-state race
 Only ticketMap uses ConcurrentHashMap because non-overlapping selectSeats() calls can write tickets concurrently for different shows
 Other datastore maps remain HashMap because G_Concurrency1 does not handle user-read/admin-write cross-method catalog races
 City, Theater, and Screen keep the F_OrchestrationValidation ArrayList-backed id lists
@@ -364,7 +364,7 @@ addShow(String showId, String movieId, String screenId, LocalDateTime startTime,
 entities getting updated: [showSeatMap, Screen.showList, showMap]
 
 1. What if the same method is called with the same params simultaneously?
-Real race. Both calls can pass containsShow(showId), show seats can overwrite each other, and Screen.showList can get duplicate show ids. Look up the Movie and Screen before locking, then use catalogLock only around contains-plus-show-seat creation-plus-put-plus-Screen.showList update.
+Real race. Both calls can pass containsShow(showId), show seats can overwrite each other, and Screen.showList can get duplicate show ids. Look up the Screen before locking, then use catalogLock only around contains-plus-show-seat creation-plus-put-plus-Screen.showList update.
 2. What if the same method is called with different params simultaneously?
 If the screen is the same, both calls append to Screen.showList. Use catalogLock around the admin update. If screens differ, catalogLock still serializes showMap/showSeatMap writes, so no ConcurrentHashMap needed for case 1.
 ```
