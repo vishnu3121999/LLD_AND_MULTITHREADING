@@ -1,6 +1,6 @@
 import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
-import { cleanJavaSource } from "./java-cleaner";
+import { cleanJavaSource } from "./java-cleaner.js";
 
 const javaModulesDir = path.join(process.cwd(), "content", "java-modules");
 const ignoredDirs = new Set(["out", "target", "build", ".git", ".idea", ".vscode"]);

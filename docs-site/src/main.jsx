@@ -23,6 +23,12 @@ import { fileStorageGetItem, fileStorageSetItem, migrateLegacyBrowserStorage } f
 hljs.registerLanguage("java", java);
 
 const API_BASE = "";
+const JAVA_PAGES_API = `${API_BASE}/api/java-pages`;
+const JAVA_PAGE_API = `${API_BASE}/api/java-page`;
+const JAVA_DIFF_API = `${API_BASE}/api/java-diff`;
+const PAGE_ID_ALIASES = {
+  "03_BookMyShow::A_Basic": ["03_BookMyShow::A_basicSeatHoldBooking"]
+};
 const SITE_THEME_STORAGE_KEY = "lld-playbook.site-theme";
 const MIN_BLOCK_WIDTH = 140;
 const MIN_BLOCK_HEIGHT = 90;
@@ -91,7 +97,7 @@ export default function App() {
   }, [collapsedModules, workspacePrefsReady]);
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/java/pages`)
+    fetch(JAVA_PAGES_API)
       .then((response) => response.json())
       .then((payload) => {
         const modules = payload.modules || [];
@@ -359,7 +365,7 @@ function JavaCodeReader({ selectedPage, codeTheme }) {
     setPageData(null);
     setSelectedFileId("");
 
-    fetch(`${API_BASE}/api/java/page?${params.toString()}`)
+    fetch(`${JAVA_PAGE_API}?${params.toString()}`)
       .then(async (response) => {
         const payload = await response.json();
         if (!response.ok) throw new Error(payload.error || "Unable to load files");
@@ -542,7 +548,7 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
     setError("");
     setPageData(null);
 
-    fetch(`${API_BASE}/api/java/page?${targetParams.toString()}`)
+    fetch(`${JAVA_PAGE_API}?${targetParams.toString()}`)
       .then(async (response) => {
         const targetPage = await response.json();
         if (!response.ok) throw new Error(targetPage.error || "Unable to load page");
@@ -559,7 +565,7 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
           to: selectedDiff.to
         });
 
-        const diffResponse = await fetch(`${API_BASE}/api/java/diff?${diffParams.toString()}`);
+        const diffResponse = await fetch(`${JAVA_DIFF_API}?${diffParams.toString()}`);
         const diffPage = await diffResponse.json();
         if (!diffResponse.ok) throw new Error(diffPage.error || "Unable to load diff");
         if (cancelled) return;
@@ -614,7 +620,7 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
     let cancelled = false;
 
     async function loadLayouts() {
-      const saved = await fileStorageGetItem(layoutStorageKey(activeLayoutPageId));
+      const saved = await readPageScopedStorage(layoutStorageKey, activeLayoutPageId);
       if (cancelled) return;
       if (saved) {
         setLayouts(mergeLayoutsWithFiles(pageData.files, parseJsonValue(saved, {})));
@@ -638,7 +644,7 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
     let cancelled = false;
 
     async function loadParentZoom() {
-      const saved = await fileStorageGetItem(parentZoomStorageKey(activeLayoutPageId));
+      const saved = await readPageScopedStorage(parentZoomStorageKey, activeLayoutPageId);
       if (!cancelled) {
         setParentZoom(saved ? Number(saved) || 1 : 1);
         setParentZoomSource(saved ? "saved" : "generated");
@@ -1072,6 +1078,15 @@ function methodFoldStorageKey(pageId, fileId, methodKey) {
 
 async function readJsonFileStorage(key, fallback) {
   return parseJsonValue(await fileStorageGetItem(key), fallback);
+}
+
+async function readPageScopedStorage(storageKeyFactory, pageId) {
+  const pageIds = [pageId, ...(PAGE_ID_ALIASES[pageId] || [])];
+  for (const candidatePageId of pageIds) {
+    const saved = await fileStorageGetItem(storageKeyFactory(candidatePageId));
+    if (saved) return saved;
+  }
+  return null;
 }
 
 function parseJsonValue(value, fallback) {

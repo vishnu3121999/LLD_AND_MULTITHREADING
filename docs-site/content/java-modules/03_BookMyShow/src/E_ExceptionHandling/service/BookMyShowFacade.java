@@ -2,6 +2,7 @@ package E_ExceptionHandling.service;
 
 import E_ExceptionHandling.datastore.DataStore;
 import E_ExceptionHandling.model.City;
+import E_ExceptionHandling.model.CreditCardPayment;
 import E_ExceptionHandling.model.Movie;
 import E_ExceptionHandling.model.Payment;
 import E_ExceptionHandling.model.Screen;
@@ -10,6 +11,7 @@ import E_ExceptionHandling.model.Show;
 import E_ExceptionHandling.model.ShowSeat;
 import E_ExceptionHandling.model.Theater;
 import E_ExceptionHandling.model.Ticket;
+import E_ExceptionHandling.model.UPIPayment;
 import E_ExceptionHandling.model.enums.SeatStatus;
 import E_ExceptionHandling.model.enums.SeatType;
 import E_ExceptionHandling.model.enums.TicketStatus;
@@ -43,7 +45,6 @@ public class BookMyShowFacade {
     public List<Show> searchShows(String movieTitle, String cityId) {
         requireText(movieTitle, "movieTitle");
         City city = getRequiredCity(cityId);
-
         List<Show> result = new ArrayList<>();
         for (String theaterId : city.getTheaterList()) {
             Theater theater = getRequiredTheater(theaterId);
@@ -58,7 +59,6 @@ public class BookMyShowFacade {
     public List<ShowSeat> getSeatsForShow(String showId) {
         Show show = getRequiredShow(showId);
         releaseExpiredHolds(show.getShowId());
-
         List<ShowSeat> result = new ArrayList<>();
         for (ShowSeat showSeat : dataStore.getShowSeatList()) {
             if (isShowSeatForShow(show.getShowId(), showSeat.getShowSeatId())) {
@@ -71,16 +71,16 @@ public class BookMyShowFacade {
 
     public String selectSeats(String userId, String showId, List<String> showSeatList) {
         requireText(userId, "userId");
-        Show show = getRequiredShow(showId);
-        validateInputList(show.getShowId(), showSeatList);
-
+        getRequiredShow(showId);
+        validateShowSeatList(showId, showSeatList);
         LocalDateTime now = LocalDateTime.now();
+
         String ticketId = "ticket-" + UUID.randomUUID();
         LocalDateTime expiresAt = now.plus(DEFAULT_HOLD_DURATION);
         Ticket ticket = new Ticket(
                 ticketId,
                 userId,
-                show.getShowId(),
+                showId,
                 showSeatList,
                 TicketStatus.PENDING_PAYMENT,
                 now,
@@ -94,26 +94,25 @@ public class BookMyShowFacade {
     }
 
     public Ticket pay(String ticketId, Payment payment) {
+        requireText(ticketId, "ticketId");
+        requireNotNull(payment, "payment");
+        requirePositive(payment.getAmount(), "payment amount");
+        validateSupportedPayment(payment);
         Ticket ticket = getRequiredTicket(ticketId);
         releaseExpiredHolds(ticket.getShowId());
 
-        if (ticket.getTicketStatus() != TicketStatus.PENDING_PAYMENT) {
-            return ticket;
-        }
-
-        requireNotNull(payment, "payment");
         if (Double.compare(payment.getAmount(), ticket.getPrice()) != 0) {
-            throw new IllegalArgumentException("Payment amount does not match ticket price");
+            throw new RuntimeException("Payment amount does not match ticket price");
         }
         if (!paymentProcessor.process(payment)) {
-            throw new IllegalStateException("Payment failed for ticket: " + ticketId);
+            throw new RuntimeException("Payment failed for ticket: " + ticketId);
         }
-
         for (String showSeatId : ticket.getShowSeatList()) {
             ShowSeat showSeat = getRequiredShowSeat(showSeatId);
             showSeat.book();
         }
         ticket.confirm();
+
         return ticket;
     }
 
@@ -159,9 +158,8 @@ public class BookMyShowFacade {
         requireText(cityId, "cityId");
         requireText(name, "name");
         if (dataStore.containsCity(cityId)) {
-            throw new IllegalStateException("City already exists: " + cityId);
+            throw new RuntimeException("City already exists: " + cityId);
         }
-
         City city = new City(cityId, name);
         dataStore.putCity(city.getCityId(), city);
     }
@@ -170,47 +168,48 @@ public class BookMyShowFacade {
         requireText(movieId, "movieId");
         requireText(title, "title");
         if (dataStore.containsMovie(movieId)) {
-            throw new IllegalStateException("Movie already exists: " + movieId);
+            throw new RuntimeException("Movie already exists: " + movieId);
         }
-
         Movie movie = new Movie(movieId, title);
         dataStore.putMovie(movie.getMovieId(), movie);
     }
 
     public void addTheater(String cityId, String theaterId, String name) {
+        requireText(cityId, "cityId");
         requireText(theaterId, "theaterId");
         requireText(name, "name");
-        if (dataStore.containsTheater(theaterId)) {
-            throw new IllegalStateException("Theater already exists: " + theaterId);
-        }
         City city = getRequiredCity(cityId);
-
+        if (dataStore.containsTheater(theaterId)) {
+            throw new RuntimeException("Theater already exists: " + theaterId);
+        }
         Theater theater = new Theater(theaterId, name);
+
         dataStore.putTheater(theater.getTheaterId(), theater);
         city.addTheater(theaterId);
     }
 
     public void addScreen(String theaterId, String screenId, String name) {
+        requireText(theaterId, "theaterId");
         requireText(screenId, "screenId");
         requireText(name, "name");
-        if (dataStore.containsScreen(screenId)) {
-            throw new IllegalStateException("Screen already exists: " + screenId);
-        }
         Theater theater = getRequiredTheater(theaterId);
-
+        if (dataStore.containsScreen(screenId)) {
+            throw new RuntimeException("Screen already exists: " + screenId);
+        }
         Screen screen = new Screen(screenId, name);
+
         dataStore.putScreen(screen.getScreenId(), screen);
         theater.addScreen(screenId);
     }
 
     public void addSeat(String screenId, String seatId, SeatType seatType) {
+        requireText(screenId, "screenId");
         requireText(seatId, "seatId");
         requireNotNull(seatType, "seatType");
-        if (dataStore.containsSeat(seatId)) {
-            throw new IllegalStateException("Seat already exists: " + seatId);
-        }
         Screen screen = getRequiredScreen(screenId);
-
+        if (dataStore.containsSeat(seatId)) {
+            throw new RuntimeException("Seat already exists: " + seatId);
+        }
         Seat seat = new Seat(seatId, seatType);
         dataStore.putSeat(seat.getSeatId(), seat);
         screen.addSeat(seatId);
@@ -218,21 +217,18 @@ public class BookMyShowFacade {
 
     public void addShow(String showId, String movieId, String screenId, LocalDateTime startTime, int basePrice) {
         requireText(showId, "showId");
+        requireText(movieId, "movieId");
+        requireText(screenId, "screenId");
         requireNotNull(startTime, "startTime");
         requirePositive(basePrice, "basePrice");
-        if (dataStore.containsShow(showId)) {
-            throw new IllegalStateException("Show already exists: " + showId);
-        }
         getRequiredMovie(movieId);
         Screen screen = getRequiredScreen(screenId);
-
+        if (dataStore.containsShow(showId)) {
+            throw new RuntimeException("Show already exists: " + showId);
+        }
         Show show = new Show(showId, movieId, startTime);
         for (String seatId : screen.getSeatList()) {
-            getRequiredSeat(seatId);
             String showSeatId = showId + "-" + seatId;
-            if (dataStore.containsShowSeat(showSeatId)) {
-                throw new IllegalStateException("Show seat already exists: " + showSeatId);
-            }
             ShowSeat showSeat = new ShowSeat(
                     showSeatId,
                     seatId,
@@ -256,24 +252,6 @@ public class BookMyShowFacade {
         }
     }
 
-    private void validateInputList(String showId, List<String> showSeatList) {
-        if (showSeatList == null || showSeatList.isEmpty()) {
-            throw new IllegalArgumentException("showSeatList cannot be empty");
-        }
-
-        Set<String> uniqueShowSeatList = new HashSet<>();
-        for (String showSeatId : showSeatList) {
-            if (!uniqueShowSeatList.add(showSeatId)) {
-                throw new IllegalArgumentException("Duplicate show seat selected: " + showSeatId);
-            }
-            ShowSeat showSeat = getRequiredShowSeat(showSeatId);
-            if (!isShowSeatForShow(showId, showSeat.getShowSeatId())) {
-                throw new IllegalArgumentException("Show seat does not belong to show: " + showSeatId);
-            }
-            showSeat.ensureAvailable();
-        }
-    }
-
     private boolean isShowSeatForShow(String showId, String showSeatId) {
         return showSeatId.startsWith(showId + "-");
     }
@@ -281,6 +259,31 @@ public class BookMyShowFacade {
     private int calculateShowSeatPrice(Show show, ShowSeat showSeat) {
         Seat seat = getRequiredSeat(showSeat.getSeatId());
         return priceCalculator.calculateShowSeatPrice(showSeat.getBasePrice(), seat.getSeatType(), show.getStartTime());
+    }
+
+    private void validateShowSeatList(String showId, List<String> showSeatList) {
+        if (showSeatList == null || showSeatList.isEmpty()) {
+            throw new IllegalArgumentException("showSeatList is required");
+        }
+        Set<String> selectedShowSeatIds = new HashSet<>();
+        for (String showSeatId : showSeatList) {
+            requireText(showSeatId, "showSeatId");
+            if (!selectedShowSeatIds.add(showSeatId)) {
+                throw new IllegalArgumentException("Duplicate show seat selected: " + showSeatId);
+            }
+        }
+        for (String showSeatId : showSeatList) {
+            ShowSeat showSeat = getRequiredShowSeat(showSeatId);
+            if (!isShowSeatForShow(showId, showSeat.getShowSeatId())) {
+                throw new IllegalArgumentException("Show seat does not belong to show: " + showSeatId);
+            }
+        }
+    }
+
+    private void validateSupportedPayment(Payment payment) {
+        if (!(payment instanceof CreditCardPayment) && !(payment instanceof UPIPayment)) {
+            throw new IllegalArgumentException("Unsupported payment type");
+        }
     }
 
     private void requireText(String value, String fieldName) {
@@ -296,6 +299,12 @@ public class BookMyShowFacade {
     }
 
     private void requirePositive(int value, String fieldName) {
+        if (value <= 0) {
+            throw new IllegalArgumentException(fieldName + " must be positive");
+        }
+    }
+
+    private void requirePositive(double value, String fieldName) {
         if (value <= 0) {
             throw new IllegalArgumentException(fieldName + " must be positive");
         }

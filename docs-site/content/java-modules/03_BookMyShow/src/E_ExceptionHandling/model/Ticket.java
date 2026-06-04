@@ -35,22 +35,19 @@ public class Ticket {
 
     public void confirm() {
         if (ticketStatus != TicketStatus.PENDING_PAYMENT) {
-            throw new IllegalStateException("Ticket is not pending payment: " + ticketId);
+            throw new IllegalStateException("Ticket can only be confirmed from PENDING_PAYMENT state: " + ticketId);
         }
         this.ticketStatus = TicketStatus.CONFIRMED;
     }
 
     public void expire() {
-        if (ticketStatus == TicketStatus.CONFIRMED) {
-            throw new IllegalStateException("Confirmed ticket cannot expire: " + ticketId);
+        if (ticketStatus != TicketStatus.PENDING_PAYMENT) {
+            throw new IllegalStateException("Ticket can only expire from PENDING_PAYMENT state: " + ticketId);
         }
         this.ticketStatus = TicketStatus.EXPIRED;
     }
 
     public void updatePrice(int price) {
-        if (price < 0) {
-            throw new IllegalArgumentException("price cannot be negative");
-        }
         this.price = price;
     }
 

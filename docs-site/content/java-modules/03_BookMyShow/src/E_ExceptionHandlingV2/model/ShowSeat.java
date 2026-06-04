@@ -17,27 +17,23 @@ public class ShowSeat {
         this.seatStatus = SeatStatus.AVAILABLE;
     }
 
-    public void ensureAvailable() {
-        if (seatStatus != SeatStatus.AVAILABLE) {
-            throw new IllegalStateException("Seat is not available: " + showSeatId);
-        }
-    }
-
     public void hold() {
-        ensureAvailable();
+        if (seatStatus != SeatStatus.AVAILABLE) {
+            throw new IllegalStateException("Show seat can only be held from AVAILABLE state: " + showSeatId);
+        }
         this.seatStatus = SeatStatus.HELD;
     }
 
     public void book() {
         if (seatStatus != SeatStatus.HELD) {
-            throw new IllegalStateException("Seat is not held: " + showSeatId);
+            throw new IllegalStateException("Show seat can only be booked from HELD state: " + showSeatId);
         }
         this.seatStatus = SeatStatus.BOOKED;
     }
 
     public void releaseHold() {
-        if (seatStatus == SeatStatus.BOOKED) {
-            throw new IllegalStateException("Booked seat cannot be released: " + showSeatId);
+        if (seatStatus != SeatStatus.HELD) {
+            throw new IllegalStateException("Show seat can only release hold from HELD state: " + showSeatId);
         }
         this.seatStatus = SeatStatus.AVAILABLE;
     }

@@ -51,9 +51,9 @@ public class BookMyShowFacade {
     }
 
     public List<ShowSeat> getSeatsForShow(String showId) {
-        Show show = dataStore.getShow(showId);
-        releaseExpiredHolds(show.getShowId());
+        releaseExpiredHolds(showId);
 
+        Show show = dataStore.getShow(showId);
         List<ShowSeat> result = new ArrayList<>();
         for (ShowSeat showSeat : dataStore.getShowSeatList()) {
             if (isShowSeatForShow(show.getShowId(), showSeat.getShowSeatId())) {
@@ -66,6 +66,7 @@ public class BookMyShowFacade {
 
     public String selectSeats(String userId, String showId, List<String> showSeatList) {
         LocalDateTime now = LocalDateTime.now();
+
         String ticketId = "ticket-" + UUID.randomUUID();
         LocalDateTime expiresAt = now.plus(DEFAULT_HOLD_DURATION);
         Ticket ticket = new Ticket(
@@ -88,13 +89,18 @@ public class BookMyShowFacade {
         Ticket ticket = dataStore.getTicket(ticketId);
         releaseExpiredHolds(ticket.getShowId());
 
-        if (paymentProcessor.process(payment)) {
-            for (String showSeatId : ticket.getShowSeatList()) {
-                ShowSeat showSeat = dataStore.getShowSeat(showSeatId);
-                showSeat.book();
-            }
-            ticket.confirm();
+        if (Double.compare(payment.getAmount(), ticket.getPrice()) != 0) {
+            throw new RuntimeException("Payment amount does not match ticket price");
         }
+        if (!paymentProcessor.process(payment)) {
+            throw new RuntimeException("Payment failed for ticket: " + ticketId);
+        }
+        for (String showSeatId : ticket.getShowSeatList()) {
+            ShowSeat showSeat = dataStore.getShowSeat(showSeatId);
+            showSeat.book();
+        }
+        ticket.confirm();
+
         return ticket;
     }
 
@@ -138,67 +144,60 @@ public class BookMyShowFacade {
 
     public void addCity(String cityId, String name) {
         if (dataStore.containsCity(cityId)) {
-            throw new IllegalStateException("City already exists: " + cityId);
+            throw new RuntimeException("City already exists: " + cityId);
         }
-
         City city = new City(cityId, name);
         dataStore.putCity(city.getCityId(), city);
     }
 
     public void addMovie(String movieId, String title) {
         if (dataStore.containsMovie(movieId)) {
-            throw new IllegalStateException("Movie already exists: " + movieId);
+            throw new RuntimeException("Movie already exists: " + movieId);
         }
-
         Movie movie = new Movie(movieId, title);
         dataStore.putMovie(movie.getMovieId(), movie);
     }
 
     public void addTheater(String cityId, String theaterId, String name) {
-        if (dataStore.containsTheater(theaterId)) {
-            throw new IllegalStateException("Theater already exists: " + theaterId);
-        }
         City city = dataStore.getCity(cityId);
-
+        if (dataStore.containsTheater(theaterId)) {
+            throw new RuntimeException("Theater already exists: " + theaterId);
+        }
         Theater theater = new Theater(theaterId, name);
+
         dataStore.putTheater(theater.getTheaterId(), theater);
         city.addTheater(theaterId);
     }
 
     public void addScreen(String theaterId, String screenId, String name) {
-        if (dataStore.containsScreen(screenId)) {
-            throw new IllegalStateException("Screen already exists: " + screenId);
-        }
         Theater theater = dataStore.getTheater(theaterId);
-
+        if (dataStore.containsScreen(screenId)) {
+            throw new RuntimeException("Screen already exists: " + screenId);
+        }
         Screen screen = new Screen(screenId, name);
+
         dataStore.putScreen(screen.getScreenId(), screen);
         theater.addScreen(screenId);
     }
 
     public void addSeat(String screenId, String seatId, SeatType seatType) {
-        if (dataStore.containsSeat(seatId)) {
-            throw new IllegalStateException("Seat already exists: " + seatId);
-        }
         Screen screen = dataStore.getScreen(screenId);
-
+        if (dataStore.containsSeat(seatId)) {
+            throw new RuntimeException("Seat already exists: " + seatId);
+        }
         Seat seat = new Seat(seatId, seatType);
         dataStore.putSeat(seat.getSeatId(), seat);
         screen.addSeat(seatId);
     }
 
     public void addShow(String showId, String movieId, String screenId, LocalDateTime startTime, int basePrice) {
-        if (dataStore.containsShow(showId)) {
-            throw new IllegalStateException("Show already exists: " + showId);
-        }
         Screen screen = dataStore.getScreen(screenId);
-
+        if (dataStore.containsShow(showId)) {
+            throw new RuntimeException("Show already exists: " + showId);
+        }
         Show show = new Show(showId, movieId, startTime);
         for (String seatId : screen.getSeatList()) {
             String showSeatId = showId + "-" + seatId;
-            if (dataStore.containsShowSeat(showSeatId)) {
-                throw new IllegalStateException("Show seat already exists: " + showSeatId);
-            }
             ShowSeat showSeat = new ShowSeat(
                     showSeatId,
                     seatId,

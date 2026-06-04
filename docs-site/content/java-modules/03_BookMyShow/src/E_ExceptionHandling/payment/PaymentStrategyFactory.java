@@ -12,6 +12,6 @@ public class PaymentStrategyFactory {
         if (payment instanceof UPIPayment) {
             return new UPIPaymentStrategy();
         }
-        throw new IllegalArgumentException("Unsupported payment type");
+        return null;
     }
 }
