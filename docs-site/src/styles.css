@@ -249,17 +249,20 @@ select {
 
 .primary-nav button,
 .doc-nav button,
-.java-nav button {
+.java-nav button,
+.java-nav a.package-name-button {
   display: flex;
   align-items: center;
   gap: 10px;
   width: 100%;
   min-height: 40px;
   padding: 9px 10px;
-  border-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 7px;
   background: transparent;
   color: #d8e4dd;
   text-align: left;
+  text-decoration: none;
 }
 
 .primary-nav button.active,
@@ -267,7 +270,8 @@ select {
 .doc-nav button.active,
 .doc-nav button:hover,
 .java-nav button.active,
-.java-nav button:hover {
+.java-nav button:hover,
+.java-nav a.package-name-button:hover {
   background: #26352e;
   color: #ffffff;
 }
@@ -356,7 +360,8 @@ select {
   align-items: center;
 }
 
-.package-row button {
+.package-row button,
+.package-row .package-name-button {
   min-height: 34px;
 }
 
@@ -654,6 +659,7 @@ select {
 .workspace {
   position: relative;
   overflow: auto;
+  touch-action: pan-x pan-y;
   scrollbar-width: none;
 }
 
@@ -1531,7 +1537,7 @@ select {
   min-height: 34px;
 }
 
-.site-studio .package-name-button {
+.site-studio .java-nav a.package-name-button {
   position: relative;
   justify-content: space-between;
   gap: 8px;
@@ -1589,7 +1595,8 @@ select {
 
 .site-studio .primary-nav button,
 .site-studio .doc-nav button,
-.site-studio .java-nav button {
+.site-studio .java-nav button,
+.site-studio .java-nav a.package-name-button {
   color: #475569;
 }
 
@@ -1599,6 +1606,7 @@ select {
 .site-studio .doc-nav button:hover,
 .site-studio .java-nav button.active,
 .site-studio .java-nav button:hover,
+.site-studio .java-nav a.package-name-button:hover,
 .site-studio .package-entry.active {
   background: #f1f5f9;
   color: var(--text);

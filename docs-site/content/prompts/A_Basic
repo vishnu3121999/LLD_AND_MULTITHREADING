@@ -1,0 +1,217 @@
+﻿Create the first/basic package for this LLD problem in Java.
+
+Problem:
+05_ElevatorSystem
+
+Target package:
+Use package name `A_basic` unless I explicitly give another package name.
+Every Java file's package declaration must exactly match the folder name and imports.
+
+Goal:
+Create only the first/basic implementation. Do not add later-stage design patterns such as Strategy, Factory, Observer, Command, State, Memento, Chain of Responsibility, concurrency, exception handling, persistence, or advanced validation unless the problem fundamentally cannot run without a tiny amount of domain logic.
+Assume happy paths only. Do not handle unhappy paths in this package; a later package will add validations, exceptions, fallback behavior, and edge-case handling.
+
+Expected output:
+1. Create a clean file tree under `src/A_basic`.
+2. Include a runnable `Main.java` demo.
+3. Include core model/entity classes.
+4. Include enums under `model/enums` when needed.
+5. Include one facade class under `service`.
+6. If this is an online/catalog/booking/order-type app, include `datastore/DataStore.java` and `datastore/InMemoryDataStore.java`.
+7. Keep the code simple, readable, and interview-friendly.
+
+Coding standards:
+
+Generic entity design:
+- Use plain Java classes with private fields.
+- Prefer `private final` for identity and immutable attributes.
+- Do not add reverse links.
+- Parent entities may store child IDs, but child entities must not store parent IDs unless the problem absolutely requires it.
+- Example: `City -> Theater -> Screen`; `City` can have `theaterList`, `Theater` can have `screenList`, but `Screen` should not contain `theaterId` or `cityId`.
+- Store relationships as IDs, not full object references, for online/catalog apps.
+- Use singular ID fields like `movieId`, `screenId`, `ticketId`.
+- Avoid setters unless the field is intentionally mutable state.
+- Do not put defensive validations yet: no duplicate checks, null checks, exception classes, or validation services.
+- Do not add unhappy-path checks such as missing IDs, empty collections, invalid states, invalid floors, insufficient balance, unavailable resources, duplicate requests, expired records, or fallback assignments.
+- Write the basic flow assuming all inputs and setup are valid.
+- Domain state transitions are allowed only when needed for the basic demo, for example `hold()`, `book()`, `confirm()`, `cancelTransaction()`.
+
+List standard:
+- For relationship lists, use this style exactly:
+
+```java
+private final List<String> theaterList;
+
+public void addTheater(String theaterId) {
+    theaterList.add(theaterId);
+}
+
+public List<String> getTheaterList() {
+    return Collections.unmodifiableList(theaterList);
+}
+```
+
+- Initialize lists in the constructor with `new ArrayList<>()`.
+- Never return mutable internal lists directly.
+- Use names like `theaterList`, `screenList`, `seatList`, `showList`, `rackList`.
+
+Datastore standard for online/catalog apps:
+- Create `datastore/DataStore.java` as an interface.
+- Create `datastore/InMemoryDataStore.java` as the implementation.
+- Use `HashMap`, not `ConcurrentHashMap`, in the first/basic package.
+- Map fields must be named as `<entityName>Map`.
+- Example: if entity is `Movie`, use `private final Map<String, Movie> movieMap;`.
+- For every core entity stored independently, add methods in this exact shape and order:
+
+```java
+Movie getMovie(String key);
+
+void putMovie(String key, Movie value);
+
+boolean containsMovie(String key);
+
+Movie removeMovie(String key);
+```
+
+Implementation:
+
+```java
+@Override
+public Movie getMovie(String key) {
+    return movieMap.get(key);
+}
+
+@Override
+public void putMovie(String key, Movie value) {
+    movieMap.put(key, value);
+}
+
+@Override
+public boolean containsMovie(String key) {
+    return movieMap.containsKey(key);
+}
+
+@Override
+public Movie removeMovie(String key) {
+    return movieMap.remove(key);
+}
+```
+
+- Add `List<Movie> getMovieList()` only when facade/search/demo needs iteration.
+- If adding list methods, return `new ArrayList<>(movieMap.values())`.
+- Datastore must not contain business logic.
+- Datastore must not create IDs.
+- Datastore must not validate.
+
+Datastore standard for game-only problems:
+- If the problem is a single local game, datastore can store one game object or a `gameMap`.
+- Still prefer names `DataStore` and `InMemoryDataStore`.
+- If multiple games can exist, use `private final Map<String, Game> gameMap`.
+- Use `HashMap` in the first/basic package.
+
+Facade standard:
+- There must be only one facade class in `service`, named `<ProblemName>Facade`.
+- Do not create multiple services like `UserService`, `BookingService`, `PaymentService`, etc.
+- If helper logic is tiny, keep it as private methods inside the facade.
+- If a helper class is unavoidable, do not put it in `service`; put it in a domain/helper package and keep it non-orchestrating.
+- The facade owns orchestration between models and datastore.
+- The facade should create entities in admin methods.
+- The facade should not generate IDs for entities created directly by user/admin actions; accept those IDs from `Main`.
+- The facade may generate IDs for system-created entities like ticket, transaction, payment, invoice, etc.
+- Method order inside facade must be:
+  1. User methods
+  2. System methods
+  3. Admin methods
+  4. Util/helper methods
+- Add comments exactly like:
+  `// User methods`
+  `// System methods`
+  `// Admin methods`
+  `// Util/helper methods`
+
+Main standard:
+- `Main.java` should be a simple runnable demo.
+- Instantiate datastore, facade, and any required helper/domain components.
+- Generate random IDs in `Main` for direct user/admin-created entities.
+- Use a helper like:
+
+```java
+private static String id(String prefix) {
+    return prefix + "-" + UUID.randomUUID();
+}
+```
+
+- Do not generate direct entity IDs inside facade for admin-created entities like city, movie, theater, product, rack, user.
+- It is okay for facade/model to generate system IDs like `ticketId` when a user action creates a derived system record.
+- Main should call facade methods, not mutate entities directly after setup.
+- Main can print objects to demonstrate the flow.
+
+Package structure standard:
+Use this shape when applicable:
+
+```text
+src/A_basic/
+  Main.java
+  datastore/
+    DataStore.java
+    InMemoryDataStore.java
+  model/
+    CoreEntity.java
+    AnotherEntity.java
+    enums/
+      SomeStatus.java
+      SomeType.java
+  service/
+    ProblemFacade.java
+```
+
+For game problems, use:
+
+```text
+src/A_basic/
+  Main.java
+  datastore/
+    DataStore.java
+    InMemoryDataStore.java
+  model/
+    Player.java
+    Move.java
+    Position.java
+    board/
+      GameBoard.java
+      ClassicBoard.java
+    game/
+      Game.java
+      ClassicGame.java
+    enums/
+      GameState.java
+  service/
+    GameFacade.java
+```
+
+Naming rules:
+- Use `DataStore`, not `IDatastore`.
+- Use `InMemoryDataStore`, not `InmemoryDatastore`.
+- Use `HashMap` in basic package.
+- Use `A_basic` consistently; do not mix `A_basic` and `A_Basic`.
+- Class names must be clear and domain-specific.
+- Method names should be simple: `addCity`, `addMovie`, `searchShows`, `selectSeats`, `pay`, `cancel`, `startGame`, `makeMove`.
+
+Do not include:
+- Reverse entity links.
+- Multiple service classes.
+- Controllers, APIs, repositories, database code, threads, locks, exceptions, custom validators.
+- Over-engineered patterns in the first package.
+- Concurrency-safe collections unless this is a concurrency package.
+- Direct mutable list getters.
+- Business logic inside datastore.
+- Random/non-deterministic demo flow unless the problem needs randomness.
+- Unhappy-path handling, fallback logic, defensive guards, or validation branches.
+
+Before finishing:
+- Ensure all package declarations match folder names.
+- Ensure imports compile.
+- Ensure `Main.java` demonstrates the primary flow.
+- Ensure facade method order follows user/system/admin/helper.
+- Ensure online-app datastore has `get/put/contains/remove` for every core entity map.
+- Ensure relationship lists use `private final List<String> ...List`, `addX`, and `Collections.unmodifiableList`.

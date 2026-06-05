@@ -1,0 +1,166 @@
+	Inspect the existing module and reference concurrency packages before coding.
+
+	Target module: 05_ElevatorSystem
+
+	Create two next progressive packages after the current latest package:
+
+	1. <NextPackageName>_Concurrency1
+	   Purpose:
+	   Handle only races that happen when multiple threads execute the same facade method concurrently.
+
+	2. <NextPackageName>_Concurrency2
+	   Purpose:
+	   Build directly on Concurrency1 and handle additional races where the same mutable entity/aggregate is updated by multiple facade methods.
+
+	Before implementing, first inspect:
+	- current problem packages
+	- reference concurrency packages from earlier modules
+	- mutable core entities
+	- datastore collections/maps/lists
+	- facade methods that perform check + update
+	- admin/write methods also, because multiple admins or duplicate clicks can happen
+	- read methods only if they mutate state or require a consistent snapshot
+
+	Important:
+	- Do not blindly add concurrency everywhere.
+	- Throwing an exception is not automatically a concurrency bug. If the final state remains correct, say no locking is needed.
+	- Focus only on real race conditions, inconsistent state, lost updates, duplicate creation, invalid state transitions, or collection structure races.
+	- Do not lock the whole datastore unless there is a strong reason. Prefer object/aggregate-level locking.
+	- Prefer locking in the facade when the facade owns the workflow.
+	- If multiple methods mutate the same core object, lock on that object or its aggregate root.
+	- If explicit lock objects are needed, use a simple LockManager class.
+	- Do not put synchronization inside core entities unless explicitly required.
+	- If a prerequisite read/validation does not need lock protection, keep it outside the lock.
+	- If a validation is only needed for protected state, do it inside the lock.
+	- Do not use concurrent collections by default.
+	- ConcurrentHashMap protects map structure only, not mutable objects stored inside the map.
+	- Use concurrent collections only for real concurrent read/write access to the collection structure.
+	- Keep entity analysis at entity/aggregate level, not field-as-entity level. Mention fields only as mutable state inside that entity.
+	- Preserve existing code shape strictly. Do not refactor helpers, conditions, method flow, or naming unless required for concurrency.
+	- Each package must remain complete and runnable.
+	- Add/update APPROACH_COMPARISON.md.
+	- Add small concurrent demos in Main where useful.
+	- Compile/run the package.
+
+	Before coding, return a concurrency report and wait for my confirmation.
+
+	Report structure:
+
+	## Concurrency1: Same Method Race Analysis
+
+	For each facade method:
+
+	methodName(...)
+	entities getting updated: [EntityName.fieldName, EntityName.fieldName]
+
+	1. What if the same method is called with the same params simultaneously?
+	- State whether there is a real race.
+	- If yes, explain the bad interleaving and proposed lock/collection fix.
+	- If no, say no concurrency handling needed and why.
+
+	2. What if the same method is called with different params simultaneously?
+	- Cover both overlapping-object and non-overlapping-object cases.
+	- Also mention collection/map structure races if the method can create/read/write shared datastore collections.
+	- If no real race, say no concurrency handling needed and why.
+
+	Then answer for Concurrency1:
+	1. Which methods actually need concurrency handling?
+	2. Which shared objects can race?
+	3. Which collections/maps really need concurrent structures?
+	4. What locking level should be used: method-level, object-level, aggregate-level, lock-manager-level, or datastore-level?
+	5. Which things do not need concurrency handling and why?
+
+	## Concurrency2: Cross Method Entity Race Analysis
+
+	This package must build on top of Concurrency1.
+
+	For each mutable entity/aggregate updated by facade methods:
+
+	EntityName
+	mutable state getting updated: [field1, field2]
+	facade methods updating it: [methodA(...), methodB(...)]
+
+	Question:
+	Can these methods race because they update the same entity/aggregate?
+
+	Answer format:
+	- Race condition:
+	  Explain the real conflicting interleaving, or say no race.
+	- Solution:
+	  Explain how to solve it. Be specific about lock target, lock scope, and whether collection changes are needed.
+	- Why this belongs in Concurrency2:
+	  Explain what was not covered by Concurrency1.
+
+	Then answer for Concurrency2:
+	1. Which cross-method races exist?
+	2. Which entity/aggregate should be the lock owner?
+	3. Whether locks should be object-level, aggregate-level, or lock-manager-level?
+	4. Which collections need concurrent structures because reads and writes can overlap across methods?
+	5. Which methods/entities still do not need concurrency handling and why?
+
+	## APPROACH_COMPARISON.md Required Structure
+
+	Update APPROACH_COMPARISON.md using this structure:
+
+	# Approach Comparison
+
+	## Existing Packages
+
+	Briefly list existing packages and what each one demonstrates.
+
+	## Concurrency1
+
+	### Goal
+	Explain that this package fixes same-facade-method concurrent execution races only.
+
+	### Race Conditions Solved
+	For each solved race:
+	- facade method
+	- shared object/entity
+	- bad interleaving
+	- chosen fix
+	- why this fix is enough for Concurrency1
+
+	### Things Intentionally Not Solved
+	List cross-method races or broader collection issues intentionally left for Concurrency2.
+
+	### Collections Changed
+	List only maps/lists actually changed to concurrent collections and why.
+
+	### Locking Strategy
+	Explain exact lock target and why method-level/datastore-level locking was avoided.
+
+	### Demo
+	Explain the concurrent demo added in Main.
+
+	## Concurrency2
+
+	### Goal
+	Explain that this package builds on Concurrency1 and fixes cross-method entity/aggregate races.
+
+	### Race Conditions Solved
+	For each solved race:
+	- entity/aggregate
+	- methods involved
+	- bad interleaving
+	- chosen fix
+	- why this fix is enough
+
+	### Collections Changed
+	List maps/lists changed because user/admin or cross-method reads/writes can overlap.
+
+	### Locking Strategy
+	Explain exact lock target, lock scope, and why broader locks were avoided.
+
+	### Things Not Needing Concurrency Handling
+	Explicitly list methods/entities where no handling is needed and why.
+
+	### Demo
+	Explain the concurrent demo added in Main.
+
+	Implementation rules:
+	- After I confirm the plan, implement Concurrency1 first.
+	- Then implement Concurrency2 by copying Concurrency1 and adding only the extra cross-method fixes.
+	- Do not introduce unrelated refactors.
+	- Compile/run both packages.
+	- After implementation, verify APPROACH_COMPARISON.md is in sync with the actual code.

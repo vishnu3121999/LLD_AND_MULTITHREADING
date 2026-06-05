@@ -31,6 +31,7 @@ export async function getJavaModules() {
         module: entry.name,
         packageName: packageEntry.name,
         title: packageEntry.name,
+        href: javaWorkspaceHref(entry.name, packageEntry.name),
         count: files.length
       });
     }
@@ -70,6 +71,7 @@ export async function getJavaPage(moduleName, packageName) {
     module: safeModule,
     packageName: safePackage,
     title: safePackage,
+    href: javaWorkspaceHref(safeModule, safePackage),
     root: `content/java-modules/${safeModule}/src/${safePackage}`,
     count: files.length,
     files
@@ -289,6 +291,10 @@ function sanitizePathPart(value) {
 
 function pageId(moduleName, packageName) {
   return `${moduleName}::${packageName}`;
+}
+
+export function javaWorkspaceHref(moduleName, packageName) {
+  return `/workspace/${encodeURIComponent(moduleName)}/${encodeURIComponent(packageName)}`;
 }
 
 function badRequest(message) {

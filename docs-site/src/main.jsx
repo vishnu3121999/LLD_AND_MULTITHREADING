@@ -34,7 +34,7 @@ const MIN_BLOCK_WIDTH = 140;
 const MIN_BLOCK_HEIGHT = 90;
 const CANVAS_SIZE = 100000;
 
-export default function App() {
+export default function App({ initialModule = "", initialPackage = "" } = {}) {
   const appRef = useRef(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -102,12 +102,26 @@ export default function App() {
       .then((payload) => {
         const modules = payload.modules || [];
         setJavaModules(modules);
-        if (modules[0]?.name) setSelectedModule(modules[0].name);
-        const firstPage = modules[0]?.pages?.[0] || null;
-        if (firstPage) setSelectedPage(firstPage);
+        const initialPage = findPageByRoute(modules, initialModule, initialPackage) || modules[0]?.pages?.[0] || null;
+        if (initialPage) applyPageSelection(initialPage);
       })
       .catch(() => setJavaModules([]));
-  }, []);
+  }, [initialModule, initialPackage]);
+
+  useEffect(() => {
+    function handlePopState() {
+      if (javaModules.length === 0) return;
+      const routeSelection = parseWorkspaceRoute(window.location.pathname);
+      const nextPage = routeSelection
+        ? findPageByRoute(javaModules, routeSelection.module, routeSelection.packageName)
+        : javaModules[0]?.pages?.[0] || null;
+
+      if (nextPage) applyPageSelection(nextPage);
+    }
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [javaModules]);
 
   useEffect(() => {
     function handleFullscreenChange() {
@@ -164,10 +178,20 @@ export default function App() {
     const nextIndex = (currentIndex + direction + pages.length) % pages.length;
     const nextPage = pages[nextIndex];
 
-    setSelectedModule(nextPage.module);
-    setSelectedPage(nextPage);
+    selectPage(nextPage);
     setWorkspaceMode("visualizer");
+  }
+
+  function applyPageSelection(page) {
+    setSelectedModule(page.module);
+    setSelectedPage(page);
+    setSelectedDiff(null);
     setJavaMode("page");
+  }
+
+  function selectPage(page, { updateUrl = true } = {}) {
+    applyPageSelection(page);
+    if (updateUrl) pushWorkspaceRoute(page);
   }
 
   return (
@@ -210,25 +234,18 @@ export default function App() {
             selectedDiff={selectedDiff}
             javaMode={javaMode}
             onToggleModule={(moduleName) => setCollapsedModules((current) => ({ ...current, [moduleName]: !current[moduleName] }))}
-            onSelectPage={(page) => {
-              setSelectedModule(page.module);
-              setSelectedPage(page);
-              setSelectedDiff(null);
-              setJavaMode("page");
-            }}
+            onSelectPage={(page) => selectPage(page)}
             onSelectDiff={(diffSelection) => {
               setSelectedModule(diffSelection.module);
               setWorkspaceMode("visualizer");
               setSelectedPage(diffSelection.targetPage);
               setSelectedDiff(diffSelection);
               setJavaMode("diff");
+              pushWorkspaceRoute(diffSelection.targetPage);
             }}
             onReorganizePage={(page) => {
-              setSelectedModule(page.module);
+              selectPage(page);
               setWorkspaceMode("visualizer");
-              setSelectedPage(page);
-              setSelectedDiff(null);
-              setJavaMode("page");
               setReorganizeRequest({ pageId: page.id, requestedAt: Date.now() });
             }}
           />
@@ -247,6 +264,46 @@ export default function App() {
 function isEditableTarget(target) {
   if (!(target instanceof HTMLElement)) return false;
   return Boolean(target.closest("input, textarea, select, [contenteditable='true']"));
+}
+
+function findPageByRoute(modules, moduleName, packageName) {
+  if (!moduleName || !packageName) return null;
+  const module = modules.find((candidate) => candidate.name === moduleName);
+  return module?.pages?.find((page) => page.packageName === packageName) || null;
+}
+
+function pageRouteHref(page) {
+  return page?.href || `/workspace/${encodeURIComponent(page.module)}/${encodeURIComponent(page.packageName)}`;
+}
+
+function pushWorkspaceRoute(page) {
+  if (typeof window === "undefined" || !page) return;
+  const href = pageRouteHref(page);
+  if (window.location.pathname === href) return;
+  window.history.pushState({ pageId: page.id }, "", href);
+}
+
+function parseWorkspaceRoute(pathname) {
+  const parts = pathname.split("/").filter(Boolean);
+  if (parts[0] !== "workspace" || parts.length < 3) return null;
+  return {
+    module: decodePathPart(parts[1]),
+    packageName: decodePathPart(parts[2])
+  };
+}
+
+function decodePathPart(value) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+function handlePackageLinkClick(event, page, onSelectPage) {
+  if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  event.preventDefault();
+  onSelectPage(page);
 }
 
 function JavaPageNav({ modules, selectedModule, workspaceMode, collapsedModules, selectedPage, selectedDiff, javaMode, onToggleModule, onSelectPage, onSelectDiff, onReorganizePage }) {
@@ -289,10 +346,14 @@ function JavaPageNav({ modules, selectedModule, workspaceMode, collapsedModules,
             return (
               <div key={page.id} className={`package-entry ${isNormalActive || isDiffActive ? "active" : ""}`}>
                 <div className="package-row">
-                  <button className="package-name-button" onClick={() => onSelectPage(page)}>
+                  <a
+                    className="package-name-button"
+                    href={pageRouteHref(page)}
+                    onClick={(event) => handlePackageLinkClick(event, page, onSelectPage)}
+                  >
                     <span>{page.title}</span>
                     <small>{page.count}</small>
-                  </button>
+                  </a>
                   <button
                     className="package-action-button"
                     onClick={() => onReorganizePage(page)}
@@ -680,29 +741,12 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
   useEffect(() => {
     function handleZoom(event) {
       if (!event.ctrlKey || event.altKey || event.metaKey) return;
-      const direction = zoomDirection(event);
-      if (direction === 0) return;
+      const delta = keyboardZoomDelta(event);
+      if (delta === 0) return;
 
       event.preventDefault();
 
-      if (hoveredBlockId) {
-        setLayouts((current) => {
-          const layout = current[hoveredBlockId];
-          if (!layout) return current;
-          setLayoutsSource("user");
-          return {
-            ...current,
-            [hoveredBlockId]: {
-              ...layout,
-              zoom: clampZoom((layout.zoom || 1) + direction * 0.1)
-            }
-          };
-        });
-        return;
-      }
-
-      setParentZoomSource("user");
-      setParentZoom((current) => clampParentZoom(current + direction * 0.1));
+      applyZoomDelta(delta, "auto");
     }
 
     window.addEventListener("keydown", handleZoom);
@@ -734,6 +778,34 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
       ...current,
       [storageKey]: !current[storageKey]
     }));
+  }
+
+  function applyZoomDelta(delta, target = "auto") {
+    if (!Number.isFinite(delta) || delta === 0) return;
+    const shouldZoomBlock = target === "block" || (target === "auto" && hoveredBlockId);
+
+    if (shouldZoomBlock) {
+      setLayouts((current) => {
+        const layout = current[hoveredBlockId];
+        if (!layout) return current;
+        setLayoutsSource("user");
+        return {
+          ...current,
+          [hoveredBlockId]: {
+            ...layout,
+            zoom: clampZoom((layout.zoom || 1) + delta)
+          }
+        };
+      });
+      return;
+    }
+
+    setParentZoomSource("user");
+    setParentZoom((current) => clampParentZoom(current + delta));
+  }
+
+  function zoomPage(delta) {
+    applyZoomDelta(delta, "page");
   }
 
   async function reorganizeFromPreviousPackage(targetPage) {
@@ -773,13 +845,69 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
         onHoverBlock={setHoveredBlockId}
         onToggleConstructors={toggleConstructors}
         onToggleMethodFold={toggleMethodFold}
+        onPageZoom={zoomPage}
       />
     </section>
   );
 }
 
-function CodeWorkspace({ files, deletedFiles, layouts, activePageId, constructorVisibility, collapsedMethods, parentZoom, onLayoutChange, onHoverBlock, onToggleConstructors, onToggleMethodFold }) {
+function CodeWorkspace({ files, deletedFiles, layouts, activePageId, constructorVisibility, collapsedMethods, parentZoom, onLayoutChange, onHoverBlock, onToggleConstructors, onToggleMethodFold, onPageZoom }) {
   const workspaceRef = useRef(null);
+  const pinchRef = useRef({ distance: 0 });
+  const onPageZoomRef = useRef(onPageZoom);
+
+  useEffect(() => {
+    onPageZoomRef.current = onPageZoom;
+  }, [onPageZoom]);
+
+  useEffect(() => {
+    const workspace = workspaceRef.current;
+    if (!workspace) return undefined;
+
+    function handleWheel(event) {
+      if (!event.ctrlKey || event.altKey || event.metaKey) return;
+      const delta = wheelZoomDelta(event);
+      if (delta === 0) return;
+
+      event.preventDefault();
+      onPageZoomRef.current(delta);
+    }
+
+    function handleTouchStart(event) {
+      if (event.touches.length !== 2) return;
+      pinchRef.current.distance = touchDistance(event.touches);
+      event.preventDefault();
+    }
+
+    function handleTouchMove(event) {
+      if (event.touches.length !== 2 || !pinchRef.current.distance) return;
+      const nextDistance = touchDistance(event.touches);
+      const delta = pinchZoomDelta(nextDistance, pinchRef.current.distance);
+      pinchRef.current.distance = nextDistance;
+      if (delta === 0) return;
+
+      event.preventDefault();
+      onPageZoomRef.current(delta);
+    }
+
+    function handleTouchEnd(event) {
+      pinchRef.current.distance = event.touches.length === 2 ? touchDistance(event.touches) : 0;
+    }
+
+    workspace.addEventListener("wheel", handleWheel, { passive: false });
+    workspace.addEventListener("touchstart", handleTouchStart, { passive: false });
+    workspace.addEventListener("touchmove", handleTouchMove, { passive: false });
+    workspace.addEventListener("touchend", handleTouchEnd);
+    workspace.addEventListener("touchcancel", handleTouchEnd);
+
+    return () => {
+      workspace.removeEventListener("wheel", handleWheel);
+      workspace.removeEventListener("touchstart", handleTouchStart);
+      workspace.removeEventListener("touchmove", handleTouchMove);
+      workspace.removeEventListener("touchend", handleTouchEnd);
+      workspace.removeEventListener("touchcancel", handleTouchEnd);
+    };
+  }, [files.length]);
 
   if (!files.length) {
     return (
@@ -1319,10 +1447,37 @@ function maskJavaCommentsAndStrings(source) {
   return chars.join("");
 }
 
-function zoomDirection(event) {
-  if (event.key === "+" || event.key === "=") return 1;
-  if (event.key === "-" || event.key === "_") return -1;
+function keyboardZoomDelta(event) {
+  if (event.key === "+" || event.key === "=") return 0.1;
+  if (event.key === "-" || event.key === "_") return -0.1;
   return 0;
+}
+
+function wheelZoomDelta(event) {
+  const rawDelta = Math.abs(event.deltaY) >= Math.abs(event.deltaX) ? event.deltaY : event.deltaX;
+  if (!Number.isFinite(rawDelta) || rawDelta === 0) return 0;
+  return clampZoomStep((-rawDelta * wheelDeltaModeMultiplier(event)) / 500);
+}
+
+function wheelDeltaModeMultiplier(event) {
+  if (event.deltaMode === 1) return 16;
+  if (event.deltaMode === 2) return typeof window === "undefined" ? 800 : window.innerHeight;
+  return 1;
+}
+
+function pinchZoomDelta(nextDistance, previousDistance) {
+  if (!Number.isFinite(nextDistance) || !Number.isFinite(previousDistance) || previousDistance <= 0) return 0;
+  return clampZoomStep((nextDistance - previousDistance) / 250);
+}
+
+function clampZoomStep(value) {
+  return Math.min(0.08, Math.max(-0.08, Number(value.toFixed(3))));
+}
+
+function touchDistance(touches) {
+  const [first, second] = touches;
+  if (!first || !second) return 0;
+  return Math.hypot(first.clientX - second.clientX, first.clientY - second.clientY);
 }
 
 function clampZoom(value) {

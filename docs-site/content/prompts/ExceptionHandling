@@ -1,0 +1,96 @@
+	<Module Name>
+	I need two exception-handling packages.
+
+	Before coding, inspect existing exception-handling packages for standards from reference modules, especially:
+	- 03_BookMyShow
+
+
+	Create the first exception-handling package by copying the last existing package of this module.
+
+	Strict standards:
+	- Do not refactor code.
+	- Do not change algorithms, model design, package structure, method names, or behavior except what is required for exception handling.
+	- Do not add/remove unrelated empty lines or formatting.
+	- If you find a bug unrelated to exception handling, stop and ask before fixing it.
+	- Throw anywhere appropriate, but catch only at Main/demo boundary.
+	- Do not put input validations inside facade system/util methods when user/admin boundary methods already validate before calling them.
+	- Do not introduce validation Chain of Responsibility unless I explicitly ask.
+	- Do not introduce State pattern unless I explicitly ask.
+	- Do not add public model/domain validation helper methods just so facade can throw state exceptions.
+	- Do not expose entity state only to throw from facade.
+	- Do not move exception responsibility from one class to another unless required by the rules below.
+	- Keep passive entities passive. Do not add validations to simple models/datastore classes unless the class already owns the state transition being validated.
+	- Keep the package complete, runnable, and interview-friendly.
+
+
+
+	Exception types and ownership:
+	1. IllegalArgumentException
+	   - For invalid method parameters only.
+	   - Examples: null/blank inputs, regex validation, value <= 0, invalid count/price.
+	   - Throw only from facade or services.
+	   - Do not throw from core entities or datastore.
+
+	2. NoSuchElementException
+	   - For element not found in datastore.
+	   - Throw only from facade or services.
+	   - Do not throw from datastore or core entities.
+
+	3. RuntimeException for entity already exists
+	   - For duplicate entity creation.
+	   - Throw only from facade or services.
+	   - Example: product/rack/game already exists.
+
+	4. IllegalStateException
+	   - Only for invalid state transitions.
+	   - Throw only in the class where that state is owned.
+	   - Do not add facade-side state checks for state owned by a model.
+	   - Do not add new public “ensure/validate/canX” methods just to force ordering from facade.
+	   - Prefer throwing inside the actual state-changing method already present.
+
+	5. Other RuntimeException/custom exceptions
+	   - For remaining business validations.
+	   - Prefer plain RuntimeException unless a similar reference module already uses a custom exception for the same kind of business case.
+	   - Do not create custom exceptions unless clearly needed and consistent with references.
+
+	Exception ordering rule:
+	- Within each method, checks must appear in this order where applicable:
+	  1. IllegalArgumentException checks
+	  2. NoSuchElementException datastore lookup checks
+	  3. RuntimeException duplicate/already-exists checks
+	  4. IllegalStateException checks, but only inside the class that owns the state
+	  5. Other RuntimeException/custom business validations
+	- Reorder only existing/new validation checks inside the same method.
+	- Do not add new state-preflight methods or move validations to another class just to satisfy ordering.
+
+
+
+	V2 package:
+	- Create V2 by copying V1 after V1 is implemented.
+	- Remove explicit IllegalArgumentException and NoSuchElementException handling from V2.
+	- Do not replace them with new custom/runtime lookup or argument exceptions.
+	- Keep IllegalStateException where state is owned.
+	- Keep RuntimeException business validations and duplicate checks unless they only existed to replace IllegalArgumentException/NoSuchElementException.
+
+
+
+	Diff expectations:
+	- The exception-handling package should differ from the previous package mainly by added throws/catches and minimal helper methods needed for facade/service validation.
+	- If a change would cause algorithmic or design differences, ask before doing it.
+	- V2 should differ from V1 mainly only by removing IllegalArgumentException and NoSuchElementException logic.
+
+
+
+	Required docs and verification:
+	- Update APPROACH_COMPARISON.md.
+	- Compile and run the new packages after implementation.
+	- Report the exact commands run and whether they passed.
+
+	Before implementing, tell me:
+	1. What exceptions you plan to use.
+	2. Where each exception should be thrown.
+	3. Which validations belong in facade/services vs model/domain classes.
+	4. Which validations you will intentionally skip for now.
+	5. Any non-exception bug/design issue you noticed but will not fix without confirmation.
+
+	Then wait for my confirmation before coding.
