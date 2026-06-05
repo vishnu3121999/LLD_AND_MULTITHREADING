@@ -5,10 +5,21 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="64a0acb2-1dfb-413c-a6e2-8247ba411467" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/03_BookMyShow/APPROACH_COMPARISON.md" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/03_BookMyShow/APPROACH_COMPARISON.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/03_BookMyShow/src/F_OrchestrationValidation/service/BookMyShowFacade.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/03_BookMyShow/src/F_OrchestrationValidation/service/BookMyShowFacade.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/03_BookMyShow/src/G_Concurrency1/service/BookMyShowFacade.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/03_BookMyShow/src/G_Concurrency1/service/BookMyShowFacade.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs-site/content/java-modules/03_BookMyShow/src/H_Concurrency2/service/BookMyShowFacade.java" beforeDir="false" afterPath="$PROJECT_DIR$/docs-site/content/java-modules/03_BookMyShow/src/H_Concurrency2/service/BookMyShowFacade.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hld/camel/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/hld/camel/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hld/camel/data/camelcamelcamel.json" beforeDir="false" afterPath="$PROJECT_DIR$/hld/camel/data/camelcamelcamel.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hld/camel/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/hld/camel/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hld/camel/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/hld/camel/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hld/camel/static/css/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/hld/camel/static/css/styles.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hld/camel/static/js/editor.js" beforeDir="false" afterPath="$PROJECT_DIR$/hld/camel/static/js/editor.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hld/camel/static/js/guide.js" beforeDir="false" afterPath="$PROJECT_DIR$/hld/camel/static/js/guide.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hld/camel/static/js/viewer.js" beforeDir="false" afterPath="$PROJECT_DIR$/hld/camel/static/js/viewer.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hld/camel/templates/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/hld/camel/templates/base.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hld/camel/templates/edit.html" beforeDir="false" afterPath="$PROJECT_DIR$/hld/camel/templates/edit.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hld/camel/templates/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/hld/camel/templates/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hld/camel/templates/markdown_guide.html" beforeDir="false" afterPath="$PROJECT_DIR$/hld/camel/templates/markdown_guide.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hld/camel/templates/view.html" beforeDir="false" afterPath="$PROJECT_DIR$/hld/camel/templates/view.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -16,7 +27,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="37380" />
+    <option name="cachedIndexableFilesCount" value="37815" />
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -29,6 +40,9 @@
   &quot;associatedIndex&quot;: 7
 }</component>
   <component name="ProjectId" id="3DD4WwTA9ZtnAW0mw00jcoH2K4D" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -50,7 +64,7 @@
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "git-widget-placeholder": "main",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/vishn/OneDrive/Desktop/workspace/InterviewPrep/LLD_AND_MULTITHREADING/docs-site/content/java-modules/oldsamples/vendingmachine",
+    "last_opened_file_path": "C:/Users/vishn/OneDrive/Desktop/workspace/InterviewPrep/LLD_AND_MULTITHREADING/docs-site/content/java-modules/oldsamples/elevatorysystem",
     "project.structure.last.edited": "Modules",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.2",
@@ -61,11 +75,11 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\vishn\OneDrive\Desktop\workspace\InterviewPrep\LLD_AND_MULTITHREADING\docs-site\content\java-modules\oldsamples\elevatorysystem" />
       <recent name="C:\Users\vishn\OneDrive\Desktop\workspace\InterviewPrep\LLD_AND_MULTITHREADING\docs-site\content\java-modules\oldsamples\vendingmachine" />
       <recent name="C:\Users\vishn\OneDrive\Desktop\workspace\InterviewPrep\LLD_AND_MULTITHREADING\docs-site\content\java-modules\oldsamples\bookmyshow" />
       <recent name="C:\Users\vishn\OneDrive\Desktop\workspace\InterviewPrep\LLD_AND_MULTITHREADING\docs-site\content\java-modules\03_BookMyShow" />
       <recent name="C:\Users\vishn\OneDrive\Desktop\workspace\InterviewPrep\LLD_AND_MULTITHREADING\docs-site\content\java-modules\01_TicTacToe" />
-      <recent name="C:\Users\vishn\OneDrive\Desktop\workspace\InterviewPrep\LLD_AND_MULTITHREADING\docs-site" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\vishn\OneDrive\Desktop\workspace\InterviewPrep\LLD_AND_MULTITHREADING\docs-site\content\java-modules\01_TicTacToe" />

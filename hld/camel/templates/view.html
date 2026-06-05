@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{{ problem.title }} – HLD Academy{% endblock %}
+
+{% block content %}
+<article class="reader">
+    <aside class="reader-sidebar" id="toc">
+        <div class="toc-title">On this page</div>
+        <nav id="toc-list"></nav>
+    </aside>
+
+    <div class="reader-main">
+        <header class="reader-head">
+            <div class="reader-tags">
+                {% for tag in problem.tags %}<span class="tag">{{ tag }}</span>{% endfor %}
+            </div>
+            <h1>{{ problem.title }}</h1>
+            {% if problem.summary %}<p class="reader-summary">{{ problem.summary }}</p>{% endif %}
+            <div class="reader-meta">
+                <span>Updated {{ problem.updated_at[:10] }}</span>
+                <a class="btn btn-ghost" href="{{ url_for('edit_problem', pid=problem.id) }}">✎ Edit</a>
+            </div>
+        </header>
+
+        <div id="content">
+            {# server-side payload for client renderer #}
+            <script id="problem-data" type="application/json">{{ problem | tojson }}</script>
+        </div>
+    </div>
+</article>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/lib/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script src="{{ url_for('static', filename='js/viewer.js') }}"></script>
+{% endblock %}

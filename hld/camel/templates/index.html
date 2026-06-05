@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}HLD Academy — Library{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h1>Master High-Level Design</h1>
+    <p>A library of system design problems written like real interview docs — with diagrams, deep dives, and trade-offs.</p>
+    <a class="btn btn-primary btn-lg" href="{{ url_for('new_problem') }}">+ Author a new problem</a>
+</section>
+
+<section class="library">
+    <h2>Library</h2>
+    {% if problems %}
+    <div class="card-grid">
+        {% for p in problems %}
+        <a class="problem-card" href="{{ url_for('view_problem', pid=p.id) }}">
+            <div class="problem-card-tags">
+                {% for tag in p.tags %}<span class="tag">{{ tag }}</span>{% endfor %}
+            </div>
+            <h3>{{ p.title }}</h3>
+            <p>{{ p.summary }}</p>
+            <div class="problem-card-foot">
+                <span>Updated {{ p.updated_at[:10] }}</span>
+                <span class="arrow">→</span>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty">
+        <p>No problems yet. Click <strong>+ New Problem</strong> to write your first one.</p>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

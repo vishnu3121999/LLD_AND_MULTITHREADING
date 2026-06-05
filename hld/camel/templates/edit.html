@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}{{ "Edit" if problem else "New" }} problem — HLD Academy{% endblock %}
+
+{% block content %}
+<div class="editor" id="editor"
+     data-problem='{{ (problem or {}) | tojson }}'>
+    <div class="editor-toolbar">
+        <input class="editor-title-input" id="f-title" placeholder="Problem title (e.g. CamelCamelCamel)" />
+        <div class="editor-toolbar-actions">
+            <button class="btn btn-ghost" id="btn-preview-toggle" type="button">Preview</button>
+            <button class="btn btn-primary" id="btn-save" type="button">Save</button>
+        </div>
+    </div>
+
+    <div class="editor-meta">
+        <input class="editor-input" id="f-summary" placeholder="One-line summary" />
+        <input class="editor-input" id="f-tags" placeholder="comma,separated,tags" />
+    </div>
+
+    <div class="editor-body">
+        <div class="editor-pane" id="editor-pane">
+            <div class="editor-section-list" id="section-list"></div>
+
+            <div class="editor-add-row">
+                <span>Add section:</span>
+                <button class="btn btn-ghost" type="button" data-add="markdown">+ Markdown</button>
+                <button class="btn btn-ghost" type="button" data-add="diagram">+ Diagram</button>
+                <button class="btn btn-ghost" type="button" data-add="deepdive">+ Deep Dives</button>
+            </div>
+
+            <div class="editor-help">
+                <details>
+                    <summary>Cheat sheet · <a href="{{ url_for('markdown_guide') }}" target="_blank" rel="noopener">open full guide ↗</a></summary>
+                    <ul>
+                        <li><strong>Markdown</strong>: nested bullets, <code>**bold**</code>, fenced code <code>```sql ... ```</code>, tables, blockquotes.</li>
+                        <li><strong>Diagrams</strong>: paste Mermaid syntax — start with <code>flowchart LR</code>, <code>sequenceDiagram</code>, or <code>erDiagram</code>.</li>
+                        <li><strong>Deep Dives</strong>: groups of related sub-sections. Each can be markdown, diagram, <em>or another nested deep-dive</em> (any depth).</li>
+                        <li><strong>Images</strong>: <kbd>⌘V</kbd> paste a screenshot, drag-and-drop a file, or click <strong>📎 Add image</strong> in any markdown section.</li>
+                    </ul>
+                </details>
+            </div>
+        </div>
+
+        <div class="editor-preview" id="editor-preview" hidden>
+            <div class="preview-inner" id="preview-inner"></div>
+        </div>
+    </div>
+
+    <div class="editor-saving" id="saving-toast" hidden>Saved ✓</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/lib/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<script src="{{ url_for('static', filename='js/editor.js') }}"></script>
+{% endblock %}
