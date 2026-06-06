@@ -1,5 +1,6 @@
 import "./globals.css";
 import "../src/styles.css";
+import "highlight.js/styles/atom-one-dark.css";
 import { Providers } from "./providers";
 
 export const metadata = {

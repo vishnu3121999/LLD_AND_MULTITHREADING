@@ -1,8 +1,10 @@
+import { forwardRef } from "react";
 import { cn } from "../../lib/utils";
 
-export function Textarea({ className, ...props }) {
+export const Textarea = forwardRef(function Textarea({ className, ...props }, ref) {
   return (
     <textarea
+      ref={ref}
       className={cn(
         "min-h-28 w-full resize-y rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200",
         className
@@ -10,4 +12,4 @@ export function Textarea({ className, ...props }) {
       {...props}
     />
   );
-}
+});
