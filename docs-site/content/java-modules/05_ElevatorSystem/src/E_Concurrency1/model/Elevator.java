@@ -9,7 +9,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.NavigableSet;
+import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.locks.LockSupport;
 
 public class Elevator {
@@ -21,7 +23,7 @@ public class Elevator {
     private final List<Integer> allowedFloorList;
     private final TreeSet<Integer> stopSet;
     private final ElevatorMovementStrategy elevatorMovementStrategy;
-    private final List<ElevatorObserver> observerList;
+    private final Set<ElevatorObserver> observerList;
 
     public Elevator(String elevatorId, int capacity, int currentFloor, List<Integer> allowedFloorList,
                     ElevatorMovementStrategy elevatorMovementStrategy) {
@@ -33,7 +35,7 @@ public class Elevator {
         this.allowedFloorList = new ArrayList<>(allowedFloorList);
         this.stopSet = new TreeSet<>();
         this.elevatorMovementStrategy = elevatorMovementStrategy;
-        this.observerList = new ArrayList<>();
+        this.observerList = new CopyOnWriteArraySet<>();
     }
 
     public void addStop(int floor) {
@@ -45,25 +47,19 @@ public class Elevator {
     }
 
     public void addObserver(ElevatorObserver elevatorObserver) {
-        observerList.add(elevatorObserver);
-        elevatorObserver.update(this);
+        if (observerList.add(elevatorObserver)) {
+            elevatorObserver.update(this);
+        }
     }
 
     public void start() {
-        if (elevatorState == ElevatorState.MOVING) {
-            throw new IllegalStateException("Elevator cannot start while MOVING: " + elevatorId);
+        if (elevatorState == ElevatorState.MAINTENANCE) {
+            throw new IllegalStateException("Elevator cannot start while MAINTENANCE: " + elevatorId);
         }
         markIdle();
-        while (elevatorState != ElevatorState.MAINTENANCE) {
-            if (stopSet.isEmpty()) {
-                waitForNextCommand();
-                continue;
-            }
-            moveElevator();
-        }
     }
 
-    private void moveElevator() {
+    public void moveElevator() {
         int nextStop = getNextStop();
         if (nextStop > currentFloor) {
             moveUp();
@@ -126,6 +122,14 @@ public class Elevator {
         return Collections.unmodifiableNavigableSet(stopSet);
     }
 
+    public boolean isInMaintenance() {
+        return elevatorState == ElevatorState.MAINTENANCE;
+    }
+
+    public boolean hasPendingStops() {
+        return !stopSet.isEmpty();
+    }
+
     private int getNextStop() {
         return elevatorMovementStrategy.getNextStop(this);
     }
@@ -155,10 +159,6 @@ public class Elevator {
         for (ElevatorObserver elevatorObserver : observerList) {
             elevatorObserver.update(this);
         }
-    }
-
-    private void waitForNextCommand() {
-        Thread.yield();
     }
 
     private void waitBetweenFloors() {

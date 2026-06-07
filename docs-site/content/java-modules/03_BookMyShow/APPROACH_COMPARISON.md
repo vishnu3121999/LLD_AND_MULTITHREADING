@@ -274,100 +274,130 @@ City, Theater, and Screen keep the F_OrchestrationValidation ArrayList-backed id
 Main demonstrates two admins concurrently adding the same city and two users concurrently calling selectSeats() for the same show seat
 ```
 
-Case-1 report:
+### Case-1 Report
 
-```text
 For each facade method:
 
-searchShows(String movieTitle, String cityId)
-entities getting updated: []
+#### `searchShows(String movieTitle, String cityId)`
 
-1. What if the same method is called with the same params simultaneously?
-Nothing gets updated. No lock needed.
-2. What if the same method is called with different params simultaneously?
-Nothing gets updated. No lock needed.
+**Entities getting updated:** `[]`
 
-getSeatsForShow(String showId)
-entities getting updated: [Ticket.ticketStatus, ShowSeat.seatStatus, ShowSeat.price]
+1. **What if the same method is called with the same params simultaneously?**
+   Nothing gets updated. No lock needed.
 
-1. What if the same method is called with the same params simultaneously?
-No inconsistent state. Expiry cleanup is idempotent in final state, and show-seat price recalculation is deterministic. A duplicate cleanup may throw, but throwing alone is not a concurrency bug worth locking for.
-2. What if the same method is called with different params simultaneously?
-No inconsistent state for booking. Different shows update different show seats and tickets. No lock needed for case 1.
+2. **What if the same method is called with different params simultaneously?**
+   Nothing gets updated. No lock needed.
 
-selectSeats(String userId, String showId, List<String> showSeatList)
-entities getting updated: [ShowSeat.seatStatus, ticketMap, ShowSeat.price, Ticket.price]
 
-1. What if the same method is called with the same params simultaneously?
-Exact same ordered seat list does not create two tickets because seats are held before the ticket is stored, and ShowSeat.hold() rechecks state. One call succeeds and the other fails.
-2. What if the same method is called with different params simultaneously?
-Real seat-state race if selections overlap. One call can hold part of its list, another call can hold an overlapping seat, and the first call can fail later, leaving an orphan held seat with no ticket. Lock selectSeats() on the Show object and run the seat-availability check plus hold update inside the lock.
-If selections do not overlap, there is no seat-state race, but both calls still write ticketMap. Use ConcurrentHashMap for ticketMap structure safety.
+#### `getSeatsForShow(String showId)`
 
-pay(String ticketId, Payment payment)
-entities getting updated: [Ticket.ticketStatus, ShowSeat.seatStatus, Payment.status]
+**Entities getting updated:** `[Ticket.ticketStatus, ShowSeat.seatStatus, ShowSeat.price]`
 
-1. What if the same method is called with the same params simultaneously?
-Real race. Both calls can process payment before either confirms the ticket if ticket/seat/payment-amount checks run outside the ticket lock. Lock pay() per ticket and run those mutable state checks inside the lock.
-2. What if the same method is called with different params simultaneously?
-No booking inconsistency for different valid tickets. Different tickets own different selected seats in a valid datastore. No extra same-method lock needed beyond ticket-level locking.
+1. **What if the same method is called with the same params simultaneously?**
+   No inconsistent state. Expiry cleanup is idempotent in final state, and show-seat price recalculation is deterministic. A duplicate cleanup may throw, but throwing alone is not a concurrency bug worth locking for.
 
-getTicket(String ticketId)
-entities getting updated: []
+2. **What if the same method is called with different params simultaneously?**
+   No inconsistent state for booking. Different shows update different show seats and tickets. No lock needed for case 1.
 
-1. What if the same method is called with the same params simultaneously?
-Nothing gets updated. No lock needed.
-2. What if the same method is called with different params simultaneously?
-Nothing gets updated. No lock needed.
 
-addCity(String cityId, String name)
-entities getting updated: [cityMap]
+#### `selectSeats(String userId, String showId, List<String> showSeatList)`
 
-1. What if the same method is called with the same params simultaneously?
-Real race. Both calls can pass containsCity(cityId) before either put happens, so duplicate create can be accepted. Use catalogLock around contains-plus-put.
-2. What if the same method is called with different params simultaneously?
-No semantic conflict. catalogLock serializes cityMap writes between admins. No ConcurrentHashMap needed for case 1.
+**Entities getting updated:** `[ShowSeat.seatStatus, ticketMap, ShowSeat.price, Ticket.price]`
 
-addMovie(String movieId, String title)
-entities getting updated: [movieMap]
+1. **What if the same method is called with the same params simultaneously?**
+   Exact same ordered seat list does not create two tickets because seats are held before the ticket is stored, and ShowSeat.hold() rechecks state. One call succeeds and the other fails.
 
-1. What if the same method is called with the same params simultaneously?
-Real race. Both calls can pass containsMovie(movieId) before either put happens, so duplicate create can be accepted. Use catalogLock around contains-plus-put.
-2. What if the same method is called with different params simultaneously?
-No semantic conflict. catalogLock serializes movieMap writes between admins. No ConcurrentHashMap needed for case 1.
+2. **What if the same method is called with different params simultaneously?**
+   Real seat-state race if selections overlap. One call can hold part of its list, another call can hold an overlapping seat, and the first call can fail later, leaving an orphan held seat with no ticket. Lock selectSeats() on the Show object and run the seat-availability check plus hold update inside the lock.
+   If selections do not overlap, there is no seat-state race, but both calls still write ticketMap. Use ConcurrentHashMap for ticketMap structure safety.
 
-addTheater(String cityId, String theaterId, String name)
-entities getting updated: [theaterMap, City.theaterList]
 
-1. What if the same method is called with the same params simultaneously?
-Real race. Both calls can pass containsTheater(theaterId), one map value can overwrite the other, and City.theaterList can get duplicate theater ids. Look up the City before locking, then use catalogLock only around contains-plus-put-plus-City.theaterList update.
-2. What if the same method is called with different params simultaneously?
-If the city is the same, both calls append to City.theaterList. Use catalogLock around the admin update. If cities differ, catalogLock still serializes theaterMap writes, so no ConcurrentHashMap needed for case 1.
+#### `pay(String ticketId, Payment payment)`
 
-addScreen(String theaterId, String screenId, String name)
-entities getting updated: [screenMap, Theater.screenList]
+**Entities getting updated:** `[Ticket.ticketStatus, ShowSeat.seatStatus, Payment.status]`
 
-1. What if the same method is called with the same params simultaneously?
-Real race. Both calls can pass containsScreen(screenId), one map value can overwrite the other, and Theater.screenList can get duplicate screen ids. Look up the Theater before locking, then use catalogLock only around contains-plus-put-plus-Theater.screenList update.
-2. What if the same method is called with different params simultaneously?
-If the theater is the same, both calls append to Theater.screenList. Use catalogLock around the admin update. If theaters differ, catalogLock still serializes screenMap writes, so no ConcurrentHashMap needed for case 1.
+1. **What if the same method is called with the same params simultaneously?**
+   Real race. Both calls can process payment before either confirms the ticket if ticket/seat/payment-amount checks run outside the ticket lock. Lock pay() per ticket and run those mutable state checks inside the lock.
 
-addSeat(String screenId, String seatId, SeatType seatType)
-entities getting updated: [seatMap, Screen.seatList]
+2. **What if the same method is called with different params simultaneously?**
+   No booking inconsistency for different valid tickets. Different tickets own different selected seats in a valid datastore. No extra same-method lock needed beyond ticket-level locking.
 
-1. What if the same method is called with the same params simultaneously?
-Real race. Both calls can pass containsSeat(seatId), one map value can overwrite the other, and Screen.seatList can get duplicate seat ids. Look up the Screen before locking, then use catalogLock only around contains-plus-put-plus-Screen.seatList update.
-2. What if the same method is called with different params simultaneously?
-If the screen is the same, both calls append to Screen.seatList. Use catalogLock around the admin update. If screens differ, catalogLock still serializes seatMap writes, so no ConcurrentHashMap needed for case 1.
 
-addShow(String showId, String movieId, String screenId, LocalDateTime startTime, int basePrice)
-entities getting updated: [showSeatMap, Screen.showList, showMap]
+#### `getTicket(String ticketId)`
 
-1. What if the same method is called with the same params simultaneously?
-Real race. Both calls can pass containsShow(showId), show seats can overwrite each other, and Screen.showList can get duplicate show ids. Look up the Screen before locking, then use catalogLock only around contains-plus-show-seat creation-plus-put-plus-Screen.showList update.
-2. What if the same method is called with different params simultaneously?
-If the screen is the same, both calls append to Screen.showList. Use catalogLock around the admin update. If screens differ, catalogLock still serializes showMap/showSeatMap writes, so no ConcurrentHashMap needed for case 1.
-```
+**Entities getting updated:** `[]`
+
+1. **What if the same method is called with the same params simultaneously?**
+   Nothing gets updated. No lock needed.
+
+2. **What if the same method is called with different params simultaneously?**
+   Nothing gets updated. No lock needed.
+
+
+#### `addCity(String cityId, String name)`
+
+**Entities getting updated:** `[cityMap]`
+
+1. **What if the same method is called with the same params simultaneously?**
+   Real race. Both calls can pass containsCity(cityId) before either put happens, so duplicate create can be accepted. Use catalogLock around contains-plus-put.
+
+2. **What if the same method is called with different params simultaneously?**
+   No semantic conflict. catalogLock serializes cityMap writes between admins. No ConcurrentHashMap needed for case 1.
+
+
+#### `addMovie(String movieId, String title)`
+
+**Entities getting updated:** `[movieMap]`
+
+1. **What if the same method is called with the same params simultaneously?**
+   Real race. Both calls can pass containsMovie(movieId) before either put happens, so duplicate create can be accepted. Use catalogLock around contains-plus-put.
+
+2. **What if the same method is called with different params simultaneously?**
+   No semantic conflict. catalogLock serializes movieMap writes between admins. No ConcurrentHashMap needed for case 1.
+
+
+#### `addTheater(String cityId, String theaterId, String name)`
+
+**Entities getting updated:** `[theaterMap, City.theaterList]`
+
+1. **What if the same method is called with the same params simultaneously?**
+   Real race. Both calls can pass containsTheater(theaterId), one map value can overwrite the other, and City.theaterList can get duplicate theater ids. Look up the City before locking, then use catalogLock only around contains-plus-put-plus-City.theaterList update.
+
+2. **What if the same method is called with different params simultaneously?**
+   If the city is the same, both calls append to City.theaterList. Use catalogLock around the admin update. If cities differ, catalogLock still serializes theaterMap writes, so no ConcurrentHashMap needed for case 1.
+
+
+#### `addScreen(String theaterId, String screenId, String name)`
+
+**Entities getting updated:** `[screenMap, Theater.screenList]`
+
+1. **What if the same method is called with the same params simultaneously?**
+   Real race. Both calls can pass containsScreen(screenId), one map value can overwrite the other, and Theater.screenList can get duplicate screen ids. Look up the Theater before locking, then use catalogLock only around contains-plus-put-plus-Theater.screenList update.
+
+2. **What if the same method is called with different params simultaneously?**
+   If the theater is the same, both calls append to Theater.screenList. Use catalogLock around the admin update. If theaters differ, catalogLock still serializes screenMap writes, so no ConcurrentHashMap needed for case 1.
+
+
+#### `addSeat(String screenId, String seatId, SeatType seatType)`
+
+**Entities getting updated:** `[seatMap, Screen.seatList]`
+
+1. **What if the same method is called with the same params simultaneously?**
+   Real race. Both calls can pass containsSeat(seatId), one map value can overwrite the other, and Screen.seatList can get duplicate seat ids. Look up the Screen before locking, then use catalogLock only around contains-plus-put-plus-Screen.seatList update.
+
+2. **What if the same method is called with different params simultaneously?**
+   If the screen is the same, both calls append to Screen.seatList. Use catalogLock around the admin update. If screens differ, catalogLock still serializes seatMap writes, so no ConcurrentHashMap needed for case 1.
+
+
+#### `addShow(String showId, String movieId, String screenId, LocalDateTime startTime, int basePrice)`
+
+**Entities getting updated:** `[showSeatMap, Screen.showList, showMap]`
+
+1. **What if the same method is called with the same params simultaneously?**
+   Real race. Both calls can pass containsShow(showId), show seats can overwrite each other, and Screen.showList can get duplicate show ids. Look up the Screen before locking, then use catalogLock only around contains-plus-show-seat creation-plus-put-plus-Screen.showList update.
+
+2. **What if the same method is called with different params simultaneously?**
+   If the screen is the same, both calls append to Screen.showList. Use catalogLock around the admin update. If screens differ, catalogLock still serializes showMap/showSeatMap writes, so no ConcurrentHashMap needed for case 1.
 
 Same-method concurrency decisions:
 
@@ -451,58 +481,73 @@ ConcurrentHashMap protects map structure only, not Ticket or ShowSeat mutable st
 Main demonstrates two admins concurrently adding the same city and two users concurrently trying to hold the same show seat
 ```
 
-Case-2 report:
+### Case-2 Report
 
-```text
 For each entity from the updated list above:
 
-cityMap: [addCity]
-movieMap: [addMovie]
-theaterMap: [addTheater]
-screenMap: [addScreen]
-seatMap: [addSeat]
-showMap: [addShow]
-showSeatMap: [addShow]
-ticketMap: [selectSeats]
-City: [addTheater] fields updated: [theaterList]
-Theater: [addScreen] fields updated: [screenList]
-Screen: [addSeat, addShow] fields updated: [seatList, showList]
-ShowSeat: [getSeatsForShow, selectSeats, pay] fields updated: [seatStatus, price]
-Ticket: [getSeatsForShow, selectSeats, pay] fields updated: [ticketStatus, price]
-Payment: [pay] fields updated: [status]
+- `cityMap`: `[addCity]`
+- `movieMap`: `[addMovie]`
+- `theaterMap`: `[addTheater]`
+- `screenMap`: `[addScreen]`
+- `seatMap`: `[addSeat]`
+- `showMap`: `[addShow]`
+- `showSeatMap`: `[addShow]`
+- `ticketMap`: `[selectSeats]`
+- `City`: `[addTheater]`; fields updated: `[theaterList]`
+- `Theater`: `[addScreen]`; fields updated: `[screenList]`
+- `Screen`: `[addSeat, addShow]`; fields updated: `[seatList, showList]`
+- `ShowSeat`: `[getSeatsForShow, selectSeats, pay]`; fields updated: `[seatStatus, price]`
+- `Ticket`: `[getSeatsForShow, selectSeats, pay]`; fields updated: `[ticketStatus, price]`
+- `Payment`: `[pay]`; fields updated: `[status]`
 
 For each shared entity, what coordination is required, and where is that coordination applied?
 
-City: [addTheater] fields updated: [theaterList]
-Problem:
+#### `City`
+
+**Facade methods:** `[addTheater]`
+**Fields updated:** `[theaterList]`
+
+**Problem:**
 addTheater() appends to City.theaterList under catalogLock, but searchShows() reads City.theaterList without catalogLock.
-Solution:
+**Solution:**
 Use CopyOnWriteArrayList for City.theaterList.
 Keep addTheater() under catalogLock for admin duplicate-check-plus-update.
 Do not lock searchShows(); it only needs safe iteration, not a globally consistent catalog snapshot.
 
-Theater: [addScreen] fields updated: [screenList]
-Problem:
+#### `Theater`
+
+**Facade methods:** `[addScreen]`
+**Fields updated:** `[screenList]`
+
+**Problem:**
 addScreen() appends to Theater.screenList under catalogLock, but searchShows() reads Theater.screenList without catalogLock.
-Solution:
+**Solution:**
 Use CopyOnWriteArrayList for Theater.screenList.
 Keep addScreen() under catalogLock for containsScreen() plus screenMap put plus Theater.screenList append.
 
-Screen: [addSeat, addShow] fields updated: [seatList, showList]
-Problem:
+#### `Screen`
+
+**Facade methods:** `[addSeat, addShow]`
+**Fields updated:** `[seatList, showList]`
+
+**Problem:**
 addShow() appends to Screen.showList while searchShows() can read Screen.showList.
 addSeat() mutates Screen.seatList and addShow() reads Screen.seatList, but both are admin workflows already serialized by catalogLock.
-Solution:
+**Solution:**
 Use CopyOnWriteArrayList for Screen.showList only.
 Keep Screen.seatList as ArrayList.
 No Screen object lock is needed.
 
-ShowSeat: [getSeatsForShow, selectSeats, pay] fields updated: [seatStatus, price]
-Problem:
+#### `ShowSeat`
+
+**Facade methods:** `[getSeatsForShow, selectSeats, pay]`
+**Fields updated:** `[seatStatus, price]`
+
+**Problem:**
 selectSeats() vs selectSeats() is already handled in G_Concurrency1 with the Show lock, but that lock is broader than needed.
 The missed cross-method race is getSeatsForShow() expiry cleanup vs pay() booking for the same show.
 pay() can send a payment request while getSeatsForShow() expires the ticket and releases its held seats.
-Solution:
+**Solution:**
 Use ShowSeat locks as the booking lock.
 selectSeats(), pay(), and expiry cleanup lock all selected ShowSeat objects for that workflow.
 The facade first synchronizes on Show only while acquiring explicit ShowSeat ReentrantLocks.
@@ -514,35 +559,43 @@ Other seats in the same show can still proceed independently.
 getSeatsForShow() recalculates price under the individual ShowSeat lock when the seat is still AVAILABLE.
 The facade keeps the original getSeatsForShow() shape: collect result, then calculate prices.
 
-Ticket: [getSeatsForShow, selectSeats, pay] fields updated: [ticketStatus, price]
-Problem:
+#### `Ticket`
+
+**Facade methods:** `[getSeatsForShow, selectSeats, pay]`
+**Fields updated:** `[ticketStatus, price]`
+
+**Problem:**
 getSeatsForShow() can move a pending ticket to EXPIRED.
 pay() can move a pending ticket to CONFIRMED.
 Duplicate pay() calls can also race on the same ticket.
-Solution:
+**Solution:**
 Do not add a separate Ticket lock in H_Concurrency2.
 Every valid ticket has a non-empty showSeatList, and all workflows that mutate that ticket also lock that ticket's ShowSeat objects first.
 So duplicate pay() and expiry cleanup for the same ticket serialize on the same ShowSeat locks.
 Ticket.ticketStatus is updated only while those ShowSeat locks are held.
 Ticket.price is only updated by selectSeats(), so it does not add a separate cross-method race.
 
-Payment: [pay] fields updated: [status]
+#### `Payment`
+
+**Facade methods:** `[pay]`
+**Fields updated:** `[status]`
+
 Only pay() mutates Payment.status.
 No separate Payment lock is needed.
 The gateway call runs while the selected ShowSeat locks are held.
 No Show, Ticket, or datastore lock is held during the gateway call.
 
-Datastore maps:
-Problem:
+#### Datastore maps
+
+**Problem:**
 G_Concurrency1 intentionally did not handle user-read/admin-write catalog races.
 In H_Concurrency2, user methods can read maps while admin methods write maps, and user reads do not take catalogLock.
-Solution:
+**Solution:**
 Use ConcurrentHashMap for all datastore maps in H_Concurrency2.
 This is needed for map structure safety because search/get flows can read while admin flows put new entries.
 catalogLock still handles admin check-plus-update invariants such as containsCity() then putCity().
 ConcurrentHashMap is not a replacement for those workflow locks because it does not make contains-plus-put atomic at the facade level.
 ConcurrentHashMap also does not protect mutable objects stored in the map; Ticket and ShowSeat state still need facade locking.
-```
 
 Cross-method race condition solved:
 

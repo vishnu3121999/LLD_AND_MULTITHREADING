@@ -1,6 +1,6 @@
 	Inspect the existing module and reference concurrency packages before coding.
 
-	Target module: 05_ElevatorSystem
+	Target module: <TargetModuleName>
 
 	Create two next progressive packages after the current latest package:
 
@@ -98,65 +98,120 @@
 	4. Which collections need concurrent structures because reads and writes can overlap across methods?
 	5. Which methods/entities still do not need concurrency handling and why?
 
-	## APPROACH_COMPARISON.md Required Structure
+	## APPROACH_COMPARISON.md Required Format
 
-	Update APPROACH_COMPARISON.md using this structure:
+	Before updating APPROACH_COMPARISON.md, inspect APPROACH_COMPARISON.md from the most relevant earlier module that already has Concurrency1 and Concurrency2 packages.
+	- Prefer the immediately previous module with two progressive concurrency packages.
+	- Example reference when available: 03_BookMyShow, which uses package-specific headings and Case-1/Case-2 report blocks.
+	- Treat that existing document shape as the canonical format for concurrency package analysis.
+	- Do not replace it with a generic summary format if a reference format exists.
+	- Preserve the current module's existing non-concurrency package descriptions unless they are stale or missing.
+	- Only rewrite/add the concurrency package sections unless broader APPROACH_COMPARISON.md cleanup is explicitly requested.
 
-	# Approach Comparison
+	Use this concurrency documentation shape when the reference module follows it:
 
-	## Existing Packages
+	## <ActualConcurrency1PackageName>: Same-Method Race Handling
 
-	Briefly list existing packages and what each one demonstrates.
+	Adds one focused idea on top of <PreviousPackageName>:
 
-	## Concurrency1
+	```text
+	Compact implementation summary.
+	Mention what Concurrency1 handles and intentionally does not handle.
+	Mention the exact locks/collections changed.
+	Mention the Main demo.
+	```
 
-	### Goal
-	Explain that this package fixes same-facade-method concurrent execution races only.
+	Case-1 report:
 
-	### Race Conditions Solved
-	For each solved race:
-	- facade method
-	- shared object/entity
-	- bad interleaving
-	- chosen fix
-	- why this fix is enough for Concurrency1
+	```text
+	For each facade method:
 
-	### Things Intentionally Not Solved
-	List cross-method races or broader collection issues intentionally left for Concurrency2.
+	methodName(...)
+	entities getting updated: [EntityName.fieldName, EntityName.fieldName]
 
-	### Collections Changed
-	List only maps/lists actually changed to concurrent collections and why.
+	1. What if the same method is called with the same params simultaneously?
+	State whether there is a real race. If yes, explain the bad interleaving and the implemented lock/collection fix. If no, say no lock needed and why.
+	2. What if the same method is called with different params simultaneously?
+	Cover overlapping-object and non-overlapping-object cases. Also mention collection/map structure races if the method can create/read/write shared datastore collections.
+	```
 
-	### Locking Strategy
-	Explain exact lock target and why method-level/datastore-level locking was avoided.
+	Same-method concurrency decisions:
 
-	### Demo
-	Explain the concurrent demo added in Main.
+	```text
+	1. Which methods actually need concurrency handling?
+	2. Which shared objects can race?
+	3. Whether concurrent collections are really needed, and for which maps/lists only?
+	4. Whether locking should be method-level, object-level, aggregate-level, lock-manager-level, or datastore-level?
+	5. Which things do not need concurrency handling and why?
+	```
 
-	## Concurrency2
+	Race conditions solved in <ActualConcurrency1PackageName>:
 
-	### Goal
-	Explain that this package builds on Concurrency1 and fixes cross-method entity/aggregate races.
+	```text
+	For each solved same-method race, explain the bad interleaving and the final code fix.
+	```
 
-	### Race Conditions Solved
-	For each solved race:
-	- entity/aggregate
-	- methods involved
-	- bad interleaving
-	- chosen fix
-	- why this fix is enough
+	Best for:
 
-	### Collections Changed
-	List maps/lists changed because user/admin or cross-method reads/writes can overlap.
+	- Short bullets matching the reference module style.
 
-	### Locking Strategy
-	Explain exact lock target, lock scope, and why broader locks were avoided.
+	Tradeoff:
 
-	### Things Not Needing Concurrency Handling
-	Explicitly list methods/entities where no handling is needed and why.
+	- Short bullets matching the reference module style.
 
-	### Demo
-	Explain the concurrent demo added in Main.
+	## <ActualConcurrency2PackageName>: Shared-Entity Race Handling
+
+	Adds one focused idea on top of <ActualConcurrency1PackageName>:
+
+	```text
+	Compact implementation summary.
+	Mention what Concurrency2 adds on top of Concurrency1.
+	Mention exact aggregate locks and concurrent collections changed.
+	Mention the Main demo.
+	```
+
+	Case-2 report:
+
+	```text
+	For each entity/aggregate from the updated list:
+
+	EntityName: [facade methods] fields updated: [field1, field2]
+
+	For each shared entity, what coordination is required, and where is that coordination applied?
+
+	EntityName: [facade methods] fields updated: [field1, field2]
+	Problem:
+	Explain the real cross-method conflicting interleaving, or say no race.
+	Solution:
+	Explain exact lock target, lock scope, and collection changes if any.
+	```
+
+	Cross-method race conditions solved:
+
+	```text
+	Explain what Concurrency1 did not cover and how Concurrency2 fixes each real cross-method race.
+	```
+
+	Concurrency decisions:
+
+	```text
+	1. Which methods actually need concurrency handling?
+	2. Which shared objects can race?
+	3. Whether concurrent collections are really needed, and for which maps/lists only?
+	4. Whether locking should be method-level, object-level, aggregate-level, lock-manager-level, or datastore-level?
+	5. Which things do not need concurrency handling and why?
+	```
+
+	Best for:
+
+	- Short bullets matching the reference module style.
+
+	Tradeoff:
+
+	- Short bullets matching the reference module style.
+
+	If no earlier reference module with two concurrency packages exists, use the same shape above rather than generic `## Concurrency1` / `## Concurrency2` headings.
+	Use actual package names in headings, for example `E_Concurrency1: Same-Method Race Handling` and `F_Concurrency2: Shared-Entity Race Handling`.
 
 	Implementation rules:
 	- After I confirm the plan, implement Concurrency1 first.

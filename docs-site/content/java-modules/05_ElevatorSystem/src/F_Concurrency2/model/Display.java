@@ -2,6 +2,8 @@ package F_Concurrency2.model;
 
 import F_Concurrency2.observer.ElevatorObserver;
 
+import java.util.Objects;
+
 public class Display implements ElevatorObserver {
     private final String displayId;
     private final int floor;
@@ -33,5 +35,22 @@ public class Display implements ElevatorObserver {
 
     public int getFloor() {
         return floor;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof Display)) {
+            return false;
+        }
+        Display display = (Display) object;
+        return Objects.equals(displayId, display.displayId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(displayId);
     }
 }

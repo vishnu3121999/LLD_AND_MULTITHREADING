@@ -4,7 +4,6 @@ import F_Concurrency2.model.Building;
 import F_Concurrency2.model.Display;
 import F_Concurrency2.model.Elevator;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -16,7 +15,7 @@ public class InMemoryDataStore implements DataStore {
     public InMemoryDataStore() {
         this.buildingMap = new ConcurrentHashMap<>();
         this.elevatorMap = new ConcurrentHashMap<>();
-        this.displayMap = new HashMap<>();
+        this.displayMap = new ConcurrentHashMap<>();
     }
 
     @Override

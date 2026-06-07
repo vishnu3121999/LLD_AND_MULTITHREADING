@@ -14,10 +14,12 @@ import java.util.List;
 public class ElevatorSystemFacade {
     private final DataStore dataStore;
     private final ElevatorAssignmentStrategy elevatorAssignmentStrategy;
+    private final ElevatorMovementService elevatorMovementService;
 
     public ElevatorSystemFacade(DataStore dataStore, ElevatorAssignmentStrategy elevatorAssignmentStrategy) {
         this.dataStore = dataStore;
         this.elevatorAssignmentStrategy = elevatorAssignmentStrategy;
+            this.elevatorMovementService = new ElevatorMovementService();
     }
 
     // User methods
@@ -64,7 +66,7 @@ public class ElevatorSystemFacade {
 
     public void startElevator(String elevatorId) {
         Elevator elevator = dataStore.getElevator(elevatorId);
-        elevator.start();
+        elevatorMovementService.start(elevator);
     }
 
     public void stopElevator(String elevatorId) {

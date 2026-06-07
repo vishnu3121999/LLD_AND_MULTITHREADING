@@ -48,16 +48,9 @@ public class Elevator {
 
     public void start() {
         markIdle();
-        while (elevatorState != ElevatorState.MAINTENANCE) {
-            if (stopSet.isEmpty()) {
-                waitForNextCommand();
-                continue;
-            }
-            moveElevator();
-        }
     }
 
-    private void moveElevator() {
+    public void moveElevator() {
         int nextStop = getNextStop();
         if (nextStop > currentFloor) {
             moveUp();
@@ -117,6 +110,14 @@ public class Elevator {
         return Collections.unmodifiableNavigableSet(stopSet);
     }
 
+    public boolean isInMaintenance() {
+        return elevatorState == ElevatorState.MAINTENANCE;
+    }
+
+    public boolean hasPendingStops() {
+        return !stopSet.isEmpty();
+    }
+
     private int getNextStop() {
         return elevatorMovementStrategy.getNextStop(this);
     }
@@ -146,10 +147,6 @@ public class Elevator {
         for (ElevatorObserver elevatorObserver : observerList) {
             elevatorObserver.update(this);
         }
-    }
-
-    private void waitForNextCommand() {
-        Thread.yield();
     }
 
     private void waitBetweenFloors() {

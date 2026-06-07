@@ -9,7 +9,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.NavigableSet;
+import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.locks.LockSupport;
 
 public class Elevator {
@@ -21,7 +23,7 @@ public class Elevator {
     private final List<Integer> allowedFloorList;
     private final TreeSet<Integer> stopSet;
     private final ElevatorMovementStrategy elevatorMovementStrategy;
-    private final List<ElevatorObserver> observerList;
+    private final Set<ElevatorObserver> observerList;
 
     public Elevator(String elevatorId, int capacity, int currentFloor, List<Integer> allowedFloorList,
                     ElevatorMovementStrategy elevatorMovementStrategy) {
@@ -33,48 +35,31 @@ public class Elevator {
         this.allowedFloorList = new ArrayList<>(allowedFloorList);
         this.stopSet = new TreeSet<>();
         this.elevatorMovementStrategy = elevatorMovementStrategy;
-        this.observerList = new ArrayList<>();
+        this.observerList = new CopyOnWriteArraySet<>();
     }
 
     public void addStop(int floor) {
-        synchronized (this) {
-            if (elevatorState == ElevatorState.MAINTENANCE) {
-                throw new IllegalStateException("Elevator cannot accept stops in MAINTENANCE state: " + elevatorId);
-            }
-            stopSet.add(floor);
-            notifyObservers();
+        if (elevatorState == ElevatorState.MAINTENANCE) {
+            throw new IllegalStateException("Elevator cannot accept stops in MAINTENANCE state: " + elevatorId);
         }
+        stopSet.add(floor);
+        notifyObservers();
     }
 
     public void addObserver(ElevatorObserver elevatorObserver) {
-        synchronized (this) {
-            observerList.add(elevatorObserver);
+        if (observerList.add(elevatorObserver)) {
             elevatorObserver.update(this);
         }
     }
 
     public void start() {
-        synchronized (this) {
-            if (elevatorState == ElevatorState.MOVING) {
-                throw new IllegalStateException("Elevator cannot start while MOVING: " + elevatorId);
-            }
-            markIdle();
+        if (elevatorState == ElevatorState.MAINTENANCE) {
+            throw new IllegalStateException("Elevator cannot start while MAINTENANCE: " + elevatorId);
         }
-        while (true) {
-            synchronized (this) {
-                if (elevatorState == ElevatorState.MAINTENANCE) {
-                    return;
-                }
-                if (!stopSet.isEmpty()) {
-                    moveElevator();
-                    continue;
-                }
-            }
-            waitForNextCommand();
-        }
+        markIdle();
     }
 
-    private void moveElevator() {
+    public void moveElevator() {
         int nextStop = getNextStop();
         if (nextStop > currentFloor) {
             moveUp();
@@ -89,17 +74,15 @@ public class Elevator {
     }
 
     public void stop() {
-        synchronized (this) {
-            if (elevatorState == ElevatorState.MAINTENANCE) {
-                throw new IllegalStateException("Elevator is already in MAINTENANCE state: " + elevatorId);
-            }
-            direction = Direction.IDLE;
-            elevatorState = ElevatorState.MAINTENANCE;
+        if (elevatorState == ElevatorState.MAINTENANCE) {
+            throw new IllegalStateException("Elevator is already in MAINTENANCE state: " + elevatorId);
         }
+        direction = Direction.IDLE;
+        elevatorState = ElevatorState.MAINTENANCE;
     }
 
     @Override
-    public synchronized String toString() {
+    public String toString() {
         return "Elevator{" +
                 "elevatorId='" + elevatorId + '\'' +
                 ", capacity=" + capacity +
@@ -119,15 +102,15 @@ public class Elevator {
         return capacity;
     }
 
-    public synchronized int getCurrentFloor() {
+    public int getCurrentFloor() {
         return currentFloor;
     }
 
-    public synchronized Direction getDirection() {
+    public Direction getDirection() {
         return direction;
     }
 
-    public synchronized ElevatorState getElevatorState() {
+    public ElevatorState getElevatorState() {
         return elevatorState;
     }
 
@@ -135,8 +118,16 @@ public class Elevator {
         return Collections.unmodifiableList(allowedFloorList);
     }
 
-    public synchronized NavigableSet<Integer> getStopSet() {
-        return Collections.unmodifiableNavigableSet(new TreeSet<>(stopSet));
+    public NavigableSet<Integer> getStopSet() {
+        return Collections.unmodifiableNavigableSet(stopSet);
+    }
+
+    public boolean isInMaintenance() {
+        return elevatorState == ElevatorState.MAINTENANCE;
+    }
+
+    public boolean hasPendingStops() {
+        return !stopSet.isEmpty();
     }
 
     private int getNextStop() {
@@ -168,10 +159,6 @@ public class Elevator {
         for (ElevatorObserver elevatorObserver : observerList) {
             elevatorObserver.update(this);
         }
-    }
-
-    private void waitForNextCommand() {
-        Thread.yield();
     }
 
     private void waitBetweenFloors() {

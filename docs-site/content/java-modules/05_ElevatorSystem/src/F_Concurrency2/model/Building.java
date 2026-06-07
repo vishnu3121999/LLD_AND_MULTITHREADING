@@ -1,18 +1,18 @@
 package F_Concurrency2.model;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 public class Building {
     private final String buildingId;
     private final String name;
-    private final List<String> elevatorList;
+    private final Set<String> elevatorList;
 
     public Building(String buildingId, String name) {
         this.buildingId = buildingId;
         this.name = name;
-        this.elevatorList = new ArrayList<>();
+        this.elevatorList = new CopyOnWriteArraySet<>();
     }
 
     public void addElevator(String elevatorId) {
@@ -36,7 +36,7 @@ public class Building {
         return name;
     }
 
-    public List<String> getElevatorList() {
-        return Collections.unmodifiableList(elevatorList);
+    public Set<String> getElevatorList() {
+        return Collections.unmodifiableSet(elevatorList);
     }
 }

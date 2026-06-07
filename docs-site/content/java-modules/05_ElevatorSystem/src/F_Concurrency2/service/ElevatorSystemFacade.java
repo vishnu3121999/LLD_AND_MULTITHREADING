@@ -14,18 +14,12 @@ import java.util.List;
 public class ElevatorSystemFacade {
     private final DataStore dataStore;
     private final ElevatorAssignmentStrategy elevatorAssignmentStrategy;
-    private final Object buildingCreationLock;
-    private final Object elevatorCreationLock;
-    private final Object displayCreationLock;
-    private final ElevatorStartLockManager elevatorStartLockManager;
+    private final ElevatorMovementService elevatorMovementService;
 
     public ElevatorSystemFacade(DataStore dataStore, ElevatorAssignmentStrategy elevatorAssignmentStrategy) {
         this.dataStore = dataStore;
         this.elevatorAssignmentStrategy = elevatorAssignmentStrategy;
-        this.buildingCreationLock = new Object();
-        this.elevatorCreationLock = new Object();
-        this.displayCreationLock = new Object();
-        this.elevatorStartLockManager = new ElevatorStartLockManager();
+        this.elevatorMovementService = new ElevatorMovementService();
     }
 
     // User methods
@@ -56,54 +50,37 @@ public class ElevatorSystemFacade {
     // Admin methods
 
     public void addBuilding(String buildingId, String name) {
-        synchronized (buildingCreationLock) {
-            if (dataStore.containsBuilding(buildingId)) {
-                throw new RuntimeException("Building already exists: " + buildingId);
-            }
-            Building building = new Building(buildingId, name);
-            dataStore.putBuilding(building.getBuildingId(), building);
+        if (dataStore.containsBuilding(buildingId)) {
+            throw new RuntimeException("Building already exists: " + buildingId);
         }
+        Building building = new Building(buildingId, name);
+        dataStore.putBuilding(building.getBuildingId(), building);
     }
 
     public void addElevator(String buildingId, String elevatorId, int capacity, int currentFloor,
                             List<Integer> allowedFloorList, ElevatorMovementStrategy elevatorMovementStrategy) {
         Building building = dataStore.getBuilding(buildingId);
-        synchronized (elevatorCreationLock) {
-            if (dataStore.containsElevator(elevatorId)) {
-                throw new RuntimeException("Elevator already exists: " + elevatorId);
-            }
-            Elevator elevator = new Elevator(elevatorId, capacity, currentFloor, allowedFloorList, elevatorMovementStrategy);
-            dataStore.putElevator(elevator.getElevatorId(), elevator);
-            synchronized (building) {
-                building.addElevator(elevatorId);
-            }
+        if (dataStore.containsElevator(elevatorId)) {
+            throw new RuntimeException("Elevator already exists: " + elevatorId);
         }
+        Elevator elevator = new Elevator(elevatorId, capacity, currentFloor, allowedFloorList, elevatorMovementStrategy);
+        dataStore.putElevator(elevator.getElevatorId(), elevator);
+        building.addElevator(elevatorId);
     }
 
     public void addDisplay(String elevatorId, String displayId, int floor) {
         Elevator elevator = dataStore.getElevator(elevatorId);
-        synchronized (displayCreationLock) {
-            if (dataStore.containsDisplay(displayId)) {
-                throw new RuntimeException("Display already exists: " + displayId);
-            }
-            Display display = new Display(displayId, floor);
-            dataStore.putDisplay(display.getDisplayId(), display);
-            synchronized (elevator) {
-                elevator.addObserver(display);
-            }
+        if (dataStore.containsDisplay(displayId)) {
+            throw new RuntimeException("Display already exists: " + displayId);
         }
+        Display display = new Display(displayId, floor);
+        dataStore.putDisplay(display.getDisplayId(), display);
+        elevator.addObserver(display);
     }
 
     public void startElevator(String elevatorId) {
         Elevator elevator = dataStore.getElevator(elevatorId);
-        if (!elevatorStartLockManager.tryStart(elevatorId)) {
-            throw new IllegalStateException("Elevator is already running: " + elevatorId);
-        }
-        try {
-            elevator.start();
-        } finally {
-            elevatorStartLockManager.finish(elevatorId);
-        }
+        elevatorMovementService.start(elevatorId, elevator);
     }
 
     public void stopElevator(String elevatorId) {
@@ -118,10 +95,8 @@ public class ElevatorSystemFacade {
     private List<Elevator> getElevatorListForBuilding(String buildingId) {
         Building building = dataStore.getBuilding(buildingId);
         List<Elevator> result = new ArrayList<>();
-        synchronized (building) {
-            for (String elevatorId : building.getElevatorList()) {
-                result.add(dataStore.getElevator(elevatorId));
-            }
+        for (String elevatorId : building.getElevatorList()) {
+            result.add(dataStore.getElevator(elevatorId));
         }
         return result;
     }

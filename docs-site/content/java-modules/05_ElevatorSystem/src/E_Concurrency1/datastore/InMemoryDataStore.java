@@ -4,8 +4,8 @@ import E_Concurrency1.model.Building;
 import E_Concurrency1.model.Display;
 import E_Concurrency1.model.Elevator;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class InMemoryDataStore implements DataStore {
     private final Map<String, Building> buildingMap;
@@ -13,9 +13,9 @@ public class InMemoryDataStore implements DataStore {
     private final Map<String, Display> displayMap;
 
     public InMemoryDataStore() {
-        this.buildingMap = new HashMap<>();
-        this.elevatorMap = new HashMap<>();
-        this.displayMap = new HashMap<>();
+        this.buildingMap = new ConcurrentHashMap<>();
+        this.elevatorMap = new ConcurrentHashMap<>();
+        this.displayMap = new ConcurrentHashMap<>();
     }
 
     @Override
