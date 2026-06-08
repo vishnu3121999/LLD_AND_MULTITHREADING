@@ -39,12 +39,22 @@ Search and newsletter still have local/demo fallbacks when their provider keys a
 - `/roadmaps` and `/cheatsheets` are MDX pages.
 - Java examples live under `content/java-modules/<module>/src/<page>`.
 
+## Workspace Layout Storage
+
+Workspace code-block positions, block sizes, block zoom, page zoom, constructor visibility, and folded methods are saved per signed-in Supabase user in:
+
+```text
+public.workspace_layouts
+```
+
+Run `supabase/workspace-layouts.sql` in the Supabase SQL editor before enabling this in production.
+
 ## Local Data Files
 
-Browser `localStorage` is not used for ongoing app state. Workspace layouts, zoom levels, collapsed modules, code theme, folded methods, and demo auth state are saved into:
+Browser `localStorage` is not used for ongoing app state. Local-only UI preferences, such as code theme and collapsed module state, are saved into:
 
 ```text
 docs-site/content/local-data/browser-state.json
 ```
 
-On first load, old `localStorage` keys that start with `lld-docs.` or `lld-playbook.` are migrated into that file and then removed from the browser.
+On first load, old `localStorage` keys that start with `lld-docs.` or `lld-playbook.` are migrated into that file and then removed from the browser. Old local workspace layouts are used only as a fallback/import source; users should click Save layout to store them in their profile.

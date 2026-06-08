@@ -26,6 +26,8 @@ const API_BASE = "";
 const JAVA_PAGES_API = `${API_BASE}/api/java-pages`;
 const JAVA_PAGE_API = `${API_BASE}/api/java-page`;
 const JAVA_DIFF_API = `${API_BASE}/api/java-diff`;
+const WORKSPACE_LAYOUT_API = `${API_BASE}/api/workspace/layout`;
+const AUTH_SESSION_API = `${API_BASE}/api/auth/session`;
 const PAGE_ID_ALIASES = {
   "03_BookMyShow::A_Basic": ["03_BookMyShow::A_basicSeatHoldBooking"]
 };
@@ -633,6 +635,10 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
   const [hoveredBlockId, setHoveredBlockId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [workspaceSession, setWorkspaceSession] = useState({ checked: false, configured: false, user: null });
+  const [layoutDirty, setLayoutDirty] = useState(false);
+  const [layoutSaveStatus, setLayoutSaveStatus] = useState("idle");
+  const [layoutSaveMessage, setLayoutSaveMessage] = useState("");
   const activeLayoutPageId = mode === "diff" ? selectedDiff?.targetPage?.id : selectedPage?.id;
 
   useEffect(() => {
@@ -692,6 +698,33 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
   }, [selectedPage, selectedDiff, mode]);
 
   useEffect(() => {
+    let cancelled = false;
+
+    async function loadWorkspaceSession() {
+      try {
+        const response = await fetch(AUTH_SESSION_API);
+        const payload = await response.json();
+        if (!cancelled) {
+          setWorkspaceSession({
+            checked: true,
+            configured: Boolean(payload.configured),
+            user: payload.user || null
+          });
+        }
+      } catch {
+        if (!cancelled) {
+          setWorkspaceSession({ checked: true, configured: false, user: null });
+        }
+      }
+    }
+
+    loadWorkspaceSession();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     if (!prefsReady) return;
     let cancelled = false;
 
@@ -717,70 +750,84 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
     setLayoutsPageId(null);
     setLayoutsSource("empty");
     setParentZoomSource("empty");
+    setLayoutDirty(false);
+    setLayoutSaveStatus("idle");
+    setLayoutSaveMessage("");
   }, [activeLayoutPageId]);
 
   useEffect(() => {
-    if (!prefsReady || !activeLayoutPageId || !pageData?.files) return;
+    if (!prefsReady || !workspaceSession.checked || !activeLayoutPageId || !pageData?.files) return;
     if (pageData.id !== activeLayoutPageId) return;
     let cancelled = false;
 
     async function loadLayouts() {
-      const saved = await readPageScopedStorage(layoutStorageKey, activeLayoutPageId);
-      if (cancelled) return;
-      if (saved) {
-        setLayouts(mergeLayoutsWithFiles(pageData.files, parseJsonValue(saved, {})));
+      setLayoutSaveStatus("loading");
+      setLayoutSaveMessage("");
+
+      try {
+        if (workspaceSession.user) {
+          const profileLayout = await fetchWorkspaceLayout(activeLayoutPageId);
+          if (cancelled) return;
+
+          if (profileLayout) {
+            setLayouts(mergeLayoutsWithFiles(pageData.files, profileLayout.layouts || {}));
+            setParentZoom(Number(profileLayout.parentZoom) || 1);
+            setConstructorVisibility((current) => mergePageScopedState(current, activeLayoutPageId, profileLayout.constructorVisibility || {}));
+            setCollapsedMethods((current) => mergePageScopedState(current, activeLayoutPageId, profileLayout.collapsedMethods || {}));
+            setLayoutsPageId(activeLayoutPageId);
+            setLayoutsSource("profile");
+            setParentZoomSource("profile");
+            setLayoutDirty(false);
+            setLayoutSaveStatus("saved");
+            setLayoutSaveMessage("Loaded from profile");
+            return;
+          }
+        }
+
+        const [localLayouts, localZoom] = await Promise.all([
+          readPageScopedStorage(layoutStorageKey, activeLayoutPageId),
+          readPageScopedStorage(parentZoomStorageKey, activeLayoutPageId)
+        ]);
+        if (cancelled) return;
+
+        if (localLayouts) {
+          setLayouts(mergeLayoutsWithFiles(pageData.files, parseJsonValue(localLayouts, {})));
+          setParentZoom(localZoom ? Number(localZoom) || 1 : 1);
+          setLayoutsPageId(activeLayoutPageId);
+          setLayoutsSource("local");
+          setParentZoomSource(localZoom ? "local" : "generated");
+          setLayoutDirty(Boolean(workspaceSession.user));
+          setLayoutSaveStatus("idle");
+          setLayoutSaveMessage(workspaceSession.user ? "Local layout loaded. Save it to your profile." : "Sign in to save this layout.");
+          return;
+        }
+
+        setLayouts(buildInitialLayouts(pageData.files));
+        setParentZoom(1);
         setLayoutsPageId(activeLayoutPageId);
-        setLayoutsSource("saved");
-        return;
+        setLayoutsSource("generated");
+        setParentZoomSource("generated");
+        setLayoutDirty(false);
+        setLayoutSaveStatus("idle");
+        setLayoutSaveMessage(workspaceSession.user ? "" : "Sign in to save custom layouts.");
+      } catch (layoutError) {
+        if (cancelled) return;
+        setLayouts(buildInitialLayouts(pageData.files));
+        setParentZoom(1);
+        setLayoutsPageId(activeLayoutPageId);
+        setLayoutsSource("generated");
+        setParentZoomSource("generated");
+        setLayoutDirty(false);
+        setLayoutSaveStatus("error");
+        setLayoutSaveMessage(layoutError.message || "Unable to load saved layout.");
       }
-      setLayouts(buildInitialLayouts(pageData.files));
-      setLayoutsPageId(activeLayoutPageId);
-      setLayoutsSource("generated");
     }
 
     loadLayouts();
     return () => {
       cancelled = true;
     };
-  }, [prefsReady, activeLayoutPageId, pageData?.files]);
-
-  useEffect(() => {
-    if (!prefsReady || !activeLayoutPageId) return;
-    let cancelled = false;
-
-    async function loadParentZoom() {
-      const saved = await readPageScopedStorage(parentZoomStorageKey, activeLayoutPageId);
-      if (!cancelled) {
-        setParentZoom(saved ? Number(saved) || 1 : 1);
-        setParentZoomSource(saved ? "saved" : "generated");
-      }
-    }
-
-    loadParentZoom();
-    return () => {
-      cancelled = true;
-    };
-  }, [prefsReady, activeLayoutPageId]);
-
-  useEffect(() => {
-    if (!prefsReady || layoutsSource === "generated" || !activeLayoutPageId || layoutsPageId !== activeLayoutPageId || Object.keys(layouts).length === 0) return;
-    fileStorageSetItem(layoutStorageKey(activeLayoutPageId), JSON.stringify(layouts));
-  }, [layouts, layoutsPageId, layoutsSource, activeLayoutPageId, prefsReady]);
-
-  useEffect(() => {
-    if (!prefsReady || parentZoomSource === "generated" || !activeLayoutPageId) return;
-    fileStorageSetItem(parentZoomStorageKey(activeLayoutPageId), String(parentZoom));
-  }, [parentZoom, parentZoomSource, activeLayoutPageId, prefsReady]);
-
-  useEffect(() => {
-    if (!prefsReady) return;
-    fileStorageSetItem("lld-docs.show-constructors", JSON.stringify(constructorVisibility));
-  }, [constructorVisibility, prefsReady]);
-
-  useEffect(() => {
-    if (!prefsReady) return;
-    fileStorageSetItem("lld-docs.collapsed-methods", JSON.stringify(collapsedMethods));
-  }, [collapsedMethods, prefsReady]);
+  }, [prefsReady, workspaceSession.checked, workspaceSession.user?.id, activeLayoutPageId, pageData?.files]);
 
   useEffect(() => {
     function handleZoom(event) {
@@ -806,9 +853,16 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
     reorganizeFromPreviousPackage(selectedPage);
   }, [reorganizeRequest, mode, selectedPage?.id, files]);
 
+  function markLayoutDirty(message = "Unsaved changes") {
+    setLayoutDirty(true);
+    setLayoutSaveStatus("idle");
+    setLayoutSaveMessage(message);
+  }
+
   function toggleConstructors(fileId) {
     if (!activeLayoutPageId) return;
     const storageKey = constructorVisibilityKey(activeLayoutPageId, fileId);
+    markLayoutDirty();
     setConstructorVisibility((current) => ({
       ...current,
       [storageKey]: !current[storageKey]
@@ -818,6 +872,7 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
   function toggleMethodFold(fileId, methodKey) {
     if (!activeLayoutPageId) return;
     const storageKey = methodFoldStorageKey(activeLayoutPageId, fileId, methodKey);
+    markLayoutDirty();
     setCollapsedMethods((current) => ({
       ...current,
       [storageKey]: !current[storageKey]
@@ -833,6 +888,7 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
         const layout = current[hoveredBlockId];
         if (!layout) return current;
         setLayoutsSource("user");
+        markLayoutDirty();
         return {
           ...current,
           [hoveredBlockId]: {
@@ -845,7 +901,40 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
     }
 
     setParentZoomSource("user");
+    markLayoutDirty();
     setParentZoom((current) => clampParentZoom(current + delta));
+  }
+
+  async function saveCurrentLayout() {
+    if (!activeLayoutPageId || layoutsPageId !== activeLayoutPageId || Object.keys(layouts).length === 0) return;
+
+    if (!workspaceSession.user) {
+      setLayoutSaveStatus("error");
+      setLayoutSaveMessage("Sign in to save this layout to your profile.");
+      return;
+    }
+
+    setLayoutSaveStatus("saving");
+    setLayoutSaveMessage("Saving...");
+
+    try {
+      const result = await saveWorkspaceLayout({
+        pageId: activeLayoutPageId,
+        layouts,
+        parentZoom,
+        constructorVisibility: pageScopedState(constructorVisibility, activeLayoutPageId),
+        collapsedMethods: pageScopedState(collapsedMethods, activeLayoutPageId)
+      });
+
+      setLayoutsSource("profile");
+      setParentZoomSource("profile");
+      setLayoutDirty(false);
+      setLayoutSaveStatus("saved");
+      setLayoutSaveMessage(result.updatedAt ? `Saved ${formatTime(result.updatedAt)}` : "Saved");
+    } catch (saveError) {
+      setLayoutSaveStatus("error");
+      setLayoutSaveMessage(saveError.message || "Unable to save layout.");
+    }
   }
 
   function zoomPage(delta) {
@@ -856,13 +945,26 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
     const previousPage = findPreviousPage(javaModules, targetPage);
     if (!previousPage || !activeLayoutPageId || files.length === 0) return;
 
-    const previousLayouts = await readJsonFileStorage(layoutStorageKey(previousPage.id), {});
+    let previousLayouts = {};
+    let previousZoom = null;
+
+    if (workspaceSession.user) {
+      const previousProfileLayout = await fetchWorkspaceLayout(previousPage.id).catch(() => null);
+      previousLayouts = previousProfileLayout?.layouts || {};
+      previousZoom = previousProfileLayout?.parentZoom || null;
+    }
+
+    if (Object.keys(previousLayouts).length === 0) {
+      previousLayouts = await readJsonFileStorage(layoutStorageKey(previousPage.id), {});
+      previousZoom = await fileStorageGetItem(parentZoomStorageKey(previousPage.id));
+    }
+
     const nextLayouts = buildLayoutsFromPreviousPackage(files, previousLayouts);
     setLayouts(nextLayouts);
     setLayoutsPageId(activeLayoutPageId);
     setLayoutsSource("user");
+    markLayoutDirty("Reorganized layout. Save to keep it.");
 
-    const previousZoom = await fileStorageGetItem(parentZoomStorageKey(previousPage.id));
     if (previousZoom) {
       setParentZoom(Number(previousZoom) || 1);
       setParentZoomSource("user");
@@ -872,6 +974,15 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
   return (
     <section className={`visualizer-view theme-${codeTheme}`}>
       {error && <div className="error-banner">{error}</div>}
+      <WorkspaceLayoutToolbar
+        user={workspaceSession.user}
+        sessionChecked={workspaceSession.checked}
+        dirty={layoutDirty}
+        status={layoutSaveStatus}
+        message={layoutSaveMessage}
+        disabled={!activeLayoutPageId || layoutsPageId !== activeLayoutPageId || Object.keys(layouts).length === 0}
+        onSave={saveCurrentLayout}
+      />
 
       <CodeWorkspace
         files={files}
@@ -884,6 +995,7 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
         onLayoutChange={(fileId, layout) => {
           if (layoutsPageId !== activeLayoutPageId) return;
           setLayoutsSource("user");
+          markLayoutDirty();
           setLayouts((current) => ({ ...current, [fileId]: layout }));
         }}
         onHoverBlock={setHoveredBlockId}
@@ -892,6 +1004,37 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
         onPageZoom={zoomPage}
       />
     </section>
+  );
+}
+
+function WorkspaceLayoutToolbar({ user, sessionChecked, dirty, status, message, disabled, onSave }) {
+  const [authHref, setAuthHref] = useState("/auth?next=/workspace");
+  const isSaving = status === "saving";
+  const isLoading = status === "loading";
+  const canSave = Boolean(user) && !disabled && !isSaving && !isLoading && dirty;
+
+  useEffect(() => {
+    setAuthHref(`/auth?next=${encodeURIComponent(`${window.location.pathname}${window.location.search}`)}`);
+  }, []);
+
+  return (
+    <div className="workspace-layout-toolbar">
+      <div className={`workspace-layout-status status-${status || "idle"}`}>
+        <span className="workspace-layout-dot" aria-hidden="true" />
+        <span>
+          {!sessionChecked
+            ? "Checking account..."
+            : message || (user ? dirty ? "Unsaved layout changes" : "Layout ready" : "Sign in to save layouts")}
+        </span>
+      </div>
+      {user ? (
+        <button className="workspace-save-button" type="button" onClick={onSave} disabled={!canSave}>
+          {isSaving ? "Saving..." : dirty ? "Save layout" : "Saved"}
+        </button>
+      ) : (
+        <a className="workspace-save-button" href={authHref}>Sign in to save</a>
+      )}
+    </div>
   );
 }
 
@@ -1238,6 +1381,54 @@ function layoutStorageKey(pageId) {
 
 function parentZoomStorageKey(pageId) {
   return `lld-docs.parentZoom.${pageId}`;
+}
+
+async function fetchWorkspaceLayout(pageId) {
+  const response = await fetch(`${WORKSPACE_LAYOUT_API}?pageId=${encodeURIComponent(pageId)}`);
+  if (response.status === 401) return null;
+
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload.error || "Unable to load profile layout.");
+  return payload.layout || null;
+}
+
+async function saveWorkspaceLayout(payload) {
+  const response = await fetch(WORKSPACE_LAYOUT_API, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(result.error || "Unable to save profile layout.");
+  return result;
+}
+
+function pageScopedState(state, pageId) {
+  const prefix = `${pageId}::`;
+  return Object.fromEntries(Object.entries(state || {}).filter(([key]) => key.startsWith(prefix)));
+}
+
+function mergePageScopedState(current, pageId, nextState) {
+  const prefix = `${pageId}::`;
+  return {
+    ...Object.fromEntries(Object.entries(current || {}).filter(([key]) => !key.startsWith(prefix))),
+    ...sanitizePreferenceMap(nextState)
+  };
+}
+
+function sanitizePreferenceMap(value) {
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+}
+
+function formatTime(value) {
+  try {
+    return new Intl.DateTimeFormat(undefined, {
+      hour: "numeric",
+      minute: "2-digit"
+    }).format(new Date(value));
+  } catch {
+    return "now";
+  }
 }
 
 function constructorVisibilityKey(pageId, fileId) {

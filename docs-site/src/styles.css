@@ -480,6 +480,81 @@ select {
   position: relative;
 }
 
+.workspace-layout-toolbar {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 30;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(520px, calc(100% - 28px));
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-strong) 94%, transparent);
+  box-shadow: 0 12px 28px var(--shadow);
+  backdrop-filter: blur(10px);
+}
+
+.workspace-layout-status {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+  padding: 0 8px 0 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.workspace-layout-status span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.workspace-layout-dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #94a3b8;
+}
+
+.workspace-layout-status.status-saved .workspace-layout-dot {
+  background: #2a9d5a;
+}
+
+.workspace-layout-status.status-saving .workspace-layout-dot,
+.workspace-layout-status.status-loading .workspace-layout-dot {
+  background: #d49b2a;
+}
+
+.workspace-layout-status.status-error .workspace-layout-dot {
+  background: #c94f4f;
+}
+
+.workspace-save-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.workspace-save-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .docs-editor-view {
   display: flex;
   flex-direction: column;

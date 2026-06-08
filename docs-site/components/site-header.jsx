@@ -63,17 +63,23 @@ export function SiteHeader() {
 
 function HeaderAuthButton({ pathname }) {
   const [user, setUser] = useState(null);
+  const [sessionChecked, setSessionChecked] = useState(false);
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
-    if (!supabase) return undefined;
+    if (!supabase) {
+      setSessionChecked(true);
+      return undefined;
+    }
 
     supabase.auth.getSession().then(({ data }) => {
       setUser(data.session?.user || null);
+      setSessionChecked(true);
     });
 
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user || null);
+      setSessionChecked(true);
     });
 
     return () => {
@@ -82,12 +88,34 @@ function HeaderAuthButton({ pathname }) {
   }, []);
 
   const next = pathname && pathname !== "/auth" ? `?next=${encodeURIComponent(pathname)}` : "";
+  if (user?.email) {
+    return (
+      <Link
+        href={`/auth${next}`}
+        className="inline-flex h-9 items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950"
+        aria-label={`Account for ${user.email}`}
+      >
+        <span className="grid h-7 w-7 place-items-center rounded-full bg-slate-950 text-xs font-semibold text-white">
+          {getInitials(user.email)}
+        </span>
+        <span className="hidden max-w-24 truncate sm:inline">Account</span>
+      </Link>
+    );
+  }
+
   return (
-    <Button asChild size="sm">
+    <Button asChild size="sm" className="rounded-full px-4">
       <Link href={`/auth${next}`}>
         <UserRound size={16} aria-hidden="true" />
-        {user?.email ? "Account" : "Sign in"}
+        {sessionChecked ? "Sign in" : "Account"}
       </Link>
     </Button>
   );
+}
+
+function getInitials(email) {
+  const localPart = String(email || "U").split("@")[0];
+  const chunks = localPart.split(/[._-]+/).filter(Boolean);
+  const initials = chunks.length > 1 ? `${chunks[0][0]}${chunks[1][0]}` : localPart.slice(0, 2);
+  return initials.toUpperCase();
 }

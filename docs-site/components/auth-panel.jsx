@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, CheckCircle2, Loader2, LogIn, ShieldCheck, UserPlus } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { getSupabaseBrowserClient } from "../lib/supabase-browser";
 import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
@@ -25,12 +25,12 @@ export function AuthPanel() {
   useEffect(() => {
     const reason = typeof window === "undefined" ? "" : new URLSearchParams(window.location.search).get("error");
     if (!supabase) {
-      showStatus("warning", "Supabase auth is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.");
+      showStatus("warning", "Sign in is not configured yet.");
       return undefined;
     }
 
     if (reason === "auth_required") showStatus("info", "Sign in to continue.");
-    if (reason === "auth_not_configured") showStatus("warning", "Supabase auth is not configured for protected routes.");
+    if (reason === "auth_not_configured") showStatus("warning", "Sign in is not configured yet.");
 
     supabase.auth.getUser().then(({ data }) => setUser(data.user || null));
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -50,18 +50,16 @@ export function AuthPanel() {
     event.preventDefault();
     showStatus("info", "");
 
-    if (!supabase) {
-      return;
-    }
+    if (!supabase) return;
 
     if (cooldownSeconds > 0) {
-      showStatus("warning", `Supabase is rate-limiting this auth action. Try again in ${cooldownSeconds} seconds.`);
+      showStatus("warning", `Try again in ${cooldownSeconds} seconds.`);
       return;
     }
 
     const normalizedEmail = email.trim().toLowerCase();
     if (!normalizedEmail || !password) {
-      showStatus("error", "Email and password are required.");
+      showStatus("error", "Enter your email and password.");
       return;
     }
 
@@ -91,13 +89,12 @@ export function AuthPanel() {
     }
 
     if (mode === "signin" || data.session) {
-      showStatus("success", "Signed in. Redirecting...");
       router.replace(nextPath);
       router.refresh();
       return;
     }
 
-    showStatus("success", "Account created. Check your email to confirm the account, then sign in.");
+    showStatus("success", "Check your email to confirm your account.");
   }
 
   async function signOut() {
@@ -111,35 +108,44 @@ export function AuthPanel() {
     router.refresh();
   }
 
+  function handleAuthError(error) {
+    const seconds = rateLimitSeconds(error);
+    if (seconds > 0) {
+      setCooldownUntil(Date.now() + seconds * 1000);
+      setNow(Date.now());
+      showStatus("warning", `Too many attempts. Try again in ${seconds} seconds.`);
+      return;
+    }
+
+    showStatus("error", normalizeAuthError(error.message));
+  }
+
+  function showStatus(type, message) {
+    setStatusType(type);
+    setStatus(message);
+  }
+
   if (!supabase) {
     return (
-      <div className="rounded-lg border border-amber-200 bg-amber-50 p-6">
-        <div className="flex items-start gap-3">
-          <AlertCircle className="mt-0.5 text-amber-700" size={20} aria-hidden="true" />
-          <div>
-            <h2 className="text-lg font-semibold tracking-normal text-amber-950">Auth Configuration Required</h2>
-            <p className="mt-2 text-sm leading-6 text-amber-800">
-              Add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`, then restart the app. Protected pages are intentionally blocked until Supabase is configured.
-            </p>
-          </div>
-        </div>
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm">
+        <LogoHeader title="Sign in unavailable" />
+        <p className="mt-3 text-sm leading-6 text-slate-600">
+          Authentication is not configured for this deployment.
+        </p>
       </div>
     );
   }
 
   if (user) {
     return (
-      <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-soft">
-        <div className="flex items-start gap-3">
-          <span className="grid h-10 w-10 place-items-center rounded-md bg-emerald-50 text-emerald-700">
-            <ShieldCheck size={20} aria-hidden="true" />
-          </span>
-          <div className="min-w-0">
-            <h2 className="text-lg font-semibold tracking-normal text-slate-950">Signed In</h2>
-            <p className="mt-1 truncate text-sm leading-6 text-slate-600">{user.email}</p>
-          </div>
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <LogoHeader title="Account" />
+        <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Signed in as</p>
+          <p className="mt-1 truncate text-sm font-semibold text-slate-950">{user.email}</p>
         </div>
-        <Button className="mt-6 w-full" variant="outline" onClick={signOut} disabled={loading}>
+        <Button className="mt-5 w-full" variant="outline" onClick={signOut} disabled={loading}>
+          {loading && <Loader2 className="animate-spin" size={16} aria-hidden="true" />}
           {loading ? "Signing out..." : "Sign out"}
         </Button>
         <StatusMessage type={statusType} message={status} />
@@ -148,42 +154,39 @@ export function AuthPanel() {
   }
 
   return (
-    <form onSubmit={submit} className="rounded-lg border border-slate-200 bg-white p-6 shadow-soft">
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold tracking-normal text-slate-950">{mode === "signin" ? "Sign in" : "Create account"}</h2>
-        <p className="mt-2 text-sm leading-6 text-slate-600">
-          Use the same account to access protected tools and future premium content.
-        </p>
-      </div>
+    <form onSubmit={submit} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <LogoHeader title={mode === "signin" ? "Sign in" : "Create account"} />
 
-      <div className="grid grid-cols-2 gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1">
-        <Button
+      <div className="mt-6 grid grid-cols-2 rounded-lg bg-slate-100 p-1">
+        <button
           type="button"
-          variant={mode === "signin" ? "default" : "secondary"}
-          className="border-transparent"
+          className={cn(
+            "h-9 rounded-md text-sm font-semibold transition",
+            mode === "signin" ? "bg-white text-slate-950 shadow-sm" : "text-slate-500 hover:text-slate-950"
+          )}
           onClick={() => {
             setMode("signin");
             showStatus("info", "");
           }}
         >
-          <LogIn size={16} aria-hidden="true" />
           Sign in
-        </Button>
-        <Button
+        </button>
+        <button
           type="button"
-          variant={mode === "signup" ? "default" : "secondary"}
-          className="border-transparent"
+          className={cn(
+            "h-9 rounded-md text-sm font-semibold transition",
+            mode === "signup" ? "bg-white text-slate-950 shadow-sm" : "text-slate-500 hover:text-slate-950"
+          )}
           onClick={() => {
             setMode("signup");
             showStatus("info", "");
           }}
         >
-          <UserPlus size={16} aria-hidden="true" />
           Sign up
-        </Button>
+        </button>
       </div>
 
-      <div className="mt-6 space-y-4">
+      <div className="mt-5 space-y-4">
         <label className="block space-y-2">
           <span className="text-sm font-medium text-slate-700">Email</span>
           <Input
@@ -204,46 +207,32 @@ export function AuthPanel() {
             autoComplete={mode === "signin" ? "current-password" : "new-password"}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            placeholder="Minimum 6 characters"
+            placeholder="Password"
           />
         </label>
       </div>
 
-      <Button className="mt-6 w-full" type="submit" disabled={loading || cooldownSeconds > 0}>
+      <Button className="mt-5 w-full" type="submit" disabled={loading || cooldownSeconds > 0}>
         {loading && <Loader2 className="animate-spin" size={16} aria-hidden="true" />}
         {loading
-          ? "Working..."
+          ? "Please wait..."
           : cooldownSeconds > 0
             ? `Try again in ${cooldownSeconds}s`
             : mode === "signin" ? "Sign in" : "Create account"}
       </Button>
 
       <StatusMessage type={statusType} message={status} />
-
-      {mode === "signup" && (
-        <p className="mt-4 text-xs leading-5 text-slate-500">
-          Supabase sends a confirmation email for new accounts. Repeated sign-up attempts can trigger provider rate limits.
-        </p>
-      )}
     </form>
   );
+}
 
-  function handleAuthError(error) {
-    const seconds = rateLimitSeconds(error);
-    if (seconds > 0) {
-      setCooldownUntil(Date.now() + seconds * 1000);
-      setNow(Date.now());
-      showStatus("warning", `Supabase rate limit reached. Wait ${seconds} seconds before trying again. If the account was just created, check your inbox and then use Sign in.`);
-      return;
-    }
-
-    showStatus("error", normalizeAuthError(error.message));
-  }
-
-  function showStatus(type, message) {
-    setStatusType(type);
-    setStatus(message);
-  }
+function LogoHeader({ title }) {
+  return (
+    <div className="text-center">
+      <img src="/logo.png" alt="01 Interview" className="mx-auto h-16 w-auto object-contain" />
+      <h1 className="mt-5 text-2xl font-semibold tracking-tight text-slate-950">{title}</h1>
+    </div>
+  );
 }
 
 function getNextPath() {
@@ -284,6 +273,6 @@ function rateLimitSeconds(error) {
 function normalizeAuthError(message) {
   const text = String(message || "Authentication failed.");
   if (/invalid login credentials/i.test(text)) return "Invalid email or password.";
-  if (/email not confirmed/i.test(text)) return "Email is not confirmed yet. Check your inbox for the confirmation link.";
+  if (/email not confirmed/i.test(text)) return "Confirm your email before signing in.";
   return text;
 }
