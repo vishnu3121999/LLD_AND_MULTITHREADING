@@ -80,7 +80,7 @@ public class ElevatorSystemFacade {
 
     public void startElevator(String elevatorId) {
         Elevator elevator = dataStore.getElevator(elevatorId);
-        elevatorMovementService.start(elevatorId, elevator);
+        elevatorMovementService.start(elevator);
     }
 
     public void stopElevator(String elevatorId) {

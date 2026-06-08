@@ -103,7 +103,7 @@ export default function App({ initialModule = "", initialPackage = "" } = {}) {
         const modules = payload.modules || [];
         setJavaModules(modules);
         const initialPage = findPageByRoute(modules, initialModule, initialPackage) || modules[0]?.pages?.[0] || null;
-        if (initialPage) applyPageSelection(initialPage);
+        if (initialPage) applyCurrentRouteSelection(modules, initialPage);
       })
       .catch(() => setJavaModules([]));
   }, [initialModule, initialPackage]);
@@ -111,12 +111,7 @@ export default function App({ initialModule = "", initialPackage = "" } = {}) {
   useEffect(() => {
     function handlePopState() {
       if (javaModules.length === 0) return;
-      const routeSelection = parseWorkspaceRoute(window.location.pathname);
-      const nextPage = routeSelection
-        ? findPageByRoute(javaModules, routeSelection.module, routeSelection.packageName)
-        : javaModules[0]?.pages?.[0] || null;
-
-      if (nextPage) applyPageSelection(nextPage);
+      applyCurrentRouteSelection(javaModules, javaModules[0]?.pages?.[0] || null);
     }
 
     window.addEventListener("popstate", handlePopState);
@@ -189,6 +184,31 @@ export default function App({ initialModule = "", initialPackage = "" } = {}) {
     setJavaMode("page");
   }
 
+  function applyDiffSelection(diffSelection) {
+    setSelectedModule(diffSelection.module);
+    setWorkspaceMode("visualizer");
+    setSelectedPage(diffSelection.targetPage);
+    setSelectedDiff(diffSelection);
+    setJavaMode("diff");
+  }
+
+  function applyCurrentRouteSelection(modules, fallbackPage) {
+    const routeSelection = parseWorkspaceRoute(window.location.pathname);
+    const nextPage = routeSelection
+      ? findPageByRoute(modules, routeSelection.module, routeSelection.packageName)
+      : fallbackPage;
+
+    if (!nextPage) return;
+
+    const diffSelection = diffSelectionFromUrl(modules, nextPage, window.location.search);
+    if (diffSelection) {
+      applyDiffSelection(diffSelection);
+      return;
+    }
+
+    applyPageSelection(nextPage);
+  }
+
   function selectPage(page, { updateUrl = true } = {}) {
     applyPageSelection(page);
     if (updateUrl) pushWorkspaceRoute(page);
@@ -236,12 +256,8 @@ export default function App({ initialModule = "", initialPackage = "" } = {}) {
             onToggleModule={(moduleName) => setCollapsedModules((current) => ({ ...current, [moduleName]: !current[moduleName] }))}
             onSelectPage={(page) => selectPage(page)}
             onSelectDiff={(diffSelection) => {
-              setSelectedModule(diffSelection.module);
-              setWorkspaceMode("visualizer");
-              setSelectedPage(diffSelection.targetPage);
-              setSelectedDiff(diffSelection);
-              setJavaMode("diff");
-              pushWorkspaceRoute(diffSelection.targetPage);
+              applyDiffSelection(diffSelection);
+              pushWorkspaceRoute(diffSelection.targetPage, diffSelection);
             }}
             onReorganizePage={(page) => {
               selectPage(page);
@@ -272,15 +288,24 @@ function findPageByRoute(modules, moduleName, packageName) {
   return module?.pages?.find((page) => page.packageName === packageName) || null;
 }
 
-function pageRouteHref(page) {
-  return page?.href || `/workspace/${encodeURIComponent(page.module)}/${encodeURIComponent(page.packageName)}`;
+function pageRouteHref(page, diffSelection = null) {
+  if (!page) return "";
+  const baseHref = page.href || `/workspace/${encodeURIComponent(page.module)}/${encodeURIComponent(page.packageName)}`;
+  if (!diffSelection) return baseHref;
+
+  const params = new URLSearchParams({
+    mode: "diff",
+    from: diffSelection.from
+  });
+  return `${baseHref}?${params.toString()}`;
 }
 
-function pushWorkspaceRoute(page) {
+function pushWorkspaceRoute(page, diffSelection = null) {
   if (typeof window === "undefined" || !page) return;
-  const href = pageRouteHref(page);
-  if (window.location.pathname === href) return;
-  window.history.pushState({ pageId: page.id }, "", href);
+  const href = pageRouteHref(page, diffSelection);
+  const currentHref = `${window.location.pathname}${window.location.search}`;
+  if (currentHref === href) return;
+  window.history.pushState({ pageId: page.id, diffId: diffSelection?.id || null }, "", href);
 }
 
 function parseWorkspaceRoute(pathname) {
@@ -289,6 +314,25 @@ function parseWorkspaceRoute(pathname) {
   return {
     module: decodePathPart(parts[1]),
     packageName: decodePathPart(parts[2])
+  };
+}
+
+function diffSelectionFromUrl(modules, targetPage, search) {
+  const params = new URLSearchParams(search);
+  if (params.get("mode") !== "diff") return null;
+
+  const sourcePackage = params.get("from");
+  if (!sourcePackage || sourcePackage === targetPage.packageName) return null;
+
+  const sourcePage = findPageByRoute(modules, targetPage.module, sourcePackage);
+  if (!sourcePage) return null;
+
+  return {
+    id: `diff::${targetPage.module}::${sourcePage.packageName}::${targetPage.packageName}`,
+    module: targetPage.module,
+    from: sourcePage.packageName,
+    to: targetPage.packageName,
+    targetPage
   };
 }
 
@@ -348,7 +392,7 @@ function JavaPageNav({ modules, selectedModule, workspaceMode, collapsedModules,
                 <div className="package-row">
                   <a
                     className="package-name-button"
-                    href={pageRouteHref(page)}
+                    href={isDiffActive ? pageRouteHref(page, selectedDiff) : pageRouteHref(page)}
                     onClick={(event) => handlePackageLinkClick(event, page, onSelectPage)}
                   >
                     <span>{page.title}</span>

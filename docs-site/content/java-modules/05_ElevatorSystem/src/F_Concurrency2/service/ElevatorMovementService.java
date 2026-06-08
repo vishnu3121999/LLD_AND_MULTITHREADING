@@ -9,7 +9,8 @@ public class ElevatorMovementService {
         this.elevatorStartLockManager = new ElevatorStartLockManager();
     }
 
-    public void start(String elevatorId, Elevator elevator) {
+    public void start(Elevator elevator) {
+        String elevatorId = elevator.getElevatorId();
         if (!elevatorStartLockManager.tryStart(elevatorId)) {
             throw new IllegalStateException("Elevator is already running: " + elevatorId);
         }
