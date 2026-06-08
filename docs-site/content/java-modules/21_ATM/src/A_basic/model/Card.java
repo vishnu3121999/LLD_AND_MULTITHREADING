@@ -1,0 +1,2 @@
+package A_basic.model;
+public class Card { private final String cardId; private final String accountId; private final String pin; public Card(String cardId, String accountId, String pin) { this.cardId = cardId; this.accountId = accountId; this.pin = pin; } public boolean matchesPin(String pin) { return this.pin.equals(pin); } @Override public String toString() { return "Card{" + "cardId='" + cardId + "'" + ", accountId='" + accountId + "'" + '}'; } public String getCardId() { return cardId; } public String getAccountId() { return accountId; } }

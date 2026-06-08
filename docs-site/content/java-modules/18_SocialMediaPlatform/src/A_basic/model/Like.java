@@ -1,0 +1,2 @@
+package A_basic.model;
+public class Like { private final String likeId; private final String userId; public Like(String likeId, String userId) { this.likeId = likeId; this.userId = userId; } @Override public String toString() { return "Like{" + "likeId='" + likeId + "'" + ", userId='" + userId + "'" + '}'; } public String getLikeId() { return likeId; } public String getUserId() { return userId; } }

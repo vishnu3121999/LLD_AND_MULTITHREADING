@@ -5,7 +5,7 @@ export default function HldLayout({ children }) {
     <div className="hld-original">
       <header className="topbar">
         <Link className="brand" href="/hld">
-          <span className="brand-mark">»</span>
+          <img className="brand-logo" src="/logo.png" alt="01 Interview" />
           <span className="brand-text">HLD Academy</span>
         </Link>
 

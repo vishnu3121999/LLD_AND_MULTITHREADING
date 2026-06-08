@@ -1,0 +1,2 @@
+package A_basic.model;
+public class Comment { private final String commentId; private final String userId; private final String text; public Comment(String commentId, String userId, String text) { this.commentId = commentId; this.userId = userId; this.text = text; } @Override public String toString() { return "Comment{" + "commentId='" + commentId + "'" + ", userId='" + userId + "'" + ", text='" + text + "'" + '}'; } public String getCommentId() { return commentId; } public String getUserId() { return userId; } public String getText() { return text; } }

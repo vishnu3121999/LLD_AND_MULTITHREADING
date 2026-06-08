@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Code2, Search, UserRound } from "lucide-react";
+import { Search, UserRound } from "lucide-react";
 import { navItems } from "../lib/site-data";
 import { cn } from "../lib/utils";
 import { getSupabaseBrowserClient } from "../lib/supabase-browser";
@@ -18,11 +18,13 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
       <div className="site-container flex min-h-16 items-center justify-between gap-4">
-        <Link href="/" className="flex items-center gap-2 font-semibold text-slate-950">
-          <span className="grid h-9 w-9 place-items-center rounded-md bg-slate-950 text-white">
-            <Code2 size={20} aria-hidden="true" />
-          </span>
-          <span>LLD Playbook</span>
+        <Link href="/" className="flex items-center gap-3 font-semibold text-slate-950" aria-label="01 Interview home">
+          <img
+            src="/logo.png"
+            alt="01 Interview"
+            className="h-12 w-auto rounded-sm object-contain"
+          />
+          <span className="sr-only">LLD Playbook</span>
         </Link>
 
         <nav className="hidden items-center gap-1 md:flex" aria-label="Primary navigation">

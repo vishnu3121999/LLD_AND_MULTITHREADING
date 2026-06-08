@@ -1,7 +1,7 @@
 ﻿Create the first/basic package for this LLD problem in Java.
 
 Problem:
-05_ElevatorSystem
+<Problem_Name>
 
 Target package:
 Use package name `A_basic` unless I explicitly give another package name.
@@ -17,7 +17,7 @@ Expected output:
 3. Include core model/entity classes.
 4. Include enums under `model/enums` when needed.
 5. Include one facade class under `service`.
-6. If this is an online/catalog/booking/order-type app, include `datastore/DataStore.java` and `datastore/InMemoryDataStore.java`.
+6. Include `datastore/DataStore.java` and `datastore/InMemoryDataStore.java`.
 7. Keep the code simple, readable, and interview-friendly.
 
 Coding standards:
@@ -215,3 +215,435 @@ Before finishing:
 - Ensure facade method order follows user/system/admin/helper.
 - Ensure online-app datastore has `get/put/contains/remove` for every core entity map.
 - Ensure relationship lists use `private final List<String> ...List`, `addX`, and `Collections.unmodifiableList`.
+
+
+
+Reusable A_basic Design Analysis Format
+--------------------------------------
+
+Use this section when creating the first/basic package for any new LLD problem. The goal is to explain how the basic design is derived before or while implementing it. If the user asks for a report first, return this analysis and wait. If the user asks to implement directly, still follow this reasoning internally and keep the implementation aligned with it.
+
+A_basic scope boundary:
+- Build the first runnable domain model and facade flow.
+- Keep inputs as happy-path unless the problem fundamentally cannot run without a tiny check.
+- Do not implement later-package concerns yet: Strategy, Factory, Observer, Command, State, Memento, Chain of Responsibility, concurrency, detailed exception handling, persistence, or advanced validations.
+- It is okay to mention future extensibility candidates in the design explanation, but do not implement those patterns in A_basic.
+- Prefer one facade plus core entities plus datastore. Add a tiny helper service only when keeping logic inside an entity would be worse design, such as long-running movement orchestration.
+
+Requirements:
+- System Specific Requirements:
+  - Physical Structure based points:
+    - Identify the physical or structural hierarchy of the system.
+    - Examples:
+      - TicTacToe:
+        - The game is played on a 3x3 grid.
+      - Chess:
+        - The game board is an 8x8 grid.
+        - Two players control one set of pieces each.
+        - Each player has 16 pieces: 1 king, 1 queen, 2 rooks, 2 bishops, 2 knights, and 8 pawns.
+      - BookMyShow:
+        - The system supports multiple cities.
+        - Each city has multiple theaters.
+        - Each theater has multiple screens.
+        - Each screen has a fixed seat layout.
+        - Seats can have types such as NORMAL, PREMIUM, RECLINER.
+        - The system supports multiple movies and shows.
+      - VendingMachine:
+        - The machine contains multiple racks or slots.
+        - Each rack stores one product type.
+        - The machine supports multiple products.
+      - ElevatorSystem:
+        - The system supports multiple buildings.
+        - Each building has multiple elevators.
+        - Each elevator serves a set of allowed floors.
+        - Displays exist to show elevator position, but in A_basic they can remain simple stored entities.
+
+  - Action based points:
+    - Identify what users, admins, and the system can do.
+    - Keep only the primary happy-path actions for A_basic.
+    - Examples:
+      - TicTacToe:
+        - User Actions:
+          - Two players take turns marking X or O.
+          - A player wins by completing a row, column, or diagonal.
+          - The game can end in draw when the board is full.
+        - System Actions:
+          - Display the board.
+          - Track turns.
+          - Detect win or draw.
+      - Chess:
+        - Players take turns making moves.
+        - The system applies basic legal moves.
+        - Later packages can add complete check, checkmate, stalemate, king safety, and special moves.
+      - BookMyShow:
+        - Admin Actions:
+          - Add movies, cities, theaters, screens, seats, and shows.
+        - User Actions:
+          - Search shows for a movie in a city.
+          - View seats for a show.
+          - Select seats and create a booking/ticket in the happy path.
+      - VendingMachine:
+        - Admin Actions:
+          - Add racks, products, and inventory.
+        - User Actions:
+          - View products.
+          - Select product.
+          - Pay.
+          - Receive product and change in the happy path.
+      - ElevatorSystem:
+        - User Actions:
+          - Request an elevator from a floor.
+          - Enter a destination floor after getting an assigned elevator.
+        - Admin Actions:
+          - Add buildings, elevators, and displays.
+          - Start and stop an elevator.
+        - System Actions:
+          - Assign an elevator for a request.
+          - Move an elevator toward pending stops.
+
+  - Misc:
+    - Mention important domain rules, but implement only basic ones in A_basic.
+    - Examples:
+      - Chess:
+        - Standard chess rules exist, but A_basic can keep move handling minimal unless the user asks for full chess.
+      - ElevatorSystem:
+        - Elevator assignment and movement need to exist, but advanced validation, concurrency, and observer display updates belong to later packages.
+
+- Common Misc:
+  - Offline or Online:
+    - Ask or infer whether the system is online/API-like or local/offline.
+    - Online/catalog systems should use datastore maps and entity IDs.
+    - Offline single-object problems can still use a datastore if that keeps package shape consistent.
+    - Examples:
+      - TicTacToe: usually offline/local.
+      - Chess: can be online or local; clarify if needed.
+      - BookMyShow: online.
+      - VendingMachine: offline device, but design facade-style.
+      - ElevatorSystem: online/control-system style, so datastore maps and IDs are acceptable.
+
+  - Extensibility:
+    - Core entities:
+      - Identify possible siblings or future variants.
+      - In A_basic, keep simple classes or enums unless polymorphism is necessary now.
+      - Examples:
+        - TicTacToe:
+          - Board variants: classic board, board with stones, larger board.
+          - Game variants: classic, timed, AI game.
+        - Chess:
+          - Board variants: classical, freestyle.
+          - Game variants: classic, blitz, rapid, AI game.
+        - BookMyShow:
+          - Seat types and payment types are extensibility points.
+        - VendingMachine:
+          - Payment types and coin denominations are extensibility points.
+        - ElevatorSystem:
+          - No core entity sibling is required in A_basic.
+
+    - Behaviour:
+      - Identify business logic that can later become Strategy or Factory.
+      - Do not implement Strategy or Factory in A_basic unless requested.
+      - Examples:
+        - TicTacToe: win strategy.
+        - VendingMachine: change calculation strategy.
+        - ElevatorSystem: elevator assignment and elevator movement.
+
+    - Features:
+      - Identify advanced features that are intentionally deferred.
+      - Examples:
+        - Chess: king safety, castling, en-passant, pawn promotion, checkmate detection.
+        - BookMyShow: pricing rules, offer rules, cancellation rules.
+        - ElevatorSystem: observer-based display updates, concurrent requests, maintenance validation.
+
+  - Store full history and support undo:
+    - Mention if the problem naturally needs history.
+    - Do not implement Command/Memento in A_basic unless it is the core requirement.
+    - Examples:
+      - TicTacToe: Command can support undo later.
+      - Chess: Memento or move history can support undo later.
+      - BookMyShow: usually not needed in basic package.
+      - VendingMachine: usually not needed in basic package.
+      - ElevatorSystem: not needed.
+
+  - Notification broadcasts:
+    - Mention whether Observer may be needed later.
+    - Do not implement Observer in A_basic unless user explicitly asks.
+    - Examples:
+      - TicTacToe: move/win/draw broadcasts can be observer later.
+      - Chess: move/checkmate/draw broadcasts can be observer later.
+      - BookMyShow: booking confirmation can be direct response in basic package.
+      - VendingMachine: not needed.
+      - ElevatorSystem: displays should eventually observe elevator floor changes, but A_basic can keep Display as a simple entity.
+
+  - Exception Handling:
+    - Identify likely invalid states and invalid arguments.
+    - Do not implement detailed exception handling in A_basic.
+    - Later packages can add IllegalStateException for incorrect action order, IllegalArgumentException for invalid inputs, NoSuchElementException for missing IDs, and custom exceptions if useful.
+    - Clarify whether UI hides invalid actions or backend must guard every method.
+
+  - Edge Cases:
+    - List likely mistakes to handle later.
+    - Do not add defensive branches in A_basic unless required for demo execution.
+
+  - Concurrency and thread-safety:
+    - Mention if the domain naturally has concurrent actors.
+    - Do not add locks or concurrent collections in A_basic.
+    - Examples:
+      - TicTacToe and Chess can have simultaneous player actions in online mode.
+      - BookMyShow must eventually make booking thread-safe.
+      - ElevatorSystem must eventually handle simultaneous requests and start/stop races.
+
+UseCase Diagram:
+- Actors:
+  - Identify User, Admin, and System actors.
+- UseCases:
+  - Write facade-facing use cases first.
+  - Expand each into system-owned internal steps.
+  - Examples:
+    - Chess:
+      - startGame(Player) -> changeGameStatus(System)
+      - makeMove(Player) -> validateMove(System) -> applyMove(System) -> checkForWinOrDraw(System) -> notifyObservers(System, later package)
+    - BookMyShow:
+      - searchShows(User)
+      - getSeatsPerShow(User) -> releaseExpiredHolds(System, later package) -> calculatePrices(System)
+      - selectSeats(User) -> holdSeats(System) -> calculatePrice(System)
+      - makePayment(User) -> checkTicketNotExpired(System, later package) -> processPayment(System) -> confirmBooking(System)
+      - addCity/addTheater/addScreen/addSeat/addMovie/addShow(Admin)
+    - VendingMachine:
+      - selectProduct(User)
+      - makePayment(User) -> processPayment(System) -> calculateChange(System) -> dispatchProduct(System) -> dispatchChange(System)
+      - cancel(User)
+      - addProduct/addRack/updateInventory(Admin)
+    - ElevatorSystem:
+      - addBuilding/addElevator/addDisplay(Admin)
+      - startElevator/stopElevator(Admin)
+      - requestElevator(User) -> assignElevator(System) -> add pickup stop(System)
+      - enterDestination(User) -> add destination stop(System)
+      - movement loop(System) -> moveElevator until stopped or idle
+
+Class Diagram:
+- Identifying layers/structure:
+  - Main:
+    - Client code or demo runner.
+    - Generates direct user/admin entity IDs.
+    - Calls facade methods only.
+  - Facade/service:
+    - Server/API-like orchestration layer.
+    - Owns use-case workflow and datastore coordination.
+    - Keep one facade in A_basic.
+  - Core entities/models:
+    - Library/domain code.
+    - Own their own state and simple state mutations.
+  - Datastore:
+    - In-memory database abstraction.
+    - Contains maps and CRUD-like accessors only.
+    - No business logic, no validation, no ID generation.
+  - Strategies/factories/patterns:
+    - Mention as future candidates only, not implemented in A_basic.
+
+- Core entities and enums:
+  - Identify core entities and relationships:
+    - Notes:
+      - Avoid reverse links by default.
+      - Store IDs for 1-to-many relationships.
+      - Store direct object only for true 1-to-1 composition where independent lookup is not needed.
+      - For many-to-many, create a mapping entity, such as ShowSeat or MovieActor.
+      - Reverse links may improve in-memory lookup but introduce dual-write risk; avoid unless there is a strong reason.
+    - Examples:
+      - TicTacToe:
+        - Game -> Board -> Cell.
+        - Game has players, current player, game status, winner.
+      - Chess:
+        - Game -> Board -> Piece.
+        - Game has whitePlayer, blackPlayer, currentPlayer, game status, winner.
+        - Move connects player and board positions.
+      - BookMyShow:
+        - City -> Theater -> Screen -> Seat.
+        - Show -> Movie.
+        - ShowSeat maps Show and Seat with status and price.
+        - Ticket connects user to selected show seats.
+      - VendingMachine:
+        - VendingMachine -> Rack -> Product.
+        - Payment/Coin can be added depending on flow.
+      - ElevatorSystem:
+        - Building -> Elevator IDs.
+        - Elevator has capacity, current floor, direction, state, allowed floors, and pending stop set.
+        - Display has id and floor in A_basic.
+
+- Identify fields and entity modelling based on extensibility:
+  - Decision rules:
+    - If there are no meaningful siblings, use a simple class.
+    - If variants only need a label and no behavior, use an enum field.
+    - If variants share state but behavior differs, use inheritance or Strategy in a later package.
+    - If behavior depends on external systems, keep it out of the entity and put it in facade/service.
+  - Entity modelling choices:
+    - Multiple simple classes:
+      - Usually avoid, because it blocks polymorphism and duplicates fields.
+    - Single class with type enum:
+      - Good when state is same and no variant-specific behavior exists.
+      - Example: Seat with SeatType for NORMAL, PREMIUM, RECLINER.
+    - Abstract class/interface:
+      - Use later when state or behavior truly differs.
+      - Abstract class is useful for core entities with shared state.
+      - Interface is useful for behavior-only strategies.
+  - Examples:
+    - Chess:
+      - Game(board, gameState, whitePlayer, blackPlayer, winner, currentPlayer)
+      - Board(piece[][])
+      - Piece(color, type)
+      - Player(name)
+      - Move(player, fromPosition, toPosition)
+    - BookMyShow:
+      - City(id, name, theaterList)
+      - Theater(id, name, screenList)
+      - Screen(id, number, seatList, showList)
+      - Seat(id, number, row, seatType)
+      - Show(id, movieId, startTime)
+      - Movie(id, name)
+      - ShowSeat(id, showId, seatId, seatStatus, price, ticketId)
+      - User(id, name)
+      - Ticket(id, userId, showSeatList, totalPrice, ticketStatus, createdAt, expiresAt)
+      - Payment should usually be a separate entity or later package because processing depends on external API.
+    - VendingMachine:
+      - VendingMachine(id/name, rackList, currentState, selectedRackId, insertedCoinMap)
+      - Rack(id, productId, productCount, maxCount)
+      - Product(id, name, price)
+      - Coin can be enum if it only represents denomination.
+      - Payment can be abstract or type-based later, but keep A_basic simple.
+    - ElevatorSystem A_basic:
+      - Building(buildingId, name, elevatorList)
+      - Elevator(elevatorId, capacity, currentFloor, direction, elevatorState, allowedFloorList, stopSet)
+      - Display(displayId, floor)
+      - Direction enum: UP, DOWN, IDLE
+      - ElevatorState enum: IDLE, MOVING, MAINTENANCE
+
+- Identify methods from use-case diagram and decide placement:
+  - Placement rules:
+    - User/admin/system API methods go in the facade.
+    - The facade orchestrates datastore reads/writes and entity interactions.
+    - Entity methods should only mutate or compute from that entity's own fields.
+    - Do not put business workflows that need multiple entities or external systems inside entities.
+    - Datastore methods only get/put/contains/remove/list; no business behavior.
+  - Examples:
+    - BookMyShow:
+      - releaseExpiredHolds, holdSeats, confirmBooking: facade in basic package, later can be split if needed.
+      - calculatePrice: separate pricing service later because rules may depend on seat type, show time, demand, offers.
+      - processPayment: payment processor service later because it depends on external gateway.
+    - VendingMachine:
+      - User/admin methods: facade.
+      - calculateChange: can be vending machine logic if it only uses machine coin state; later strategy if behavior varies.
+      - dispatchProduct/dispatchChange: service later if hardware dispatcher is external.
+    - ElevatorSystem A_basic:
+      - requestElevator(buildingId, floor, direction): facade, because it coordinates assignment and adds pickup stop.
+      - enterDestination(elevatorId, floor): facade gets elevator and adds destination stop.
+      - assignElevator(buildingId, floor, direction): facade/system method in A_basic; later Strategy.
+      - findBestElevator(buildingId, floor): private facade helper in A_basic.
+      - addBuilding/addElevator/addDisplay/startElevator/stopElevator: facade admin methods.
+      - addStop(floor): Elevator, because it only mutates that elevator's pending stop set.
+      - moveElevator(): Elevator, because it only updates elevator's currentFloor, direction, state, and stopSet.
+      - start(Elevator): ElevatorMovementService, because the loop is orchestration around the elevator and should not live inside the core entity.
+      - stop(): Elevator, because it only mutates that elevator's state to maintenance/idle direction.
+
+ElevatorSystem A_basic Design Explanation Example:
+- Requirements:
+  - System Specific Requirements:
+    - Physical Structure based points:
+      - The system supports multiple buildings.
+      - Each building contains multiple elevators.
+      - Each elevator has capacity, current floor, allowed floors, direction, state, and pending stops.
+      - Displays are part of the elevator system, but A_basic keeps them as simple stored display entities.
+    - Action based points:
+      - User Actions:
+        - A user requests an elevator from a building and floor with a direction.
+        - A user enters a destination floor after receiving an assigned elevator.
+      - Admin Actions:
+        - Admin adds buildings.
+        - Admin adds elevators to buildings.
+        - Admin adds displays.
+        - Admin starts and stops elevators.
+      - System Actions:
+        - The system assigns the nearest elevator in A_basic.
+        - The system adds pickup and destination floors to the elevator stop set.
+        - The movement service runs the elevator movement loop.
+    - Misc:
+      - Advanced validation is intentionally not implemented in A_basic.
+      - Assignment strategy, movement strategy, observer display updates, exceptions, and concurrency are future packages.
+  - Common Misc:
+    - Offline or Online:
+      - Treat as online/control-system style because there are multiple buildings/elevators and facade APIs.
+    - Extensibility:
+      - Core entities do not need inheritance in A_basic.
+      - Assignment and movement are future behavior extension points.
+    - Store full history and support undo:
+      - Not needed.
+    - Notification broadcasts:
+      - Displays eventually need observer updates, but not in A_basic.
+    - Exception Handling:
+      - Invalid building, invalid elevator, invalid floor, maintenance state, duplicate IDs, and empty building are later-package concerns.
+    - Edge Cases:
+      - No elevators in a building, floor outside allowed floors, duplicate stops, invalid direction, repeated start/stop are not handled in A_basic.
+    - Concurrency and thread-safe:
+      - Multiple users/admins can act concurrently in real life, but A_basic uses normal collections and no locks.
+
+- UseCase Diagram:
+  - Actors:
+    - User
+    - Admin
+    - System
+  - UseCases:
+    - addBuilding(Admin) -> create Building(System) -> putBuilding(DataStore)
+    - addElevator(Admin) -> create Elevator(System) -> putElevator(DataStore) -> add elevatorId to Building(System)
+    - addDisplay(Admin) -> create Display(System) -> putDisplay(DataStore)
+    - requestElevator(User) -> assignElevator(System) -> findBestElevator(System) -> add pickup stop to Elevator(System) -> return elevatorId(User)
+    - enterDestination(User) -> get Elevator(System) -> add destination stop(System)
+    - startElevator(Admin) -> get Elevator(System) -> ElevatorMovementService.start(System) -> Elevator.moveElevator(System)
+    - stopElevator(Admin) -> get Elevator(System) -> Elevator.stop(System)
+
+- Class Diagram:
+  - Identifying layers/structure:
+    - Main:
+      - Creates DataStore and ElevatorSystemFacade.
+      - Generates building/elevator/display IDs.
+      - Calls facade methods to add setup data and simulate users.
+    - Facade:
+      - ElevatorSystemFacade owns user/admin/system workflows.
+      - It coordinates DataStore, Building, Elevator, and ElevatorMovementService.
+    - Core entities:
+      - Building, Elevator, Display, Direction, ElevatorState.
+    - Helper service:
+      - ElevatorMovementService owns the long-running movement loop.
+      - This keeps Elevator focused on its own state transitions instead of owning orchestration.
+    - Datastore:
+      - DataStore interface and InMemoryDataStore HashMap implementation.
+  - Core entities and relationships:
+    - Building stores elevator IDs in elevatorList.
+    - Elevator is stored independently in elevatorMap.
+    - Display is stored independently in displayMap.
+    - Building does not store Elevator objects, and Elevator does not store buildingId, avoiding reverse links and dual-write risk.
+  - Fields and modelling:
+    - Building:
+      - buildingId, name, elevatorList.
+      - Simple class because no sibling variants are required.
+    - Elevator:
+      - elevatorId, capacity, currentFloor, direction, elevatorState, allowedFloorList, stopSet.
+      - Simple class because A_basic does not need multiple elevator subclasses.
+      - TreeSet is used for pending stops because the next stop needs ordered floor lookup.
+    - Display:
+      - displayId, floor.
+      - Simple class in A_basic; Observer comes later.
+    - Direction and ElevatorState:
+      - Enums because they are fixed labels with no behavior in A_basic.
+  - Method placement:
+    - ElevatorSystemFacade.requestElevator:
+      - Belongs in facade because it coordinates assignment plus elevator stop mutation.
+    - ElevatorSystemFacade.enterDestination:
+      - Belongs in facade because user action starts with elevatorId lookup.
+    - ElevatorSystemFacade.assignElevator/findBestElevator:
+      - Belongs in facade for A_basic because Strategy is intentionally deferred.
+    - Elevator.addStop:
+      - Belongs in Elevator because it only changes Elevator.stopSet.
+    - Elevator.moveElevator:
+      - Belongs in Elevator because it only changes Elevator's own movement state.
+    - ElevatorMovementService.start:
+      - Belongs in service because it owns the repeated movement loop and waiting behavior.
+    - DataStore methods:
+      - Only get/put/contains/remove entities; no assignment or movement logic.

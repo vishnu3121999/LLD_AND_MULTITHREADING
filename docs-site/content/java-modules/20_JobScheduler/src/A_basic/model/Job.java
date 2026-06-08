@@ -1,0 +1,2 @@
+package A_basic.model;
+public class Job { private final String jobId; private final String name; private final String command; public Job(String jobId, String name, String command) { this.jobId = jobId; this.name = name; this.command = command; } @Override public String toString() { return "Job{" + "jobId='" + jobId + "'" + ", name='" + name + "'" + ", command='" + command + "'" + '}'; } public String getJobId() { return jobId; } public String getName() { return name; } public String getCommand() { return command; } }

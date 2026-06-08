@@ -1,0 +1,12 @@
+package A_basic.model;
+
+public class MenuItem {
+    private final String menuItemId;
+    private final String name;
+    private final double price;
+    public MenuItem(String menuItemId, String name, double price) { this.menuItemId = menuItemId; this.name = name; this.price = price; }
+    @Override public String toString() { return "MenuItem{" + "menuItemId='" + menuItemId + "'" + ", name='" + name + "'" + ", price=" + price + '}'; }
+    public String getMenuItemId() { return menuItemId; }
+    public String getName() { return name; }
+    public double getPrice() { return price; }
+}

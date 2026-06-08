@@ -1,0 +1,2 @@
+package A_basic.model;
+public class Account { private final String accountId; private double balance; public Account(String accountId, double balance) { this.accountId = accountId; this.balance = balance; } public void debit(double amount) { balance -= amount; } public void credit(double amount) { balance += amount; } @Override public String toString() { return "Account{" + "accountId='" + accountId + "'" + ", balance=" + balance + '}'; } public String getAccountId() { return accountId; } public double getBalance() { return balance; } }

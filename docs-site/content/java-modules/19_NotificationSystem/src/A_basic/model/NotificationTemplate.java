@@ -1,0 +1,2 @@
+package A_basic.model;
+public class NotificationTemplate { private final String notificationTemplateId; private final String body; public NotificationTemplate(String notificationTemplateId, String body) { this.notificationTemplateId = notificationTemplateId; this.body = body; } @Override public String toString() { return "NotificationTemplate{" + "notificationTemplateId='" + notificationTemplateId + "'" + ", body='" + body + "'" + '}'; } public String getNotificationTemplateId() { return notificationTemplateId; } public String getBody() { return body; } }

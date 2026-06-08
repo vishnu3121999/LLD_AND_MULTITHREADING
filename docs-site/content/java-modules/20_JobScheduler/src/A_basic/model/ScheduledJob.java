@@ -1,0 +1,5 @@
+package A_basic.model;
+
+import A_basic.model.enums.ScheduleStatus;
+
+public class ScheduledJob { private final String scheduledJobId; private final String jobId; private long nextRunAt; private final long intervalMillis; private ScheduleStatus scheduleStatus; public ScheduledJob(String scheduledJobId, String jobId, long nextRunAt, long intervalMillis) { this.scheduledJobId = scheduledJobId; this.jobId = jobId; this.nextRunAt = nextRunAt; this.intervalMillis = intervalMillis; this.scheduleStatus = ScheduleStatus.ACTIVE; } public void advance() { nextRunAt += intervalMillis; } @Override public String toString() { return "ScheduledJob{" + "scheduledJobId='" + scheduledJobId + "'" + ", jobId='" + jobId + "'" + ", nextRunAt=" + nextRunAt + ", intervalMillis=" + intervalMillis + ", scheduleStatus=" + scheduleStatus + '}'; } public String getScheduledJobId() { return scheduledJobId; } public String getJobId() { return jobId; } public long getNextRunAt() { return nextRunAt; } public long getIntervalMillis() { return intervalMillis; } public ScheduleStatus getScheduleStatus() { return scheduleStatus; } }

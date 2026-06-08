@@ -410,6 +410,12 @@
     color: #5b8af0;
   }
 
+  .manual-logo-mark img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+  }
+
   .manual-logo-kicker,
   .manual-sidebar-label,
   .manual-eyebrow,
@@ -1363,6 +1369,7 @@
 }
 
 .hld-original .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+.hld-original .brand-logo { height: 42px; width: auto; border-radius: var(--radius-sm); object-fit: contain; }
 .hld-original .brand-mark { font-size: 22px; }
 .hld-original .brand-text { letter-spacing: -0.01em; }
 .hld-original .topbar-nav { display: flex; align-items: center; gap: 16px; }

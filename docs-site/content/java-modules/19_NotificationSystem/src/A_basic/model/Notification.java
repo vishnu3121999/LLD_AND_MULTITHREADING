@@ -1,0 +1,6 @@
+package A_basic.model;
+
+import A_basic.model.enums.ChannelType;
+import A_basic.model.enums.NotificationStatus;
+
+public class Notification { private final String notificationId; private final String recipientId; private final ChannelType channelType; private final String message; private NotificationStatus notificationStatus; public Notification(String notificationId, String recipientId, ChannelType channelType, String message) { this.notificationId = notificationId; this.recipientId = recipientId; this.channelType = channelType; this.message = message; this.notificationStatus = NotificationStatus.CREATED; } public void markSent() { notificationStatus = NotificationStatus.SENT; } @Override public String toString() { return "Notification{" + "notificationId='" + notificationId + "'" + ", recipientId='" + recipientId + "'" + ", channelType=" + channelType + ", message='" + message + "'" + ", notificationStatus=" + notificationStatus + '}'; } public String getNotificationId() { return notificationId; } public String getRecipientId() { return recipientId; } public ChannelType getChannelType() { return channelType; } public String getMessage() { return message; } public NotificationStatus getNotificationStatus() { return notificationStatus; } }

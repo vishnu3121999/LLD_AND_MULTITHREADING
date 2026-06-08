@@ -1,0 +1,8 @@
+package A_basic.model;
+
+import A_basic.model.enums.OrderStatus;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+public class Order { private final String orderId; private final String customerId; private final String restaurantId; private final List<String> menuItemList; private final double totalAmount; private String deliveryPartnerId; private OrderStatus orderStatus; public Order(String orderId, String customerId, String restaurantId, List<String> menuItemList, double totalAmount) { this.orderId = orderId; this.customerId = customerId; this.restaurantId = restaurantId; this.menuItemList = new ArrayList<>(menuItemList); this.totalAmount = totalAmount; this.orderStatus = OrderStatus.PLACED; } public void assignPartner(String deliveryPartnerId) { this.deliveryPartnerId = deliveryPartnerId; this.orderStatus = OrderStatus.ASSIGNED; } public void deliver() { this.orderStatus = OrderStatus.DELIVERED; } @Override public String toString() { return "Order{" + "orderId='" + orderId + "'" + ", customerId='" + customerId + "'" + ", restaurantId='" + restaurantId + "'" + ", menuItemList=" + menuItemList + ", totalAmount=" + totalAmount + ", deliveryPartnerId='" + deliveryPartnerId + "'" + ", orderStatus=" + orderStatus + '}'; } public String getOrderId() { return orderId; } public String getCustomerId() { return customerId; } public String getRestaurantId() { return restaurantId; } public List<String> getMenuItemList() { return Collections.unmodifiableList(menuItemList); } public double getTotalAmount() { return totalAmount; } public String getDeliveryPartnerId() { return deliveryPartnerId; } public OrderStatus getOrderStatus() { return orderStatus; } }

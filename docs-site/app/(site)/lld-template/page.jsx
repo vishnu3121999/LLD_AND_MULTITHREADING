@@ -4,7 +4,6 @@ import {
   BookOpenCheck,
   CheckCircle2,
   CircleDot,
-  Code2,
   GitBranch,
   Layers3,
   ListChecks,
@@ -167,7 +166,7 @@ export default function TemplatePage() {
       <aside className="manual-sidebar" aria-label="Template sections">
         <Link href="/" className="manual-logo">
           <span className="manual-logo-mark">
-            <Code2 size={18} aria-hidden="true" />
+            <img src="/logo.png" alt="01 Interview" />
           </span>
           <span>
             <span className="manual-logo-kicker">Interview Prep</span>
