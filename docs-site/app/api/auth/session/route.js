@@ -1,5 +1,5 @@
 import { getSupabaseConfig } from "../../../../lib/supabase-config";
-import { getCurrentUser, publicUser } from "../../../../lib/supabase-server";
+import { getCurrentUser, isAdminUser, publicUser } from "../../../../lib/supabase-server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -9,6 +9,7 @@ export async function GET() {
   const user = configured ? await getCurrentUser() : null;
   return Response.json({
     configured,
-    user: publicUser(user)
+    user: publicUser(user),
+    isAdmin: isAdminUser(user)
   });
 }

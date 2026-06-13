@@ -35,6 +35,7 @@ const SITE_THEME_STORAGE_KEY = "lld-playbook.site-theme";
 const MIN_BLOCK_WIDTH = 140;
 const MIN_BLOCK_HEIGHT = 90;
 const CANVAS_SIZE = 100000;
+const SHARED_LAYOUT_AUTOSAVE_DELAY_MS = 600;
 
 export default function App({ initialModule = "", initialPackage = "" } = {}) {
   const appRef = useRef(null);
@@ -635,7 +636,7 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
   const [hoveredBlockId, setHoveredBlockId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [workspaceSession, setWorkspaceSession] = useState({ checked: false, configured: false, user: null });
+  const [workspaceSession, setWorkspaceSession] = useState({ checked: false, configured: false, user: null, isAdmin: false });
   const [layoutDirty, setLayoutDirty] = useState(false);
   const [layoutSaveStatus, setLayoutSaveStatus] = useState("idle");
   const [layoutSaveMessage, setLayoutSaveMessage] = useState("");
@@ -708,12 +709,13 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
           setWorkspaceSession({
             checked: true,
             configured: Boolean(payload.configured),
-            user: payload.user || null
+            user: payload.user || null,
+            isAdmin: Boolean(payload.isAdmin)
           });
         }
       } catch {
         if (!cancelled) {
-          setWorkspaceSession({ checked: true, configured: false, user: null });
+          setWorkspaceSession({ checked: true, configured: false, user: null, isAdmin: false });
         }
       }
     }
@@ -765,7 +767,7 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
       setLayoutSaveMessage("");
 
       try {
-        if (workspaceSession.user) {
+        if (workspaceSession.user && !workspaceSession.isAdmin) {
           const profileLayout = await fetchWorkspaceLayout(activeLayoutPageId);
           if (cancelled) return;
 
@@ -796,9 +798,15 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
           setLayoutsPageId(activeLayoutPageId);
           setLayoutsSource("local");
           setParentZoomSource(localZoom ? "local" : "generated");
-          setLayoutDirty(Boolean(workspaceSession.user));
+          setLayoutDirty(Boolean(workspaceSession.user && !workspaceSession.isAdmin));
           setLayoutSaveStatus("idle");
-          setLayoutSaveMessage(workspaceSession.user ? "Local layout loaded. Save it to your profile." : "Sign in to save this layout.");
+          setLayoutSaveMessage(
+            workspaceSession.isAdmin
+              ? "Shared default loaded. Edits auto-save."
+              : workspaceSession.user
+                ? "Local layout loaded. Save it to your profile."
+                : "Sign in to save this layout."
+          );
           return;
         }
 
@@ -809,7 +817,7 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
         setParentZoomSource("generated");
         setLayoutDirty(false);
         setLayoutSaveStatus("idle");
-        setLayoutSaveMessage(workspaceSession.user ? "" : "Sign in to save custom layouts.");
+        setLayoutSaveMessage(workspaceSession.isAdmin ? "Generated layout. Edits auto-save as shared default." : workspaceSession.user ? "" : "Sign in to save custom layouts.");
       } catch (layoutError) {
         if (cancelled) return;
         setLayouts(buildInitialLayouts(pageData.files));
@@ -827,7 +835,7 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
     return () => {
       cancelled = true;
     };
-  }, [prefsReady, workspaceSession.checked, workspaceSession.user?.id, activeLayoutPageId, pageData?.files]);
+  }, [prefsReady, workspaceSession.checked, workspaceSession.user?.id, workspaceSession.isAdmin, activeLayoutPageId, pageData?.files]);
 
   useEffect(() => {
     function handleZoom(event) {
@@ -843,6 +851,43 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
     window.addEventListener("keydown", handleZoom);
     return () => window.removeEventListener("keydown", handleZoom);
   }, [hoveredBlockId]);
+
+  useEffect(() => {
+    if (!workspaceSession.isAdmin || !layoutDirty || !activeLayoutPageId) return;
+    if (layoutsPageId !== activeLayoutPageId || Object.keys(layouts).length === 0) return;
+
+    let cancelled = false;
+    const timeout = window.setTimeout(async () => {
+      setLayoutSaveStatus("saving");
+      setLayoutSaveMessage("Saving shared default...");
+
+      try {
+        await saveSharedLocalLayout({
+          pageId: activeLayoutPageId,
+          layouts,
+          parentZoom,
+          constructorVisibility,
+          collapsedMethods
+        });
+
+        if (cancelled) return;
+        setLayoutsSource("local");
+        setParentZoomSource("local");
+        setLayoutDirty(false);
+        setLayoutSaveStatus("saved");
+        setLayoutSaveMessage("Shared default saved");
+      } catch (saveError) {
+        if (cancelled) return;
+        setLayoutSaveStatus("error");
+        setLayoutSaveMessage(saveError.message || "Unable to save shared default.");
+      }
+    }, SHARED_LAYOUT_AUTOSAVE_DELAY_MS);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+    };
+  }, [workspaceSession.isAdmin, layoutDirty, activeLayoutPageId, layoutsPageId, layouts, parentZoom, constructorVisibility, collapsedMethods]);
 
   const isCurrentVisualizerPage = pageData?.id === activeLayoutPageId;
   const files = isCurrentVisualizerPage ? pageData?.files || [] : [];
@@ -976,6 +1021,7 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
       {error && <div className="error-banner">{error}</div>}
       <WorkspaceLayoutToolbar
         user={workspaceSession.user}
+        isAdmin={workspaceSession.isAdmin}
         sessionChecked={workspaceSession.checked}
         dirty={layoutDirty}
         status={layoutSaveStatus}
@@ -1007,11 +1053,11 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
   );
 }
 
-function WorkspaceLayoutToolbar({ user, sessionChecked, dirty, status, message, disabled, onSave }) {
+function WorkspaceLayoutToolbar({ user, isAdmin, sessionChecked, dirty, status, message, disabled, onSave }) {
   const [authHref, setAuthHref] = useState("/auth?next=/workspace");
   const isSaving = status === "saving";
   const isLoading = status === "loading";
-  const canSave = Boolean(user) && !disabled && !isSaving && !isLoading && dirty;
+  const canSave = Boolean(user) && !isAdmin && !disabled && !isSaving && !isLoading && dirty;
 
   useEffect(() => {
     setAuthHref(`/auth?next=${encodeURIComponent(`${window.location.pathname}${window.location.search}`)}`);
@@ -1024,10 +1070,10 @@ function WorkspaceLayoutToolbar({ user, sessionChecked, dirty, status, message, 
         <span>
           {!sessionChecked
             ? "Checking account..."
-            : message || (user ? dirty ? "Unsaved layout changes" : "Layout ready" : "Sign in to save layouts")}
+            : message || (isAdmin ? dirty ? "Saving shared default..." : "Shared default ready" : user ? dirty ? "Unsaved layout changes" : "Layout ready" : "Sign in to save layouts")}
         </span>
       </div>
-      {user ? (
+      {isAdmin ? null : user ? (
         <button className="workspace-save-button" type="button" onClick={onSave} disabled={!canSave}>
           {isSaving ? "Saving..." : dirty ? "Save layout" : "Saved"}
         </button>
@@ -1400,6 +1446,26 @@ async function saveWorkspaceLayout(payload) {
   });
   const result = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(result.error || "Unable to save profile layout.");
+  return result;
+}
+
+async function saveSharedLocalLayout({ pageId, layouts, parentZoom, constructorVisibility, collapsedMethods }) {
+  await Promise.all([
+    putLocalDataValue(layoutStorageKey(pageId), JSON.stringify(layouts || {})),
+    putLocalDataValue(parentZoomStorageKey(pageId), String(parentZoom || 1)),
+    putLocalDataValue("lld-docs.show-constructors", JSON.stringify(constructorVisibility || {})),
+    putLocalDataValue("lld-docs.collapsed-methods", JSON.stringify(collapsedMethods || {}))
+  ]);
+}
+
+async function putLocalDataValue(key, value) {
+  const response = await fetch("/api/local-data", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ key, value })
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(result.error || "Unable to save shared local data.");
   return result;
 }
 

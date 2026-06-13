@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { sanitizeRedirectPath } from "./auth-paths";
 import { getSupabaseConfig } from "./supabase-config";
 
+const DEFAULT_ADMIN_EMAIL = "vishnunimmalapudi@gmail.com";
+
 export async function createSupabaseServerClient() {
   const { url, anonKey, configured } = getSupabaseConfig();
   if (!configured) return null;
@@ -63,6 +65,24 @@ export async function requireApiUser() {
   }
 
   return { user };
+}
+
+export async function requireApiAdmin() {
+  const auth = await requireApiUser();
+  if (auth.response) return auth;
+
+  if (!isAdminUser(auth.user)) {
+    return {
+      response: Response.json({ error: "Admin access required" }, { status: 403 })
+    };
+  }
+
+  return auth;
+}
+
+export function isAdminUser(user) {
+  const adminEmail = (process.env.ADMIN_EMAIL || DEFAULT_ADMIN_EMAIL).trim().toLowerCase();
+  return Boolean(user?.email && user.email.trim().toLowerCase() === adminEmail);
 }
 
 export function publicUser(user) {

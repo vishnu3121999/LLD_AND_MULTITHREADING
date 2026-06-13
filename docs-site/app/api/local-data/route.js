@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { deleteLocalDataValue, getLocalDataValue, setLocalDataValue } from "../../../lib/local-data-store";
+import { requireApiAdmin } from "../../../lib/supabase-server";
 
 export async function GET(request) {
   const key = new URL(request.url).searchParams.get("key");
@@ -8,6 +9,9 @@ export async function GET(request) {
 }
 
 export async function PUT(request) {
+  const auth = await requireApiAdmin();
+  if (auth.response) return auth.response;
+
   const body = await request.json().catch(() => ({}));
   if (!body.key) return NextResponse.json({ error: "key is required" }, { status: 400 });
   const value = typeof body.value === "string" ? body.value : JSON.stringify(body.value ?? null);
@@ -16,6 +20,9 @@ export async function PUT(request) {
 }
 
 export async function DELETE(request) {
+  const auth = await requireApiAdmin();
+  if (auth.response) return auth.response;
+
   const body = await request.json().catch(() => ({}));
   if (!body.key) return NextResponse.json({ error: "key is required" }, { status: 400 });
   await deleteLocalDataValue(body.key);

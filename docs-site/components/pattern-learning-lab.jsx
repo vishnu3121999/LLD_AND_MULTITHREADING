@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   BellRing,
@@ -299,6 +300,21 @@ export function PatternLearningLab() {
             <Metric label="engine" value="pressure map" />
             <Metric label="output" value="pattern move" />
           </div>
+          <Link
+            href="/patterns/chain-of-responsibility"
+            className="mt-5 flex items-center justify-between gap-4 border border-white/10 bg-white/[0.03] p-4 text-left transition hover:border-[#00ff66]"
+          >
+            <div className="flex items-start gap-3">
+              <span className="grid h-10 w-10 place-items-center border border-[#00ff66] text-[#00ff66]">
+                <Network size={18} aria-hidden="true" />
+              </span>
+              <div>
+                <div className="font-mono text-sm font-bold text-white">Chain of Responsibility</div>
+                <p className="mt-1 text-sm leading-6 text-slate-400">Content-first lesson with support-ticket routing, UML, code, and an interactive chain trace.</p>
+              </div>
+            </div>
+            <ChevronRight size={18} className="flex-none text-slate-500" aria-hidden="true" />
+          </Link>
         </div>
         <PatternRadar activeSignals={activeSignals} selectedPattern={selectedPattern} />
       </section>
