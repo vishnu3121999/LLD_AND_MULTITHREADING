@@ -14,7 +14,7 @@
 
 	Before implementing, first inspect:
 	- current problem packages
-	- reference concurrency packages from earlier modules
+	- reference concurrency packages from 03,05 modules
 	- mutable core entities
 	- datastore collections/maps/lists
 	- facade methods that perform check + update
@@ -22,7 +22,7 @@
 	- read methods only if they mutate state or require a consistent snapshot
 
 	Important:
-	- Do not blindly add concurrency everywhere.
+	- Do not blindly add concurrency everywhere. For every proposed lock, state the exact invariant it protects and the bad final state it prevents.If you cannot name the bad final state, do not add the lock.
 	- Throwing an exception is not automatically a concurrency bug. If the final state remains correct, say no locking is needed.
 	- Focus only on real race conditions, inconsistent state, lost updates, duplicate creation, invalid state transitions, or collection structure races.
 	- Do not lock the whole datastore unless there is a strong reason. Prefer object/aggregate-level locking.
@@ -33,6 +33,7 @@
 	- If a prerequisite read/validation does not need lock protection, keep it outside the lock.
 	- If a validation is only needed for protected state, do it inside the lock.
 	- Do not use concurrent collections by default.
+	- If the only real issue is duplicate IDs inside a parent collection, prefer `Set` over `List`.
 	- ConcurrentHashMap protects map structure only, not mutable objects stored inside the map.
 	- Use concurrent collections only for real concurrent read/write access to the collection structure.
 	- Keep entity analysis at entity/aggregate level, not field-as-entity level. Mention fields only as mutable state inside that entity.
@@ -41,6 +42,17 @@
 	- Add/update APPROACH_COMPARISON.md.
 	- Add small concurrent demos in Main where useful.
 	- Compile/run the package.
+	- Define a concurrency bug by final-state harm, not by an exception or by two threads passing the same check.
+
+      A race needs handling only if it can cause one of these:
+      - invalid final entity state
+      - lost update that matters to the domain
+      - duplicate parent references
+      - corrupted collection/map structure
+      - duplicate external side effect
+      - broken invariant that the package explicitly owns
+
+      If the only issue is nondeterministic exception timing, duplicate same-key overwrite, or a caller/data-quality mistake outside this package boundary, document it as intentionally skipped.
 
 	Before coding, return a concurrency report and wait for my confirmation.
 
@@ -55,12 +67,13 @@
 
 	1. What if the same method is called with the same params simultaneously?
 	- State whether there is a real race.
-	- If yes, explain the bad interleaving and proposed lock/collection fix.
+	- If yes, explain the bad interleaving (by simulating thread calls to show the exact inconsistency/partial-update) and proposed lock/collection fix.
 	- If no, say no concurrency handling needed and why.
 
 	2. What if the same method is called with different params simultaneously?
 	- Cover both overlapping-object and non-overlapping-object cases.
 	- Also mention collection/map structure races if the method can create/read/write shared datastore collections.
+	- If real race, show simulating thread calls to show the exact inconsistency/partial-update
 	- If no real race, say no concurrency handling needed and why.
 
 	Then answer for Concurrency1:
@@ -85,7 +98,7 @@
 
 	Answer format:
 	- Race condition:
-	  Explain the real conflicting interleaving, or say no race.
+	  Explain the real conflicting interleaving, or say no race. If race exists, show by simulating thread calls to show the exact inconsistency/partial-update
 	- Solution:
 	  Explain how to solve it. Be specific about lock target, lock scope, and whether collection changes are needed.
 	- Why this belongs in Concurrency2:

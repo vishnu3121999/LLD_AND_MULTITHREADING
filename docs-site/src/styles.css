@@ -277,6 +277,7 @@ select {
 }
 
 .module-group {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -285,7 +286,7 @@ select {
 
 .module-header {
   display: grid;
-  grid-template-columns: 32px minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 6px;
   padding: 0 4px 0 8px;
@@ -322,6 +323,153 @@ select {
   font-size: 13px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.problem-meta-status {
+  padding: 8px 10px;
+  border: 1px solid #34443b;
+  border-radius: 7px;
+  background: rgba(34, 49, 41, 0.75);
+  color: var(--sidebar-muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.problem-meta-status.error {
+  border-color: rgba(201, 79, 79, 0.5);
+  color: #ffc5c5;
+}
+
+.problem-complete-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  min-height: 30px;
+  padding: 0;
+  border: 1px solid #34443b;
+  border-radius: 999px;
+  background: #223129;
+  color: #d8e4dd;
+  cursor: pointer;
+}
+
+.problem-complete-control.completed {
+  border-color: rgba(54, 161, 102, 0.7);
+  background: rgba(54, 161, 102, 0.18);
+  color: #bcf7d4;
+}
+
+.problem-complete-control input {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: #36a166;
+}
+
+.problem-complete-control input:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.problem-notes-button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  min-height: 30px;
+  padding: 0;
+  border-color: #34443b;
+  background: #223129;
+  color: #d8e4dd;
+}
+
+.problem-notes-button.active,
+.problem-notes-button.has-notes {
+  border-color: rgba(212, 155, 42, 0.72);
+  background: rgba(212, 155, 42, 0.18);
+  color: #ffe2a4;
+}
+
+.problem-notes-dialog {
+  position: absolute;
+  top: 42px;
+  right: 4px;
+  left: 8px;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid #34443b;
+  border-radius: 8px;
+  background: #111814;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+}
+
+.problem-notes-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.problem-notes-dialog-header strong {
+  padding: 0;
+  color: #edf5f0;
+  font-size: 12px;
+}
+
+.problem-notes-dialog-header span {
+  color: var(--sidebar-muted);
+  font-size: 11px;
+}
+
+.problem-notes-dialog textarea {
+  width: 100%;
+  min-height: 110px;
+  resize: vertical;
+  padding: 9px 10px;
+  border: 1px solid #34443b;
+  border-radius: 7px;
+  outline: 0;
+  background: #111814;
+  color: #edf5f0;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.problem-notes-dialog textarea::placeholder {
+  color: var(--sidebar-muted);
+}
+
+.problem-notes-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.problem-notes-actions button {
+  width: auto;
+  min-height: 30px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.java-nav .problem-notes-save,
+.java-nav .problem-notes-save:hover {
+  border-color: rgba(54, 161, 102, 0.7);
+  background: #36a166;
+  color: #ffffff;
+}
+
+.java-nav .problem-notes-exit,
+.java-nav .problem-notes-exit:hover {
+  border-color: #34443b;
+  background: #223129;
+  color: #d8e4dd;
 }
 
 .module-mode-buttons {
@@ -1566,7 +1714,7 @@ select {
 }
 
 .site-studio .module-header {
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   gap: 8px;
   padding: 0 0 6px;
   border-bottom: 1px solid #f1f5f9;
@@ -1605,6 +1753,65 @@ select {
   letter-spacing: 0;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.site-studio .problem-meta-status {
+  border-color: var(--line);
+  background: #f8fafc;
+  color: #64748b;
+}
+
+.site-studio .problem-meta-status.error {
+  border-color: rgba(185, 28, 28, 0.2);
+  background: #fef2f2;
+  color: #991b1b;
+}
+
+.site-studio .problem-complete-control {
+  border-color: var(--line);
+  background: #f8fafc;
+  color: #475569;
+}
+
+.site-studio .problem-complete-control.completed {
+  border-color: rgba(42, 157, 90, 0.35);
+  background: #dcfce7;
+  color: #166534;
+}
+
+.site-studio .problem-notes-button {
+  width: 30px;
+  min-height: 30px;
+  border-radius: 7px;
+  border-color: var(--line);
+  background: #f8fafc;
+  color: #475569;
+}
+
+.site-studio .problem-notes-button.active,
+.site-studio .problem-notes-button.has-notes {
+  border-color: rgba(180, 83, 9, 0.28);
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.site-studio .problem-notes-dialog {
+  top: 48px;
+  right: 10px;
+  left: 10px;
+  border-color: var(--line);
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+.site-studio .problem-notes-dialog-header strong {
+  color: #1e293b;
+}
+
+.site-studio .problem-notes-dialog textarea {
+  border-color: var(--line);
+  background: #f8fafc;
+  color: var(--text);
 }
 
 .site-studio .module-mode-buttons {
@@ -1722,6 +1929,27 @@ select {
   color: #ffffff;
 }
 
+.site-studio .java-nav .problem-notes-button.active,
+.site-studio .java-nav .problem-notes-button.has-notes {
+  border-color: rgba(180, 83, 9, 0.28);
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.site-studio .java-nav .problem-notes-save,
+.site-studio .java-nav .problem-notes-save:hover {
+  border-color: #166534;
+  background: #166534;
+  color: #ffffff;
+}
+
+.site-studio .java-nav .problem-notes-exit,
+.site-studio .java-nav .problem-notes-exit:hover {
+  border-color: var(--line);
+  background: #ffffff;
+  color: #475569;
+}
+
 .site-studio .source-picker select {
   border-color: var(--line);
   border-radius: 7px;
@@ -1771,7 +1999,7 @@ select {
 }
 
 .site-midnight .module-header {
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
 }
 
 .site-midnight .module-title-button {
@@ -1807,6 +2035,11 @@ select {
   letter-spacing: 0;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.site-midnight .problem-notes-dialog textarea {
+  background: #111814;
+  color: #e8f0eb;
 }
 
 .site-midnight .workspace-mode-buttons {

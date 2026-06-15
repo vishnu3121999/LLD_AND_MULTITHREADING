@@ -1,45 +1,45 @@
-	Create a new package: <Package specific Letter>_OrchestrationValidations from exceptionhandlingV2 package & follow below to add orchestration validations.
+Create a new package: <Package specific Letter>_OrchestrationValidations from exceptionhandlingV2 package & follow below to add orchestration validations.
 
-	Orchestration validation rule:
-	- Orchestration validation is different from normal exception validation.
-	- It applies only to facade/service methods that perform multiple updates and have a concrete partial-update risk.
-	- Do not add orchestration validation just because a method has multiple validations, multiple lookups, or multiple lines.
-	- Before implementing, analyze facade/service methods for partial-update risk.
-	- For each method analyzed, list:
-	  1. The updates in execution order.
-	  2. What each update mutates.
-	  3. Which updates can throw.
-	  4. Whether a later thrown exception leaves earlier updates in an invalid partial state.
-	  5. The selected solution.
-	- If there is no concrete invalid partial state, intentionally skip orchestration validation.
-	- Prefer the smallest solution that fixes the partial-update risk.
-	- Solution priority:
-	  1. Reorder updates if that fully solves the partial-update risk.
-	  2. Add precheck-and-update if reordering is not enough.
-	  3. Do not add rollback unless I explicitly ask.
-	- Precheck-and-update may use public read-only validateCanX() methods on state-owning entities.
-	- The validateCanX() method must live in the class that owns the state transition.
-	- The validateCanX() method may throw IllegalStateException from the state-owning entity.
-	- The actual mutating method must still call validateCanX() internally before changing state.
-	- Facade/services may call validateCanX() only to prevent partial updates across a multi-update operation.
-	- Facade/services must not throw IllegalStateException directly for entity-owned state.
-	- Do not expose raw entity state only so the facade can throw state exceptions.
-	- Do not add public validateCanX() methods for passive entities or datastore classes.
-	- Do not add orchestration services, transaction abstractions, locks, rollback frameworks, State pattern, or validation Chain of Responsibility.
-	- Do not apply this to cleanup/system helpers or admin methods unless the analysis proves a real inconsistent partial-update outcome.
-	- In APPROACH_COMPARISON.md, document the orchestration analysis for every method where orchestration validation is added or intentionally skipped.
+Orchestration validation rule:
+- Orchestration validation is different from normal exception validation.
+- It applies only to facade/service methods that perform multiple updates and have a concrete partial-update risk.
+- Do not add orchestration validation just because a method has multiple validations, multiple lookups, or multiple lines.
+- Before implementing, analyze facade/service methods for partial-update risk.
+- For each method analyzed, list:
+  1. The updates in execution order.
+  2. What each update mutates.
+  3. Which updates can throw.
+  4. Whether a later thrown exception leaves earlier updates in an invalid partial state.
+  5. The selected solution.
+- If there is no concrete invalid partial state, intentionally skip orchestration validation.
+- Prefer the smallest solution that fixes the partial-update risk.
+- Solution priority:
+  1. Reorder updates if that fully solves the partial-update risk.
+  2. Add precheck-and-update if reordering is not enough.
+  3. Do not add rollback unless I explicitly ask.
+- Precheck-and-update may use public read-only validateCanX() methods on state-owning entities.
+- The validateCanX() method must live in the class that owns the state transition.
+- The validateCanX() method may throw IllegalStateException from the state-owning entity.
+- The actual mutating method must still call validateCanX() internally before changing state.
+- Facade/services may call validateCanX() only to prevent partial updates across a multi-update operation.
+- Facade/services must not throw IllegalStateException directly for entity-owned state.
+- Do not expose raw entity state only so the facade can throw state exceptions.
+- Do not add public validateCanX() methods for passive entities or datastore classes.
+- Do not add orchestration services, transaction abstractions, locks, rollback frameworks, State pattern, or validation Chain of Responsibility.
+- Do not apply this to cleanup/system helpers or admin methods unless the analysis proves a real inconsistent partial-update outcome.
+- In APPROACH_COMPARISON.md, document the orchestration analysis for every method where orchestration validation is added or intentionally skipped.
 
-	Required docs and verification:
-	- Update APPROACH_COMPARISON.md.
-	- Compile and run the new packages after implementation.
-	- Report the exact commands run and whether they passed.
+Required docs and verification:
+- Update APPROACH_COMPARISON.md.
+- Compile and run the new packages after implementation.
+- Report the exact commands run and whether they passed.
 
-	Before implementing, tell me:
-	1. What exceptions you plan to use.
-	2. Where each exception should be thrown.
-	3. Which validations belong in facade/services vs model/domain classes.
-	4. Which validations you will intentionally skip for now.
-	5. Any non-exception bug/design issue you noticed but will not fix without confirmation.
-	6. Orchestration validation analysis: method updates, throwing updates, partial-update risks, selected solutions, and intentionally skipped methods.
+Before implementing, tell me:
+1. What exceptions you plan to use.
+2. Where each exception should be thrown.
+3. Which validations belong in facade/services vs model/domain classes.
+4. Which validations you will intentionally skip for now.
+5. Any non-exception bug/design issue you noticed but will not fix without confirmation.
+6. Orchestration validation analysis: method updates, throwing updates, partial-update risks, selected solutions, and intentionally skipped methods.
 
-	Then wait for my confirmation before coding.
+Then wait for my confirmation before coding.

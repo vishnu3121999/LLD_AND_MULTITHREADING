@@ -1,46 +1,49 @@
 package A_basic.datastore;
 
-        import A_basic.model.ParkingLot;
 import A_basic.model.ParkingFloor;
+import A_basic.model.ParkingLot;
 import A_basic.model.ParkingSlot;
-import A_basic.model.Vehicle;
 import A_basic.model.ParkingTicket;
+import A_basic.model.Vehicle;
 
-        public interface DataStore {
+public interface DataStore {
+    ParkingLot getParkingLot(String key);
 
-            ParkingLot getParkingLot(String key);
+    void putParkingLot(String key, ParkingLot value);
 
-            void putParkingLot(String key, ParkingLot value);
+    boolean containsParkingLot(String key);
 
-            boolean containsParkingLot(String key);
+    ParkingLot removeParkingLot(String key);
 
-            ParkingLot removeParkingLot(String key);
-            ParkingFloor getParkingFloor(String key);
+    ParkingFloor getParkingFloor(String key);
 
-            void putParkingFloor(String key, ParkingFloor value);
+    void putParkingFloor(String key, ParkingFloor value);
 
-            boolean containsParkingFloor(String key);
+    boolean containsParkingFloor(String key);
 
-            ParkingFloor removeParkingFloor(String key);
-            ParkingSlot getParkingSlot(String key);
+    ParkingFloor removeParkingFloor(String key);
 
-            void putParkingSlot(String key, ParkingSlot value);
+    ParkingSlot getParkingSlot(String key);
 
-            boolean containsParkingSlot(String key);
+    void putParkingSlot(String key, ParkingSlot value);
 
-            ParkingSlot removeParkingSlot(String key);
-            Vehicle getVehicle(String key);
+    boolean containsParkingSlot(String key);
 
-            void putVehicle(String key, Vehicle value);
+    ParkingSlot removeParkingSlot(String key);
 
-            boolean containsVehicle(String key);
+    Vehicle getVehicle(String key);
 
-            Vehicle removeVehicle(String key);
-            ParkingTicket getParkingTicket(String key);
+    void putVehicle(String key, Vehicle value);
 
-            void putParkingTicket(String key, ParkingTicket value);
+    boolean containsVehicle(String key);
 
-            boolean containsParkingTicket(String key);
+    Vehicle removeVehicle(String key);
 
-            ParkingTicket removeParkingTicket(String key);
-        }
+    ParkingTicket getParkingTicket(String key);
+
+    void putParkingTicket(String key, ParkingTicket value);
+
+    boolean containsParkingTicket(String key);
+
+    ParkingTicket removeParkingTicket(String key);
+}

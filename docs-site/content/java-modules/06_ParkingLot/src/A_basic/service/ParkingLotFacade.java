@@ -5,34 +5,52 @@ import A_basic.model.ParkingFloor;
 import A_basic.model.ParkingLot;
 import A_basic.model.ParkingSlot;
 import A_basic.model.ParkingTicket;
+import A_basic.model.Payment;
 import A_basic.model.Vehicle;
 import A_basic.model.enums.SlotStatus;
 import A_basic.model.enums.SlotType;
 import A_basic.model.enums.VehicleType;
+import A_basic.payment.PaymentProcessor;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
 
 public class ParkingLotFacade {
     private final DataStore dataStore;
+    private final PaymentProcessor paymentProcessor;
 
-    public ParkingLotFacade(DataStore dataStore) { this.dataStore = dataStore; }
+    public ParkingLotFacade(DataStore dataStore, PaymentProcessor paymentProcessor) {
+        this.dataStore = dataStore;
+        this.paymentProcessor = paymentProcessor;
+    }
 
     // User methods
 
-    public String parkVehicle(String parkingLotId, String vehicleId, String registrationNumber, VehicleType vehicleType, long entryTime) {
+    public String parkVehicle(String parkingLotId, String vehicleId, String registrationNumber, VehicleType vehicleType) {
         Vehicle vehicle = new Vehicle(vehicleId, registrationNumber, vehicleType);
         dataStore.putVehicle(vehicle.getVehicleId(), vehicle);
         ParkingSlot parkingSlot = findAvailableSlot(parkingLotId, slotTypeFor(vehicleType));
-        parkingSlot.parkVehicle(vehicleId);
-        String parkingTicketId = "ticket-" + vehicleId;
-        ParkingTicket parkingTicket = new ParkingTicket(parkingTicketId, vehicleId, parkingSlot.getParkingSlotId(), entryTime);
+        parkingSlot.occupy(vehicleId);
+        ParkingTicket parkingTicket = issueTicket(vehicleId, parkingSlot.getParkingSlotId());
         dataStore.putParkingTicket(parkingTicket.getParkingTicketId(), parkingTicket);
-        return parkingTicketId;
+        return parkingTicket.getParkingTicketId();
     }
 
-    public ParkingTicket unparkVehicle(String parkingTicketId, long exitTime) {
+    public ParkingTicket unparkVehicle(String parkingTicketId) {
         ParkingTicket parkingTicket = dataStore.getParkingTicket(parkingTicketId);
         ParkingSlot parkingSlot = dataStore.getParkingSlot(parkingTicket.getParkingSlotId());
+        LocalDateTime exitTime = now();
         parkingSlot.vacate();
-        parkingTicket.close(exitTime, calculateAmount(parkingTicket.getEntryTime(), exitTime));
+        parkingTicket.recordExit(exitTime, calculateAmount(parkingTicket.getEntryTime(), exitTime));
+        dataStore.removeVehicle(parkingTicket.getVehicleId());
+        return parkingTicket;
+    }
+
+    public ParkingTicket pay(String parkingTicketId, Payment payment) {
+        ParkingTicket parkingTicket = dataStore.getParkingTicket(parkingTicketId);
+        if (paymentProcessor.process(payment)) {
+            parkingTicket.close();
+        }
         return parkingTicket;
     }
 
@@ -73,14 +91,24 @@ public class ParkingLotFacade {
 
     // Util/helper methods
 
-    private SlotType slotTypeFor(VehicleType vehicleType) {
-        if (vehicleType == VehicleType.BIKE) return SlotType.BIKE;
-        if (vehicleType == VehicleType.TRUCK) return SlotType.LARGE;
-        return SlotType.COMPACT;
+    private ParkingTicket issueTicket(String vehicleId, String parkingSlotId) {
+        String parkingTicketId = "ticket-" + vehicleId;
+        return new ParkingTicket(parkingTicketId, vehicleId, parkingSlotId, now());
     }
 
-    private double calculateAmount(long entryTime, long exitTime) {
-        long hours = Math.max(1, (exitTime - entryTime + 59) / 60);
+    private SlotType slotTypeFor(VehicleType vehicleType) {
+        if (vehicleType == VehicleType.BIKE) return SlotType.SMALL;
+        if (vehicleType == VehicleType.TRUCK) return SlotType.LARGE;
+        return SlotType.MEDIUM;
+    }
+
+    private double calculateAmount(LocalDateTime entryTime, LocalDateTime exitTime) {
+        long minutes = Math.max(1, Duration.between(entryTime, exitTime).toMinutes());
+        long hours = Math.max(1, (minutes + 59) / 60);
         return hours * 20.0;
+    }
+
+    private LocalDateTime now() {
+        return LocalDateTime.now();
     }
 }

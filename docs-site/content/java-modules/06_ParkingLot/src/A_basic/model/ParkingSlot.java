@@ -17,7 +17,7 @@ public class ParkingSlot {
         this.slotStatus = SlotStatus.AVAILABLE;
     }
 
-    public void parkVehicle(String vehicleId) { this.vehicleId = vehicleId; this.slotStatus = SlotStatus.OCCUPIED; }
+    public void occupy(String vehicleId) { this.vehicleId = vehicleId; this.slotStatus = SlotStatus.OCCUPIED; }
     public void vacate() { this.vehicleId = null; this.slotStatus = SlotStatus.AVAILABLE; }
 
     @Override

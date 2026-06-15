@@ -16,6 +16,7 @@ import {
   Moon,
   PanelLeftClose,
   PanelLeftOpen,
+  StickyNote,
   Sun,
 } from "lucide-react";
 import { fileStorageGetItem, fileStorageSetItem, migrateLegacyBrowserStorage } from "../lib/file-storage-client";
@@ -27,6 +28,7 @@ const JAVA_PAGES_API = `${API_BASE}/api/java-pages`;
 const JAVA_PAGE_API = `${API_BASE}/api/java-page`;
 const JAVA_DIFF_API = `${API_BASE}/api/java-diff`;
 const WORKSPACE_LAYOUT_API = `${API_BASE}/api/workspace/layout`;
+const WORKSPACE_PROBLEM_META_API = `${API_BASE}/api/workspace/problem-meta`;
 const AUTH_SESSION_API = `${API_BASE}/api/auth/session`;
 const PAGE_ID_ALIASES = {
   "03_BookMyShow::A_Basic": ["03_BookMyShow::A_basicSeatHoldBooking"]
@@ -36,6 +38,7 @@ const MIN_BLOCK_WIDTH = 140;
 const MIN_BLOCK_HEIGHT = 90;
 const CANVAS_SIZE = 100000;
 const SHARED_LAYOUT_AUTOSAVE_DELAY_MS = 600;
+const DEFAULT_PROBLEM_META = { completed: false, notes: "", updatedAt: null };
 
 export default function App({ initialModule = "", initialPackage = "" } = {}) {
   const appRef = useRef(null);
@@ -45,6 +48,11 @@ export default function App({ initialModule = "", initialPackage = "" } = {}) {
   const [codeTheme, setCodeTheme] = useState("github-dark");
   const [javaModules, setJavaModules] = useState([]);
   const [collapsedModules, setCollapsedModules] = useState({});
+  const [problemMeta, setProblemMeta] = useState({});
+  const [problemMetaReady, setProblemMetaReady] = useState(false);
+  const [problemMetaMessage, setProblemMetaMessage] = useState("");
+  const [savingProblemMeta, setSavingProblemMeta] = useState({});
+  const [problemMetaCanSave, setProblemMetaCanSave] = useState(false);
   const [workspacePrefsReady, setWorkspacePrefsReady] = useState(false);
   const [selectedModule, setSelectedModule] = useState("");
   const [workspaceMode, setWorkspaceMode] = useState("visualizer");
@@ -110,6 +118,34 @@ export default function App({ initialModule = "", initialPackage = "" } = {}) {
       })
       .catch(() => setJavaModules([]));
   }, [initialModule, initialPackage]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadProblemMeta() {
+      setProblemMetaReady(false);
+      setProblemMetaMessage("");
+
+      try {
+        const loadedMeta = await fetchWorkspaceProblemMeta();
+        if (cancelled) return;
+        setProblemMeta(normalizeProblemMetaMap(loadedMeta));
+        setProblemMetaCanSave(true);
+      } catch (metaError) {
+        if (cancelled) return;
+        setProblemMeta({});
+        setProblemMetaCanSave(false);
+        setProblemMetaMessage(metaError.message || "Unable to load problem progress.");
+      } finally {
+        if (!cancelled) setProblemMetaReady(true);
+      }
+    }
+
+    loadProblemMeta();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     function handlePopState() {
@@ -217,6 +253,48 @@ export default function App({ initialModule = "", initialPackage = "" } = {}) {
     if (updateUrl) pushWorkspaceRoute(page);
   }
 
+  async function saveProblemMeta(moduleName, patch) {
+    const previousMeta = problemMetaFor(problemMeta, moduleName);
+    const nextMeta = normalizeProblemMeta({ ...previousMeta, ...patch });
+
+    setProblemMeta((current) => {
+      return {
+        ...current,
+        [moduleName]: nextMeta
+      };
+    });
+    setSavingProblemMeta((current) => ({ ...current, [moduleName]: true }));
+    setProblemMetaMessage("");
+
+    try {
+      const savedMeta = await saveWorkspaceProblemMeta({
+        moduleName,
+        completed: nextMeta.completed,
+        notes: nextMeta.notes
+      });
+
+      setProblemMeta((current) => ({
+        ...current,
+        [moduleName]: normalizeProblemMeta(savedMeta)
+      }));
+      setProblemMetaCanSave(true);
+      return true;
+    } catch (saveError) {
+      setProblemMeta((current) => ({
+        ...current,
+        [moduleName]: previousMeta
+      }));
+      setProblemMetaMessage(saveError.message || "Unable to save problem progress.");
+      return false;
+    } finally {
+      setSavingProblemMeta((current) => {
+        const next = { ...current };
+        delete next[moduleName];
+        return next;
+      });
+    }
+  }
+
   return (
     <div ref={appRef} className={`app-shell site-${siteTheme} ${sidebarCollapsed ? "sidebar-collapsed" : ""} ${isFullscreen ? "fullscreen-mode" : ""}`}>
       <aside className="sidebar">
@@ -256,8 +334,15 @@ export default function App({ initialModule = "", initialPackage = "" } = {}) {
             selectedPage={selectedPage}
             selectedDiff={selectedDiff}
             javaMode={javaMode}
+            problemMeta={problemMeta}
+            problemMetaReady={problemMetaReady}
+            problemMetaMessage={problemMetaMessage}
+            problemMetaCanSave={problemMetaCanSave}
+            savingProblemMeta={savingProblemMeta}
             onToggleModule={(moduleName) => setCollapsedModules((current) => ({ ...current, [moduleName]: !current[moduleName] }))}
             onSelectPage={(page) => selectPage(page)}
+            onToggleProblemCompleted={(moduleName, completed) => saveProblemMeta(moduleName, { completed })}
+            onSaveProblemNotes={(moduleName, notes) => saveProblemMeta(moduleName, { notes })}
             onSelectDiff={(diffSelection) => {
               applyDiffSelection(diffSelection);
               pushWorkspaceRoute(diffSelection.targetPage, diffSelection);
@@ -353,7 +438,9 @@ function handlePackageLinkClick(event, page, onSelectPage) {
   onSelectPage(page);
 }
 
-function JavaPageNav({ modules, selectedModule, workspaceMode, collapsedModules, selectedPage, selectedDiff, javaMode, onToggleModule, onSelectPage, onSelectDiff, onReorganizePage }) {
+function JavaPageNav({ modules, selectedModule, workspaceMode, collapsedModules, selectedPage, selectedDiff, javaMode, problemMeta, problemMetaReady, problemMetaMessage, problemMetaCanSave, savingProblemMeta, onToggleModule, onSelectPage, onToggleProblemCompleted, onSaveProblemNotes, onSelectDiff, onReorganizePage }) {
+  const [openNotesModule, setOpenNotesModule] = useState("");
+
   function showDiff(module, page, sourcePackage) {
     if (!sourcePackage || sourcePackage === page.packageName) return;
     onSelectDiff({
@@ -375,14 +462,26 @@ function JavaPageNav({ modules, selectedModule, workspaceMode, collapsedModules,
   return (
     <div className="java-nav">
       <span className="nav-label">Modules</span>
+      {(!problemMetaReady || problemMetaMessage) && (
+        <span className={`problem-meta-status ${problemMetaMessage ? "error" : ""}`}>
+          {problemMetaMessage || "Loading progress..."}
+        </span>
+      )}
       {modules.map((module) => (
         <section key={module.name} className="module-group">
-          <div className="module-header">
-            <button className="module-title-button" onClick={() => onToggleModule(module.name)} title={collapsedModules[module.name] ? "Expand module" : "Collapse module"}>
-              {collapsedModules[module.name] ? <ChevronRight size={16} aria-hidden="true" /> : <ChevronDown size={16} aria-hidden="true" />}
-              <strong>{formatModuleTitle(module.name)}</strong>
-            </button>
-          </div>
+          <ModuleProblemHeader
+            module={module}
+            meta={problemMetaFor(problemMeta, module.name)}
+            collapsed={Boolean(collapsedModules[module.name])}
+            notesOpen={openNotesModule === module.name}
+            saving={Boolean(savingProblemMeta[module.name])}
+            canSave={problemMetaReady && problemMetaCanSave}
+            onToggleModule={() => onToggleModule(module.name)}
+            onToggleNotes={() => setOpenNotesModule((current) => current === module.name ? "" : module.name)}
+            onCloseNotes={() => setOpenNotesModule("")}
+            onToggleCompleted={(completed) => onToggleProblemCompleted(module.name, completed)}
+            onSaveNotes={(notes) => onSaveProblemNotes(module.name, notes)}
+          />
           {!collapsedModules[module.name] && module.pages.map((page) => {
             const isNormalActive = javaMode === "page" && page.id === selectedPage?.id;
             const isDiffActive = javaMode === "diff" && selectedDiff?.targetPage?.id === page.id;
@@ -1053,6 +1152,79 @@ function JavaVisualizer({ javaModules, selectedPage, selectedDiff, mode, codeThe
   );
 }
 
+function ModuleProblemHeader({ module, meta, collapsed, notesOpen, saving, canSave, onToggleModule, onToggleNotes, onCloseNotes, onToggleCompleted, onSaveNotes }) {
+  const title = formatModuleTitle(module.name);
+  const hasNotes = Boolean(meta.notes?.trim());
+  const [draftNotes, setDraftNotes] = useState(meta.notes || "");
+
+  useEffect(() => {
+    if (notesOpen) setDraftNotes(meta.notes || "");
+  }, [notesOpen, meta.notes]);
+
+  async function saveNotes() {
+    const saved = await onSaveNotes(draftNotes);
+    if (saved) onCloseNotes();
+  }
+
+  function exitNotes() {
+    setDraftNotes(meta.notes || "");
+    onCloseNotes();
+  }
+
+  return (
+    <>
+      <div className="module-header">
+        <button className="module-title-button" onClick={onToggleModule} title={collapsed ? "Expand module" : "Collapse module"}>
+          {collapsed ? <ChevronRight size={16} aria-hidden="true" /> : <ChevronDown size={16} aria-hidden="true" />}
+          <strong>{title}</strong>
+        </button>
+        <label className={`problem-complete-control ${meta.completed ? "completed" : ""}`} title={`Mark ${title} as completed`}>
+          <input
+            type="checkbox"
+            checked={Boolean(meta.completed)}
+            disabled={!canSave || saving}
+            aria-label={`Mark ${title} as completed`}
+            onChange={(event) => onToggleCompleted(event.target.checked)}
+          />
+        </label>
+        <button
+          className={`problem-notes-button ${notesOpen ? "active" : ""} ${hasNotes ? "has-notes" : ""}`}
+          type="button"
+          onClick={onToggleNotes}
+          title={`${title} notes`}
+          aria-label={`${title} notes`}
+          aria-pressed={notesOpen}
+        >
+          <StickyNote size={14} aria-hidden="true" />
+        </button>
+      </div>
+      {notesOpen && (
+        <div className="problem-notes-dialog" role="dialog" aria-label={`${title} notes`}>
+          <div className="problem-notes-dialog-header">
+            <strong>Notes</strong>
+            {saving && <span>Saving...</span>}
+          </div>
+          <textarea
+            value={draftNotes}
+            onChange={(event) => setDraftNotes(event.target.value)}
+            placeholder="Add notes for this problem"
+            aria-label={`${title} notes`}
+            disabled={!canSave || saving}
+          />
+          <div className="problem-notes-actions">
+            <button type="button" className="problem-notes-save" onClick={saveNotes} disabled={!canSave || saving}>
+              {saving ? "Saving..." : "Save"}
+            </button>
+            <button type="button" className="problem-notes-exit" onClick={exitNotes} disabled={saving}>
+              Exit
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 function WorkspaceLayoutToolbar({ user, isAdmin, sessionChecked, dirty, status, message, disabled, onSave }) {
   const [authHref, setAuthHref] = useState("/auth?next=/workspace");
   const isSaving = status === "saving";
@@ -1449,6 +1621,30 @@ async function saveWorkspaceLayout(payload) {
   return result;
 }
 
+async function fetchWorkspaceProblemMeta() {
+  const response = await fetch(WORKSPACE_PROBLEM_META_API);
+  const payload = await response.json().catch(() => ({}));
+  if (response.status === 401) throw new Error("Sign in to save completion and notes.");
+  if (!response.ok) throw new Error(payload.error || "Unable to load problem progress.");
+  return payload.meta || {};
+}
+
+async function saveWorkspaceProblemMeta(payload) {
+  const response = await fetch(WORKSPACE_PROBLEM_META_API, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  const result = await response.json().catch(() => ({}));
+  if (response.status === 401) throw new Error("Sign in to save completion and notes.");
+  if (!response.ok) throw new Error(result.error || "Unable to save problem progress.");
+  return {
+    completed: Boolean(result.meta?.completed),
+    notes: typeof result.meta?.notes === "string" ? result.meta.notes : "",
+    updatedAt: result.meta?.updatedAt || null
+  };
+}
+
 async function saveSharedLocalLayout({ pageId, layouts, parentZoom, constructorVisibility, collapsedMethods }) {
   await Promise.all([
     putLocalDataValue(layoutStorageKey(pageId), JSON.stringify(layouts || {})),
@@ -1524,6 +1720,27 @@ function parseJsonValue(value, fallback) {
   } catch {
     return fallback;
   }
+}
+
+function normalizeProblemMetaMap(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+
+  return Object.fromEntries(Object.entries(value).map(([moduleName, meta]) => [
+    moduleName,
+    normalizeProblemMeta(meta)
+  ]));
+}
+
+function problemMetaFor(metaMap, moduleName) {
+  return metaMap?.[moduleName] || DEFAULT_PROBLEM_META;
+}
+
+function normalizeProblemMeta(meta) {
+  return {
+    completed: Boolean(meta?.completed),
+    notes: typeof meta?.notes === "string" ? meta.notes : "",
+    updatedAt: meta?.updatedAt || null
+  };
 }
 
 function buildFoldableCode(code) {

@@ -1,5 +1,5 @@
 package A_basic.model.enums;
 
 public enum TicketStatus {
-    ACTIVE, CLOSED
+    ACTIVE, PAYMENT_PENDING, CLOSED
 }
