@@ -1,79 +1,80 @@
 package A_basic.datastore;
 
-        import A_basic.model.LogApplication;
-import A_basic.model.Appender;
-import A_basic.model.LogEntry;
+import A_basic.model.LogEvent;
+import A_basic.model.LogSink;
+import A_basic.model.LoggerConfig;
 
-        import java.util.HashMap;
-        import java.util.Map;
+import java.util.HashMap;
+import java.util.Map;
 
-        public class InMemoryDataStore implements DataStore {
-            private final Map<String, LogApplication> logApplicationMap;
-    private final Map<String, Appender> appenderMap;
-    private final Map<String, LogEntry> logEntryMap;
+public class InMemoryDataStore implements DataStore {
+    private final Map<String, LoggerConfig> loggerConfigMap;
+    private final Map<String, LogSink> logSinkMap;
+    private final Map<String, LogEvent> logEventMap;
 
-            public InMemoryDataStore() {
-                this.logApplicationMap = new HashMap<>();
-        this.appenderMap = new HashMap<>();
-        this.logEntryMap = new HashMap<>();
-            }
+    public InMemoryDataStore() {
+        this.loggerConfigMap = new HashMap<>();
+        this.logSinkMap = new HashMap<>();
+        this.logEventMap = new HashMap<>();
+    }
 
+    @Override
+    public LoggerConfig getLoggerConfig(String key) {
+        return loggerConfigMap.get(key);
+    }
 
-            @Override
-            public LogApplication getLogApplication(String key) {
-                return logApplicationMap.get(key);
-            }
+    @Override
+    public void putLoggerConfig(String key, LoggerConfig value) {
+        loggerConfigMap.put(key, value);
+    }
 
-            @Override
-            public void putLogApplication(String key, LogApplication value) {
-                logApplicationMap.put(key, value);
-            }
+    @Override
+    public boolean containsLoggerConfig(String key) {
+        return loggerConfigMap.containsKey(key);
+    }
 
-            @Override
-            public boolean containsLogApplication(String key) {
-                return logApplicationMap.containsKey(key);
-            }
+    @Override
+    public LoggerConfig removeLoggerConfig(String key) {
+        return loggerConfigMap.remove(key);
+    }
 
-            @Override
-            public LogApplication removeLogApplication(String key) {
-                return logApplicationMap.remove(key);
-            }
-            @Override
-            public Appender getAppender(String key) {
-                return appenderMap.get(key);
-            }
+    @Override
+    public LogSink getLogSink(String key) {
+        return logSinkMap.get(key);
+    }
 
-            @Override
-            public void putAppender(String key, Appender value) {
-                appenderMap.put(key, value);
-            }
+    @Override
+    public void putLogSink(String key, LogSink value) {
+        logSinkMap.put(key, value);
+    }
 
-            @Override
-            public boolean containsAppender(String key) {
-                return appenderMap.containsKey(key);
-            }
+    @Override
+    public boolean containsLogSink(String key) {
+        return logSinkMap.containsKey(key);
+    }
 
-            @Override
-            public Appender removeAppender(String key) {
-                return appenderMap.remove(key);
-            }
-            @Override
-            public LogEntry getLogEntry(String key) {
-                return logEntryMap.get(key);
-            }
+    @Override
+    public LogSink removeLogSink(String key) {
+        return logSinkMap.remove(key);
+    }
 
-            @Override
-            public void putLogEntry(String key, LogEntry value) {
-                logEntryMap.put(key, value);
-            }
+    @Override
+    public LogEvent getLogEvent(String key) {
+        return logEventMap.get(key);
+    }
 
-            @Override
-            public boolean containsLogEntry(String key) {
-                return logEntryMap.containsKey(key);
-            }
+    @Override
+    public void putLogEvent(String key, LogEvent value) {
+        logEventMap.put(key, value);
+    }
 
-            @Override
-            public LogEntry removeLogEntry(String key) {
-                return logEntryMap.remove(key);
-            }
-        }
+    @Override
+    public boolean containsLogEvent(String key) {
+        return logEventMap.containsKey(key);
+    }
+
+    @Override
+    public LogEvent removeLogEvent(String key) {
+        return logEventMap.remove(key);
+    }
+}

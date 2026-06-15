@@ -1,130 +1,120 @@
 package A_basic.datastore;
 
-        import A_basic.model.City;
-import A_basic.model.Rider;
+import A_basic.model.Booking;
+import A_basic.model.Cab;
 import A_basic.model.Driver;
-import A_basic.model.Vehicle;
-import A_basic.model.Ride;
+import A_basic.model.Rider;
 
-        import java.util.HashMap;
-        import java.util.Map;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-        public class InMemoryDataStore implements DataStore {
-            private final Map<String, City> cityMap;
+public class InMemoryDataStore implements DataStore {
     private final Map<String, Rider> riderMap;
     private final Map<String, Driver> driverMap;
-    private final Map<String, Vehicle> vehicleMap;
-    private final Map<String, Ride> rideMap;
+    private final Map<String, Cab> cabMap;
+    private final Map<String, Booking> bookingMap;
 
-            public InMemoryDataStore() {
-                this.cityMap = new HashMap<>();
+    public InMemoryDataStore() {
         this.riderMap = new HashMap<>();
         this.driverMap = new HashMap<>();
-        this.vehicleMap = new HashMap<>();
-        this.rideMap = new HashMap<>();
-            }
+        this.cabMap = new HashMap<>();
+        this.bookingMap = new HashMap<>();
+    }
 
+    @Override
+    public Rider getRider(String key) {
+        return riderMap.get(key);
+    }
 
-            @Override
-            public City getCity(String key) {
-                return cityMap.get(key);
-            }
+    @Override
+    public void putRider(String key, Rider value) {
+        riderMap.put(key, value);
+    }
 
-            @Override
-            public void putCity(String key, City value) {
-                cityMap.put(key, value);
-            }
+    @Override
+    public boolean containsRider(String key) {
+        return riderMap.containsKey(key);
+    }
 
-            @Override
-            public boolean containsCity(String key) {
-                return cityMap.containsKey(key);
-            }
+    @Override
+    public Rider removeRider(String key) {
+        return riderMap.remove(key);
+    }
 
-            @Override
-            public City removeCity(String key) {
-                return cityMap.remove(key);
-            }
-            @Override
-            public Rider getRider(String key) {
-                return riderMap.get(key);
-            }
+    @Override
+    public Driver getDriver(String key) {
+        return driverMap.get(key);
+    }
 
-            @Override
-            public void putRider(String key, Rider value) {
-                riderMap.put(key, value);
-            }
+    @Override
+    public void putDriver(String key, Driver value) {
+        driverMap.put(key, value);
+    }
 
-            @Override
-            public boolean containsRider(String key) {
-                return riderMap.containsKey(key);
-            }
+    @Override
+    public boolean containsDriver(String key) {
+        return driverMap.containsKey(key);
+    }
 
-            @Override
-            public Rider removeRider(String key) {
-                return riderMap.remove(key);
-            }
-            @Override
-            public Driver getDriver(String key) {
-                return driverMap.get(key);
-            }
+    @Override
+    public Driver removeDriver(String key) {
+        return driverMap.remove(key);
+    }
 
-            @Override
-            public void putDriver(String key, Driver value) {
-                driverMap.put(key, value);
-            }
+    @Override
+    public Cab getCab(String key) {
+        return cabMap.get(key);
+    }
 
-            @Override
-            public boolean containsDriver(String key) {
-                return driverMap.containsKey(key);
-            }
+    @Override
+    public void putCab(String key, Cab value) {
+        cabMap.put(key, value);
+    }
 
-            @Override
-            public Driver removeDriver(String key) {
-                return driverMap.remove(key);
-            }
+    @Override
+    public boolean containsCab(String key) {
+        return cabMap.containsKey(key);
+    }
 
-            @Override
-            public List<Driver> getDriverList() {
-                return new ArrayList<>(driverMap.values());
-            }
-            @Override
-            public Vehicle getVehicle(String key) {
-                return vehicleMap.get(key);
-            }
+    @Override
+    public Cab removeCab(String key) {
+        return cabMap.remove(key);
+    }
 
-            @Override
-            public void putVehicle(String key, Vehicle value) {
-                vehicleMap.put(key, value);
-            }
+    @Override
+    public Booking getBooking(String key) {
+        return bookingMap.get(key);
+    }
 
-            @Override
-            public boolean containsVehicle(String key) {
-                return vehicleMap.containsKey(key);
-            }
+    @Override
+    public void putBooking(String key, Booking value) {
+        bookingMap.put(key, value);
+    }
 
-            @Override
-            public Vehicle removeVehicle(String key) {
-                return vehicleMap.remove(key);
-            }
-            @Override
-            public Ride getRide(String key) {
-                return rideMap.get(key);
-            }
+    @Override
+    public boolean containsBooking(String key) {
+        return bookingMap.containsKey(key);
+    }
 
-            @Override
-            public void putRide(String key, Ride value) {
-                rideMap.put(key, value);
-            }
+    @Override
+    public Booking removeBooking(String key) {
+        return bookingMap.remove(key);
+    }
 
-            @Override
-            public boolean containsRide(String key) {
-                return rideMap.containsKey(key);
-            }
+    @Override
+    public List<Driver> getDriverList() {
+        return new ArrayList<>(driverMap.values());
+    }
 
-            @Override
-            public Ride removeRide(String key) {
-                return rideMap.remove(key);
-            }
-        }
+    @Override
+    public List<Cab> getCabList() {
+        return new ArrayList<>(cabMap.values());
+    }
+
+    @Override
+    public List<Booking> getBookingList() {
+        return new ArrayList<>(bookingMap.values());
+    }
+}

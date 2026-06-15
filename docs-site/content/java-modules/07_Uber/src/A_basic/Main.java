@@ -2,38 +2,65 @@ package A_basic;
 
 import A_basic.datastore.DataStore;
 import A_basic.datastore.InMemoryDataStore;
+import A_basic.model.Booking;
+import A_basic.model.Driver;
+import A_basic.model.FareEstimate;
 import A_basic.model.Location;
 import A_basic.model.enums.VehicleType;
 import A_basic.service.UberFacade;
 
+import java.util.List;
 import java.util.UUID;
 
 public class Main {
     public static void main(String[] args) {
-        System.out.println("=== Uber Basic Demo ===");
         DataStore dataStore = new InMemoryDataStore();
-        UberFacade facade = new UberFacade(dataStore);
+        UberFacade uberFacade = new UberFacade(dataStore);
 
-        String cityId = id("city");
         String riderId = id("rider");
-        String driverOneId = id("driver");
-        String driverTwoId = id("driver");
-        String vehicleOneId = id("vehicle");
-        String vehicleTwoId = id("vehicle");
-        String rideId = id("ride");
+        String sedanCabId = id("cab");
+        String goCabId = id("cab");
+        String autoCabId = id("cab");
+        String sedanDriverId = id("driver");
+        String goDriverId = id("driver");
+        String autoDriverId = id("driver");
 
-        facade.addCity(cityId, "Bengaluru");
-        facade.addRider(cityId, riderId, "Riya");
-        facade.addVehicle(vehicleOneId, "KA-01-UB-1001", VehicleType.SEDAN);
-        facade.addVehicle(vehicleTwoId, "KA-01-UB-2002", VehicleType.SUV);
-        facade.addDriver(cityId, driverOneId, "Driver One", vehicleOneId, new Location(12.9, 77.5));
-        facade.addDriver(cityId, driverTwoId, "Driver Two", vehicleTwoId, new Location(12.95, 77.6));
+        Location pickupLocation = new Location(0.0, 0.0);
+        Location destinationLocation = new Location(3.0, 4.0);
 
-        facade.requestRide(rideId, cityId, riderId, new Location(12.91, 77.51), new Location(13.0, 77.7));
-        System.out.println(dataStore.getRide(rideId));
-        System.out.println(facade.completeRide(rideId));
-        System.out.println(dataStore.getDriver(dataStore.getRide(rideId).getDriverId()));
+        uberFacade.addRider(riderId, "Aarav", pickupLocation);
+        uberFacade.addCab(sedanCabId, VehicleType.SEDAN, "KA-01-SE-1234", new Location(1.0, 1.0));
+        uberFacade.addCab(goCabId, VehicleType.GO, "KA-01-GO-2345", new Location(2.0, 1.0));
+        uberFacade.addCab(autoCabId, VehicleType.AUTO, "KA-01-AU-3456", new Location(1.0, 2.0));
+        uberFacade.addDriver(sedanDriverId, "Meera", sedanCabId);
+        uberFacade.addDriver(goDriverId, "Kabir", goCabId);
+        uberFacade.addDriver(autoDriverId, "Rohan", autoCabId);
+
+        System.out.println("Fare estimates");
+        List<FareEstimate> fareEstimateList = uberFacade.showFareEstimates(pickupLocation, destinationLocation);
+        for (FareEstimate fareEstimate : fareEstimateList) {
+            System.out.println(fareEstimate);
+        }
+
+        Booking booking = uberFacade.bookRide(riderId, destinationLocation, VehicleType.GO);
+        System.out.println("Booking created");
+        System.out.println(booking);
+
+        Driver acceptingDriver = dataStore.getDriver(goDriverId);
+        uberFacade.acceptRide(booking.getBookingId(), acceptingDriver.getDriverId());
+        System.out.println("Driver accepted");
+        System.out.println(booking);
+
+        boolean rideStarted = uberFacade.startRide(booking.getBookingId(), acceptingDriver.getDriverId(), booking.getOtp());
+        System.out.println("Ride started: " + rideStarted);
+        System.out.println(booking);
+
+        uberFacade.endRide(booking.getBookingId(), acceptingDriver.getDriverId());
+        System.out.println("Ride completed");
+        System.out.println(booking);
     }
 
-    private static String id(String prefix) { return prefix + "-" + UUID.randomUUID(); }
+    private static String id(String prefix) {
+        return prefix + "-" + UUID.randomUUID();
+    }
 }

@@ -1,49 +1,48 @@
 package A_basic.datastore;
 
-        import A_basic.model.City;
-import A_basic.model.Rider;
+import A_basic.model.Booking;
+import A_basic.model.Cab;
 import A_basic.model.Driver;
-import A_basic.model.Vehicle;
-import A_basic.model.Ride;
+import A_basic.model.Rider;
+
 import java.util.List;
 
-        public interface DataStore {
+public interface DataStore {
+    Rider getRider(String key);
 
-            City getCity(String key);
+    void putRider(String key, Rider value);
 
-            void putCity(String key, City value);
+    boolean containsRider(String key);
 
-            boolean containsCity(String key);
+    Rider removeRider(String key);
 
-            City removeCity(String key);
-            Rider getRider(String key);
+    Driver getDriver(String key);
 
-            void putRider(String key, Rider value);
+    void putDriver(String key, Driver value);
 
-            boolean containsRider(String key);
+    boolean containsDriver(String key);
 
-            Rider removeRider(String key);
-            Driver getDriver(String key);
+    Driver removeDriver(String key);
 
-            void putDriver(String key, Driver value);
+    Cab getCab(String key);
 
-            boolean containsDriver(String key);
+    void putCab(String key, Cab value);
 
-            Driver removeDriver(String key);
+    boolean containsCab(String key);
 
-            List<Driver> getDriverList();
-            Vehicle getVehicle(String key);
+    Cab removeCab(String key);
 
-            void putVehicle(String key, Vehicle value);
+    Booking getBooking(String key);
 
-            boolean containsVehicle(String key);
+    void putBooking(String key, Booking value);
 
-            Vehicle removeVehicle(String key);
-            Ride getRide(String key);
+    boolean containsBooking(String key);
 
-            void putRide(String key, Ride value);
+    Booking removeBooking(String key);
 
-            boolean containsRide(String key);
+    List<Driver> getDriverList();
 
-            Ride removeRide(String key);
-        }
+    List<Cab> getCabList();
+
+    List<Booking> getBookingList();
+}

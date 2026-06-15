@@ -1,30 +1,22 @@
 package A_basic.datastore;
 
-        import A_basic.model.FileSystem;
 import A_basic.model.Directory;
 import A_basic.model.File;
 
-        public interface DataStore {
+public interface DataStore {
+    Directory getDirectory(String key);
 
-            FileSystem getFileSystem(String key);
+    void putDirectory(String key, Directory value);
 
-            void putFileSystem(String key, FileSystem value);
+    boolean containsDirectory(String key);
 
-            boolean containsFileSystem(String key);
+    Directory removeDirectory(String key);
 
-            FileSystem removeFileSystem(String key);
-            Directory getDirectory(String key);
+    File getFile(String key);
 
-            void putDirectory(String key, Directory value);
+    void putFile(String key, File value);
 
-            boolean containsDirectory(String key);
+    boolean containsFile(String key);
 
-            Directory removeDirectory(String key);
-            File getFile(String key);
-
-            void putFile(String key, File value);
-
-            boolean containsFile(String key);
-
-            File removeFile(String key);
-        }
+    File removeFile(String key);
+}

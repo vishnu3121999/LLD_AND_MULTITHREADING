@@ -1,30 +1,31 @@
 package A_basic.datastore;
 
-        import A_basic.model.LogApplication;
-import A_basic.model.Appender;
-import A_basic.model.LogEntry;
+import A_basic.model.LogEvent;
+import A_basic.model.LogSink;
+import A_basic.model.LoggerConfig;
 
-        public interface DataStore {
+public interface DataStore {
+    LoggerConfig getLoggerConfig(String key);
 
-            LogApplication getLogApplication(String key);
+    void putLoggerConfig(String key, LoggerConfig value);
 
-            void putLogApplication(String key, LogApplication value);
+    boolean containsLoggerConfig(String key);
 
-            boolean containsLogApplication(String key);
+    LoggerConfig removeLoggerConfig(String key);
 
-            LogApplication removeLogApplication(String key);
-            Appender getAppender(String key);
+    LogSink getLogSink(String key);
 
-            void putAppender(String key, Appender value);
+    void putLogSink(String key, LogSink value);
 
-            boolean containsAppender(String key);
+    boolean containsLogSink(String key);
 
-            Appender removeAppender(String key);
-            LogEntry getLogEntry(String key);
+    LogSink removeLogSink(String key);
 
-            void putLogEntry(String key, LogEntry value);
+    LogEvent getLogEvent(String key);
 
-            boolean containsLogEntry(String key);
+    void putLogEvent(String key, LogEvent value);
 
-            LogEntry removeLogEntry(String key);
-        }
+    boolean containsLogEvent(String key);
+
+    LogEvent removeLogEvent(String key);
+}

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+
+    <Appenders>
+        <Console name="ConsoleAppender" target="SYSTEM_OUT">
+            <PatternLayout
+                    pattern="%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger - %msg%n"/>
+        </Console>
+
+        <File name="InfoFileAppender" fileName="logs/info.log">
+            <PatternLayout
+                    pattern="%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger - %msg%n"/>
+            <ThresholdFilter level="info"
+                             onMatch="ACCEPT"
+                             onMismatch="DENY"/>
+        </File>
+
+        <File name="ErrorFileAppender" fileName="logs/error.log">
+            <PatternLayout
+                    pattern="%d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %logger - %msg%n"/>
+            <ThresholdFilter level="error"
+                             onMatch="ACCEPT"
+                             onMismatch="DENY"/>
+        </File>
+    </Appenders>
+
+    <Loggers>
+        <Root level="debug">
+            <AppenderRef ref="ConsoleAppender"/>
+            <AppenderRef ref="InfoFileAppender"/>
+            <AppenderRef ref="ErrorFileAppender"/>
+        </Root>
+
+        <!-- specific package -->
+        <Logger name="com.payment" level="debug" additivity="false">
+            <AppenderRef ref="ConsoleAppender"/>
+            <AppenderRef ref="ErrorFileAppender"/>
+        </Logger>
+    </Loggers>
+
+</Configuration>
+

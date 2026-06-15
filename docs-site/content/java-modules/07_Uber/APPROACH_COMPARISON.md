@@ -2,7 +2,9 @@
 
 ## Existing Packages
 
-`A_basic` demonstrates riders, drivers, vehicles, city-level driver registration, nearest-driver assignment, ride completion, and simple fare calculation.
+`A_basic` demonstrates the first runnable Uber-like cab booking design with riders, drivers, cabs, locations, fare estimates, bookings, OTP-based ride start, and ride completion.
+
+Later packages can add validation, exception handling, assignment strategies, pricing strategies, notifications, payment handling, persistence, and concurrency-safe booking acceptance.
 
 ## A_basic Design Analysis
 
@@ -11,75 +13,109 @@
 #### System Specific Requirements
 
 Physical structure:
-- The system supports cities.
-- A city has riders and drivers.
-- A driver has one vehicle and a current location.
-- A ride connects rider, driver, pickup location, and drop location.
+- The system supports riders & drivers.
+- Each driver is linked to one cab.
+- Each cab has a vehicle type and current location.
 
 Action based points:
-- Admin adds cities, riders, vehicles, and drivers.
-- User requests a ride from pickup to drop.
-- User completes the ride.
-- System finds the nearest available driver and calculates fare.
+- Admin Actions:
+  - Admin adds riders.
+  - Admin adds cabs.
+  - Admin adds drivers and links each driver to a cab.
+- User Actions:
+  - Rider updates current location.
+  - Rider views fare estimates for available vehicle types.
+  - Rider books a ride by choosing a vehicle type.
+  - Rider can cancel the ride anytime before ride starts.
+  - Driver accepts a ride.
+  - Driver starts the ride using the rider OTP.
+  - Driver ends the ride.
+- System Actions:
+  - Calculates fare.
+  - Send notifications to nearby available drivers regarding ride requests
+  - Generate OTPs for system-created bookings.
 
-Misc:
-- A_basic assumes at least one available driver.
-- Driver matching strategies, pricing strategies, cancellation, payments, and validations are deferred.
-
+  
 #### Common Misc
 
 Offline or online:
-- Treat as online because users, drivers, rides, and vehicles are independently stored.
+- Online
 
 Extensibility:
-- Driver assignment and fare calculation can become Strategy later.
-- VehicleType is an enum in A_basic.
+- Core entities:
+  - `VehicleType` can grow with more cab categories.
+
+- Behaviour:
+  - Cab assignment
+  - Fare calculation and surge pricing
 
 History and undo:
-- Ride history naturally exists through Ride records, but undo is not needed.
+- NA
 
 Notifications:
-- Driver/rider notifications are future concerns.
+- Nearby driver lookup is enough for A_basic.
+- Real-time driver notification can be added later with Observer or an event model.
 
 Exception handling:
-- Missing city, unavailable driver, invalid rider, and invalid ride are later validations.
+- Missing rider, missing driver, missing cab, invalid OTP, unavailable cab, duplicate IDs, and wrong booking status are later-package validations.
+
+Edge cases:
+- No nearby cab, multiple drivers accepting the same booking, expired OTP, rider cancellation, driver cancellation, and invalid location inputs are deferred.
 
 Concurrency:
-- Simultaneous requests assigning the same driver are later concurrency concerns.
+- Real Uber-like booking has concurrent driver acceptance and cab availability races.
+- A_basic intentionally uses `HashMap` and no locks.
 
 ### UseCase Diagram
 
 Actors:
 - Rider
+- Driver
 - Admin
 - System
 
 UseCases:
-- addCity(Admin) -> create City(System) -> putCity(DataStore)
-- addRider(Admin) -> create Rider(System) -> putRider(DataStore) -> add rider id to City(System)
-- addVehicle(Admin) -> create Vehicle(System) -> putVehicle(DataStore)
-- addDriver(Admin) -> create Driver(System) -> putDriver(DataStore) -> add driver id to City(System)
-- requestRide(Rider) -> findNearestDriver(System) -> assign driver(System) -> calculateFare(System) -> create Ride(System)
-- completeRide(Rider) -> complete Ride(System) -> mark Driver available(System)
+- addRider(Admin) 
+- addCab(Admin) 
+- addDriver(Admin) 
+- updateRiderLocation(Rider) 
+- showFareEstimates(Rider) → findNearbyCabs(System) → calculateFare(System)
+- bookRide(Rider) -> notifyDrivers(System)
+- acceptRide(Driver) 
+- startRide(Driver) -> matchOTP(System) 
+- endRide(Driver)
 
 ### Class Diagram
 
 Layers:
-- `Main` creates IDs and runs the ride flow.
-- `UberFacade` owns registration, assignment, and ride completion.
-- `DataStore` stores maps only.
-- Models own simple state such as driver availability and ride status.
+- `Main` creates direct user/admin IDs and calls facade methods only.
+- `UberFacade` owns rider, driver, admin, and system workflows.
+- `DataStore` and `InMemoryDataStore` store maps only.
+- Models own simple state changes such as updating location, assigning driver, starting ride, and completing ride.
+
+Identify Core Entities and Cardinality:
+- Rider 
+- Driver -> Cab 
+- Booking -> Rider, Driver, Cab
+
 
 Core entities:
-- `City(cityId, name, riderList, driverList)` stores rider and driver IDs.
-- `Rider(riderId, name)` represents the passenger.
-- `Driver(driverId, name, vehicleId, currentLocation, driverStatus)` owns driver availability.
-- `Vehicle(vehicleId, registrationNumber, vehicleType)` stores vehicle metadata.
-- `Ride(rideId, riderId, driverId, pickupLocation, dropLocation, rideStatus, fare)` stores one ride.
-- `Location(latitude, longitude)` owns simple distance calculation.
+- `Rider(riderId, name, currentLocation)` represents a rider and current pickup position.
+- `Driver(driverId, name, cabId)` represents a driver linked to one cab by ID.
+- `Cab(cabId, vehicleType, registrationNumber, currentLocation, available)` represents a bookable vehicle.
+- `Location(latitude, longitude)` is a small value object with distance calculation.
+- `FareEstimate(vehicleType, fare)` represents a rider-facing fare option.
+- `Booking(bookingId, riderId, pickupLocation, destinationLocation, bookingTime, fare, otp, driverId, bookingStatus)` represents one ride lifecycle.
+
+Enums:
+- `VehicleType`: `SEDAN`, `GO`, `AUTO`, `BIKE`.
+- `BookingStatus`: `RIDE_REQUESTED`, `DRIVER_ASSIGNED`, `RIDE_STARTED`, `RIDE_COMPLETED`.
 
 Method placement:
-- `requestRide` belongs in the facade because it coordinates driver search, fare, driver state, and ride creation.
-- `findNearestDriver` is a system method in the facade for A_basic; Strategy comes later.
-- `assignRide` and `completeRide` belong in `Driver` because they mutate only driver state.
-- `complete` belongs in `Ride` because it mutates only ride status.
+- `UberFacade.showFareEstimates` belongs in the facade because it coordinates cab lookup and fare calculation.
+- `UberFacade.bookRide` belongs in the facade because it creates the system booking and stores it.
+- `UberFacade.getNearbyDrivers` belongs in the facade because it maps available cabs to drivers.
+- `UberFacade.acceptRide`, `startRide`, and `endRide` belong in the facade because they coordinate booking, driver, cab, and rider state.
+- `Booking.assignDriver`, `startRide`, and `completeRide` belong in `Booking` because they mutate booking-owned state.
+- `Cab.markUnavailable`, `markAvailable`, and `updateLocation` belong in `Cab` because they mutate cab-owned state.
+- `DataStore` methods only get, put, contains, remove, and list entities; no business logic belongs in datastore.
