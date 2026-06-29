@@ -1,6 +1,7 @@
 package A_basic.model;
 
 import A_basic.model.enums.BookingStatus;
+import A_basic.model.enums.VehicleType;
 
 import java.time.LocalDateTime;
 
@@ -9,6 +10,7 @@ public class Booking {
     private final String riderId;
     private final Location pickupLocation;
     private final Location destinationLocation;
+    private final VehicleType vehicleType;
     private final LocalDateTime bookingTime;
     private final double fare;
     private final String otp;
@@ -16,12 +18,13 @@ public class Booking {
     private BookingStatus bookingStatus;
 
     public Booking(String bookingId, String riderId, Location pickupLocation, Location destinationLocation,
-                   LocalDateTime bookingTime, double fare, String otp, String driverId,
+                   VehicleType vehicleType, LocalDateTime bookingTime, double fare, String otp, String driverId,
                    BookingStatus bookingStatus) {
         this.bookingId = bookingId;
         this.riderId = riderId;
         this.pickupLocation = pickupLocation;
         this.destinationLocation = destinationLocation;
+        this.vehicleType = vehicleType;
         this.bookingTime = bookingTime;
         this.fare = fare;
         this.otp = otp;
@@ -66,6 +69,10 @@ public class Booking {
         return destinationLocation;
     }
 
+    public VehicleType getVehicleType() {
+        return vehicleType;
+    }
+
     public LocalDateTime getBookingTime() {
         return bookingTime;
     }
@@ -93,6 +100,7 @@ public class Booking {
                 ", riderId='" + riderId + '\'' +
                 ", pickupLocation=" + pickupLocation +
                 ", destinationLocation=" + destinationLocation +
+                ", vehicleType=" + vehicleType +
                 ", bookingTime=" + bookingTime +
                 ", fare=" + fare +
                 ", otp='" + otp + '\'' +

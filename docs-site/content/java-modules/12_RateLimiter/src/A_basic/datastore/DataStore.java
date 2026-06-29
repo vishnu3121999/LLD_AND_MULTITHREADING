@@ -1,30 +1,50 @@
 package A_basic.datastore;
 
-        import A_basic.model.Client;
-import A_basic.model.RateLimitRule;
+import A_basic.model.ApiEndpoint;
+import A_basic.model.Client;
 import A_basic.model.RateLimitBucket;
+import A_basic.model.RateLimitPlan;
+import A_basic.model.RateLimitRule;
 
-        public interface DataStore {
+public interface DataStore {
 
-            Client getClient(String key);
+    Client getClient(String key);
 
-            void putClient(String key, Client value);
+    void putClient(String key, Client value);
 
-            boolean containsClient(String key);
+    boolean containsClient(String key);
 
-            Client removeClient(String key);
-            RateLimitRule getRateLimitRule(String key);
+    Client removeClient(String key);
 
-            void putRateLimitRule(String key, RateLimitRule value);
+    ApiEndpoint getApiEndpoint(String key);
 
-            boolean containsRateLimitRule(String key);
+    void putApiEndpoint(String key, ApiEndpoint value);
 
-            RateLimitRule removeRateLimitRule(String key);
-            RateLimitBucket getRateLimitBucket(String key);
+    boolean containsApiEndpoint(String key);
 
-            void putRateLimitBucket(String key, RateLimitBucket value);
+    ApiEndpoint removeApiEndpoint(String key);
 
-            boolean containsRateLimitBucket(String key);
+    RateLimitPlan getRateLimitPlan(String key);
 
-            RateLimitBucket removeRateLimitBucket(String key);
-        }
+    void putRateLimitPlan(String key, RateLimitPlan value);
+
+    boolean containsRateLimitPlan(String key);
+
+    RateLimitPlan removeRateLimitPlan(String key);
+
+    RateLimitRule getRateLimitRule(String key);
+
+    void putRateLimitRule(String key, RateLimitRule value);
+
+    boolean containsRateLimitRule(String key);
+
+    RateLimitRule removeRateLimitRule(String key);
+
+    RateLimitBucket getRateLimitBucket(String key);
+
+    void putRateLimitBucket(String key, RateLimitBucket value);
+
+    boolean containsRateLimitBucket(String key);
+
+    RateLimitBucket removeRateLimitBucket(String key);
+}

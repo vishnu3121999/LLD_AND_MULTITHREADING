@@ -1,22 +1,23 @@
 package A_basic.datastore;
 
-        import A_basic.model.Cache;
+import A_basic.model.Cache;
 import A_basic.model.CacheEntry;
 
-        public interface DataStore {
+public interface DataStore<K, V> {
 
-            Cache getCache(String key);
+    Cache<K, V> getCache(String key);
 
-            void putCache(String key, Cache value);
+    void putCache(String key, Cache<K, V> value);
 
-            boolean containsCache(String key);
+    boolean containsCache(String key);
 
-            Cache removeCache(String key);
-            CacheEntry getCacheEntry(String key);
+    Cache<K, V> removeCache(String key);
 
-            void putCacheEntry(String key, CacheEntry value);
+    CacheEntry<K, V> getCacheEntry(String key);
 
-            boolean containsCacheEntry(String key);
+    void putCacheEntry(String key, CacheEntry<K, V> value);
 
-            CacheEntry removeCacheEntry(String key);
-        }
+    boolean containsCacheEntry(String key);
+
+    CacheEntry<K, V> removeCacheEntry(String key);
+}

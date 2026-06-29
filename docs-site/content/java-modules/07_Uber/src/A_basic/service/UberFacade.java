@@ -12,22 +12,17 @@ import A_basic.model.enums.VehicleType;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class UberFacade {
     private static final double NEARBY_DISTANCE = 5.0;
 
     private final DataStore dataStore;
-    private final Map<String, VehicleType> bookingVehicleTypeMap;
-    private int nextOtp;
 
     public UberFacade(DataStore dataStore) {
         this.dataStore = dataStore;
-        this.bookingVehicleTypeMap = new HashMap<>();
-        this.nextOtp = 1234;
     }
 
     // User methods
@@ -54,16 +49,15 @@ public class UberFacade {
         double fare = calculateFare(pickupLocation, destinationLocation, vehicleType);
         String bookingId = createBookingId();
         Booking booking = new Booking(bookingId, riderId, pickupLocation, destinationLocation,
-                LocalDateTime.now(), fare, generateOtp(), null, BookingStatus.RIDE_REQUESTED);
+                vehicleType, LocalDateTime.now(), fare, generateOtp(), null, BookingStatus.RIDE_REQUESTED);
         dataStore.putBooking(booking.getBookingId(), booking);
-        bookingVehicleTypeMap.put(booking.getBookingId(), vehicleType);
         notifyDrivers(booking.getBookingId());
         return booking;
     }
 
     public List<Driver> getNearbyDrivers(String bookingId) {
         Booking booking = dataStore.getBooking(bookingId);
-        VehicleType vehicleType = bookingVehicleTypeMap.get(bookingId);
+        VehicleType vehicleType = booking.getVehicleType();
         return findNearbyDrivers(booking.getPickupLocation(), vehicleType);
     }
 
@@ -164,7 +158,7 @@ public class UberFacade {
     private double surgeMultiplier(Location pickupLocation, VehicleType vehicleType) {
         int activeBookingCount = 0;
         for (Booking booking : dataStore.getBookingList()) {
-            VehicleType bookingVehicleType = bookingVehicleTypeMap.get(booking.getBookingId());
+            VehicleType bookingVehicleType = booking.getVehicleType();
             if (bookingVehicleType == vehicleType
                     && booking.getBookingStatus() != BookingStatus.RIDE_COMPLETED
                     && booking.getBookingStatus() != BookingStatus.RIDE_CANCELLED) {
@@ -205,8 +199,6 @@ public class UberFacade {
     }
 
     private String generateOtp() {
-        String otp = String.valueOf(nextOtp);
-        nextOtp++;
-        return otp;
+        return String.format("%04d", ThreadLocalRandom.current().nextInt(10000));
     }
 }
