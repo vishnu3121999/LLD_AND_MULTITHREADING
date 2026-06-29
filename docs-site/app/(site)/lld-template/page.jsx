@@ -229,12 +229,12 @@ export default function TemplatePage() {
           </div>
 
           <div className="manual-hero-actions">
-            <Link href="/solve" className="manual-primary-action">
-              Use in practice
+            <Link href="/problems" className="manual-primary-action">
+              Open solved examples
               <ArrowRight size={16} aria-hidden="true" />
             </Link>
-            <Link href="/problems" className="manual-secondary-action">
-              Open solved examples
+            <Link href="/patterns" className="manual-secondary-action">
+              Browse patterns
             </Link>
           </div>
 

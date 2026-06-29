@@ -12,15 +12,17 @@ export function generateStaticParams() {
   return problems.map((problem) => ({ slug: problem.slug }));
 }
 
-export function generateMetadata({ params }) {
-  const problem = getProblem(params.slug);
+export async function generateMetadata({ params }) {
+  const { slug } = await params;
+  const problem = getProblem(slug);
   return {
     title: problem ? `${problem.title} | LLD Playbook` : "Problem | LLD Playbook"
   };
 }
 
-export default function ProblemPage({ params }) {
-  const problem = getProblem(params.slug);
+export default async function ProblemPage({ params }) {
+  const { slug } = await params;
+  const problem = getProblem(slug);
   if (!problem) notFound();
 
   return (

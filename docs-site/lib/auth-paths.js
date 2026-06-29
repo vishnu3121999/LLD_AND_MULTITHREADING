@@ -1,4 +1,4 @@
-export const PROTECTED_PAGE_PATHS = ["/solve"];
+export const PROTECTED_PAGE_PATHS = [];
 export const PROTECTED_API_PATHS = [];
 
 export function isProtectedPage(pathname) {

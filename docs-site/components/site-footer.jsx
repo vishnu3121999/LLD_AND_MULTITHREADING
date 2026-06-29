@@ -11,13 +11,11 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-slate-200 bg-white">
       <div className="site-container flex flex-col gap-3 py-8 text-sm text-slate-600 md:flex-row md:items-center md:justify-between">
-        <p>LLD Playbook uses a reusable template for requirements, entities, services, patterns, concurrency, and code.</p>
+        <p>01 Interview organizes LLD and HLD sections from the home dashboard.</p>
         <div className="flex flex-wrap gap-4">
-          <Link href="/hld" className="hover:text-slate-950">HLD</Link>
+          <Link href="/" className="hover:text-slate-950">Sections</Link>
           <Link href="/pricing" className="hover:text-slate-950">Pricing</Link>
-          <Link href="/roadmaps" className="hover:text-slate-950">Roadmaps</Link>
-          <Link href="/cheatsheets" className="hover:text-slate-950">Cheatsheets</Link>
-          <Link href="/workspace" className="hover:text-slate-950">Java Workspace</Link>
+          <Link href="/search" className="hover:text-slate-950">Search</Link>
         </div>
       </div>
     </footer>

@@ -42,7 +42,7 @@ export function ThemeToggle() {
   }
 
   return (
-    <Button type="button" variant="outline" size="sm" onClick={toggleTheme} title="Toggle site theme">
+    <Button type="button" variant="outline" size="sm" onClick={toggleTheme} title="Toggle site theme" className="h-8 px-2.5 text-[13px]">
       {theme === "studio" ? <Moon size={16} aria-hidden="true" /> : <Sun size={16} aria-hidden="true" />}
       <span className="hidden sm:inline">Theme</span>
     </Button>

@@ -21,8 +21,8 @@ export default function ProblemsPage() {
           </p>
         </div>
         <Button asChild variant="outline">
-          <Link href="/solve">
-            Practice a new problem
+          <Link href="/">
+            Browse sections
             <ArrowRight size={16} aria-hidden="true" />
           </Link>
         </Button>

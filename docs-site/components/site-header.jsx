@@ -17,44 +17,46 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
-      <div className="site-container flex min-h-16 items-center justify-between gap-4">
+      <div className="site-container flex min-h-12 items-center justify-between gap-3">
         <Link href="/" className="flex items-center gap-3 font-semibold text-slate-950" aria-label="01 Interview home">
           <img
             src="/logo.png"
             alt="01 Interview"
-            className="h-12 w-auto rounded-sm object-contain"
+            className="h-9 w-auto rounded-sm object-contain"
           />
           <span className="sr-only">LLD Playbook</span>
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex" aria-label="Primary navigation">
-          {navItems.map((item) => {
-            const isActive = item.href === "/" ? pathname === "/" : pathname === item.href || pathname?.startsWith(`${item.href}/`);
+        <div className="flex min-w-0 items-center justify-end gap-2">
+          <nav className="flex items-center gap-1" aria-label="Primary navigation">
+            {navItems.map((item) => {
+              const isActive = item.href === "/" ? pathname === "/" : pathname === item.href || pathname?.startsWith(`${item.href}/`);
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "rounded-md px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-950",
-                  isActive && "bg-slate-100 text-slate-950"
-                )}
-              >
-                {item.label}
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "inline-flex h-8 items-center rounded-md px-2.5 text-[13px] font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 sm:px-3",
+                    isActive && "bg-slate-100 text-slate-950"
+                  )}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <Button asChild variant="outline" size="sm" className="hidden h-8 px-2.5 text-[13px] sm:inline-flex">
+              <Link href="/search">
+                <Search size={16} aria-hidden="true" />
+                Search
               </Link>
-            );
-          })}
-        </nav>
-
-        <div className="flex items-center gap-2">
-          <ThemeToggle />
-          <Button asChild variant="outline" size="sm" className="hidden sm:inline-flex">
-            <Link href="/search">
-              <Search size={16} aria-hidden="true" />
-              Search
-            </Link>
-          </Button>
-          <HeaderAuthButton pathname={pathname} />
+            </Button>
+            <HeaderAuthButton pathname={pathname} />
+          </div>
         </div>
       </div>
     </header>
@@ -92,10 +94,10 @@ function HeaderAuthButton({ pathname }) {
     return (
       <Link
         href={`/auth${next}`}
-        className="inline-flex h-9 items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950"
+        className="inline-flex h-8 items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3 text-[13px] font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950"
         aria-label={`Account for ${user.email}`}
       >
-        <span className="grid h-7 w-7 place-items-center rounded-full bg-slate-950 text-xs font-semibold text-white">
+        <span className="grid h-6 w-6 place-items-center rounded-full bg-slate-950 text-[11px] font-semibold text-white">
           {getInitials(user.email)}
         </span>
         <span className="hidden max-w-24 truncate sm:inline">Account</span>
@@ -104,10 +106,10 @@ function HeaderAuthButton({ pathname }) {
   }
 
   return (
-    <Button asChild size="sm" className="rounded-full px-4">
-      <Link href={`/auth${next}`}>
+    <Button asChild size="sm" className="h-8 rounded-full px-3 text-[13px] sm:px-4">
+      <Link href={`/auth${next}`} aria-label={sessionChecked ? "Sign in" : "Account"}>
         <UserRound size={16} aria-hidden="true" />
-        {sessionChecked ? "Sign in" : "Account"}
+        <span className="hidden sm:inline">{sessionChecked ? "Sign in" : "Account"}</span>
       </Link>
     </Button>
   );
