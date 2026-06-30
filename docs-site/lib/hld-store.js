@@ -1,9 +1,21 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, readdir, readFile, unlink, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const HLD_DATA_DIR = path.join(process.cwd(), "content", "hld", "problems");
 const VALID_ID = /^[a-z0-9][a-z0-9-]*$/;
+const TEXT_PROBLEM_META = {
+  camelcamelcamel: {
+    title: "Design CamelCamelCamel",
+    summary: "Price history, product crawling, and price-drop notifications for a large-scale commerce tracking system.",
+    tags: ["Price tracking", "Notifications", "Crawling"]
+  },
+  googlenews: {
+    title: "Design Google News",
+    summary: "Regional news feed aggregation with low-latency infinite scroll, publisher ingestion, and feed caching.",
+    tags: ["Feed", "Aggregation", "Caching"]
+  }
+};
 
 let writeQueue = Promise.resolve();
 
@@ -13,9 +25,14 @@ export async function listHldProblems() {
   const problems = [];
 
   for (const entry of entries) {
-    if (!entry.isFile() || !entry.name.endsWith(".json")) continue;
-    const id = entry.name.slice(0, -5);
-    const problem = await readHldProblemFile(id);
+    if (!entry.isFile()) continue;
+    const ext = path.extname(entry.name);
+    if (ext !== ".json" && ext !== ".txt") continue;
+
+    const id = entry.name.slice(0, -ext.length);
+    const problem = ext === ".json"
+      ? await readHldProblemFile(id)
+      : await readTextHldProblemFile(id);
     if (!problem) continue;
 
     problems.push({
@@ -23,6 +40,7 @@ export async function listHldProblems() {
       title: problem.title || "Untitled",
       summary: problem.summary || "",
       tags: Array.isArray(problem.tags) ? problem.tags : [],
+      source: problem.source || "json",
       updated_at: problem.updated_at || "",
       created_at: problem.created_at || "",
       sectionCount: countSections(problem.sections)
@@ -34,7 +52,7 @@ export async function listHldProblems() {
 
 export async function getHldProblem(id) {
   if (!isValidId(id)) return null;
-  return readHldProblemFile(id);
+  return (await readHldProblemFile(id)) || readTextHldProblemFile(id);
 }
 
 export async function createHldProblem(payload) {
@@ -174,6 +192,36 @@ async function readHldProblemFile(id) {
   }
 }
 
+async function readTextHldProblemFile(id) {
+  if (!isValidId(id)) return null;
+
+  try {
+    const target = path.join(HLD_DATA_DIR, `${id}.txt`);
+    const [raw, fileStat] = await Promise.all([
+      readFile(target, "utf8"),
+      stat(target)
+    ]);
+    const meta = TEXT_PROBLEM_META[id] || {
+      title: titleFromId(id),
+      summary: "Solved high-level design problem.",
+      tags: ["HLD"]
+    };
+
+    return {
+      id,
+      title: meta.title,
+      summary: meta.summary,
+      tags: meta.tags,
+      source: "text",
+      created_at: fileStat.birthtime.toISOString(),
+      updated_at: fileStat.mtime.toISOString(),
+      sections: parseTextProblemSections(repairCommonMojibake(raw))
+    };
+  } catch {
+    return null;
+  }
+}
+
 async function writeHldProblemFile(problem) {
   await ensureHldDataDir();
   await writeFile(problemPath(problem.id), `${JSON.stringify(problem, null, 2)}\n`, "utf8");
@@ -208,4 +256,104 @@ function enqueueWrite(operation) {
   const next = writeQueue.then(operation, operation);
   writeQueue = next.catch(() => {});
   return next;
+}
+
+function titleFromId(id) {
+  return String(id || "")
+    .split(/[-_]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function parseTextProblemSections(raw) {
+  const lines = String(raw || "").replace(/\r\n/g, "\n").split("\n");
+  const sections = [];
+  let current = null;
+
+  for (const line of lines) {
+    const heading = detectTextHeading(line);
+    if (heading) {
+      if (current) sections.push(current);
+      current = { type: "markdown", title: heading, bodyLines: [] };
+      continue;
+    }
+
+    if (!current) current = { type: "markdown", title: "Problem Notes", bodyLines: [] };
+    current.bodyLines.push(cleanTextProblemLine(line));
+  }
+
+  if (current) sections.push(current);
+
+  return sections
+    .map((section) => ({
+      type: "markdown",
+      title: section.title,
+      body: section.bodyLines.join("\n").trim()
+    }))
+    .filter((section) => section.body);
+}
+
+function detectTextHeading(line) {
+  const cleaned = String(line || "")
+    .trim()
+    .replace(/^[^A-Za-z0-9]+/, "")
+    .replace(/[()]/g, " ")
+    .replace(/[-_]+/g, " ")
+    .replace(/\s+/g, " ")
+    .replace(/:$/, "")
+    .trim();
+
+  const normalized = cleaned.toLowerCase();
+  const headings = new Map([
+    ["functional requirements", "Functional Requirements"],
+    ["non functional requirements", "Non-Functional Requirements"],
+    ["non functional requiements", "Non-Functional Requirements"],
+    ["core entities", "Core Entities"],
+    ["api", "API Design"],
+    ["api design", "API Design"],
+    ["hld", "High-Level Design"],
+    ["high level design", "High-Level Design"],
+    ["deep dives", "Deep Dives"],
+    ["deep dive", "Deep Dives"],
+    ["below the line", "Out of Scope"],
+    ["below the line out of scope", "Out of Scope"],
+    ["out of scope", "Out of Scope"]
+  ]);
+
+  return headings.get(normalized) || null;
+}
+
+function cleanTextProblemLine(line) {
+  const original = String(line || "").replace(/\t/g, "  ");
+  if (!original.trim()) return "";
+
+  const indentSize = Math.min(10, original.length - original.trimStart().length);
+  const indent = " ".repeat(indentSize);
+  const trimmed = original.trim();
+  const numbered = trimmed.match(/^(\d+)[.)]\s+(.+)$/);
+  if (numbered) return `${indent}${numbered[1]}. ${numbered[2]}`;
+
+  const stripped = trimmed
+    .replace(/^(?:[-*•○◦▪▫□◊§®]|[a-z][.)]|[ivxlcdm]+[.)])\s+/i, "")
+    .trim();
+
+  if (stripped && stripped !== trimmed) {
+    return `${indent}- ${stripped}`;
+  }
+
+  return `${indent}${trimmed}`;
+}
+
+function repairCommonMojibake(value) {
+  return String(value || "")
+    .replace(/â€™/g, "'")
+    .replace(/â€˜/g, "'")
+    .replace(/â€œ/g, "\"")
+    .replace(/â€�/g, "\"")
+    .replace(/â€“/g, "-")
+    .replace(/â€”/g, "-")
+    .replace(/â€¢|â—‹|Â§|â–¡|Â®|â—Š/g, "-")
+    .replace(/Â /g, " ")
+    .replace(/Â/g, "");
 }

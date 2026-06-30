@@ -1,0 +1,150 @@
+
+Functional Requirements:
+	1. Users should be able to view an aggregated feed of news articles from their region(country), published from thousands of source publishers all over the world
+		a. limit to 500
+	2. Users should be able to scroll through the feed "infinitely"
+	3. Users should be able to click on articles and be redirected to the publisher's website to read the full content
+
+Below the line (out of scope):
+	1. Users should be able to customize their feed based on interests
+	2. Users should be able to save articles for later reading
+	3. Users should be able to share articles on social media platforms
+
+
+Non-Functional Requirements:
+	1. No SPOF
+	2. Availability > Consistency
+	3. System Scale:
+		a. System Size: 500M DAU
+		b. Throughput:
+		c. Latency:
+			i. feed latency < 200ms
+	4. Handle Spikes
+
+
+Core Entities:
+	Article
+	User
+	Publisher
+
+
+API:
+
+	1. GET /feed?offset={offset}&limit={limit}&region={region}  -> Article[]
+		a. offset based pagination, where offset is stored by the client and included in future requests.
+		b. region can be found from ip using ip-region DBs or public APIs provided by some sites
+	2. GET /article/{id}  -> 302 redirect  URL
+		a. (Note: For users to view a specific article we don't need an API endpoint, since their browser will navigate to the publisher's website once they click on the article based on the url field in the article object. But in google news, to track user clicks for analystics, above endpoint is used. Its optional how you decide to do it for interview)
+
+High Level Design:
+
+	rssUpdateFreq can be set manually by admins or Data-collection-svc can adjust it based on real-time info on how frequently they are getting updated.
+		lets segregate the publishers into 3 types based on high-freq: High (<15mins) , Medium (<1hr), Low (>1hr)
+		and have 3 different workers inside the data-collection service that rss-poll/web-scrape respective publishers according the update freq
+	All publishers wont have RSS/webhook options, in such cases should scrape their website.
+		webhook (best)  >  RSS (good) > webscrape (last preference)
+
+
+
+Deep Dives:
+	1. Read Latency:
+		a. Current Latency:
+			i. Total articles = 10k publishers * (1 article every 10mins = 150/day) * 30 days/month = 45*10^6 , Article row size = 200B
+				1) Lets keep only 1 month data & run a cron to cleanup older data
+			ii. Table size =  10GB
+			iii. Query Latency =  (Full Table scan = 10s) + (Sort + offset latency) + (network latency)
+		b. Optimization-1: ( Indexing )
+			i. Index on (region,ts)
+			ii. If filtered rows = 1GB, still 1s
+		c. Optimization-2: (Cursor based pagination)
+			i. only LIMIT rows are filtered. -> very fast
+			ii. Types of Cursors:
+				1) Timestamp Based cursor: (GOOD)
+					a)
+
+					b)
+				2) Composite cursor on (ts+articleId):  (GREAT)
+					a)
+				3) Monotonically increasing articleIDs: ( GREAT )
+					a)
+					b) need a specialized UUID generater
+			iii. What about the newly arrived articles while we are scrolling?
+				1) using double cursor strategy. return {start_cursor, end_cursor} to represent which all post were seen & expand towards both sides by LIMIT/2 rows
+		d. For media, can use CDN for faster downloads. We can store thumbnails in multiple dimensions in S3 and serve appropriate ones based on device
+
+	2. Write TPS:
+		a. 10k publishers * (1 article every 10mins = 150/day)  = 15*10^5/day = 15/s (very less)
+			i. single postgres can handle, no sharding needed
+
+	3. Read QPS:
+		a. 500M DAU * 5 times feed refresh * 10 req/feed(with 20 articles/req) = 25*10^9/day = 250k/s
+		b. Solution-1: (Read Replicas) (GOOD)
+		c. Single postgres = 100k/s when vertically scaled + point lookups + indexes + very minimal writes
+			i. since 20 rows/req => single instance QPS = 5k/s (as 20 disk reads, we can divide it)
+			ii. => 50 read replicas needed
+		d. Solution-2: (Redis Caching) (GREAT)
+			i. datamodel:
+				1) Redis sortedsets per region, with ts as the score.
+				2) When adding new articles, we use Redis ZADD to insert the article with its timestamp score, then immediately call ZREMRANGEBYRANK with negative indices to remove the oldest articles beyond our limit.
+			ii. cache-pattern: write-around  (cache-aside also good, but it has problems with TTLs/staleness)
+			iii. Cluster size:
+				1) Redis Ops/sec = 100k/s - 200k/s
+					a) Even for fetching 20 articles, this doesn’t decrease proportionally like redis as data is colocated in RAM.
+				2) Data size: 200 regions * 500 articles/region * 200B/article = 2*10^7B = 20MB (no sharding needed, so redis cluster not needed, sentinel enough)
+				3) So 3 nodes required : Redis sentinel ( 1 primary + 3 standbys ) (replication lag about 200ms in Redis)
+					a) primary for writes, standbys for reads
+					b) replicas geodistributed
+			iv. this also speeds by feed latency.
+			v. Cache constraints:
+				1) Refresh - CDC
+				2) Thundering herd - NA as cache never expires
+			vi. CDN not good , due to cursors in req params
+
+			vii.
+			viii. There are many other approaches to achieve this
+				1) Approaches:
+					a)  let data collection service update the cache directly.
+					b) let data collection service sned event to kafka topic consumed by feed generation workers
+				2) Which to choose?
+					a) Is kafka needed?
+						i) Yes becoz many downstreams are interested in these events.
+							} ex: analystics, noti systems, search indexing systems etc  -> they don’t want to poll DB using crons for changes as its not realtime
+						ii) Also feed gen workers can get complex. They might use ML models to decide on the priority of the article before serving to users. Can keep such big logic inside the crawler.
+					b) So how send updates to kafka? from CDC or from data collection service ?
+						i) sending from data collection service will cause dual write problems which can cause inconsistencies
+							} send to db , send to kafka (what if send to kafka fails)
+							} need to use distributed txns, but that makes the setup even more complex.
+						ii) Also there can be multiple services which add data to postgres, you cant ask all of them to also produce to kafka.
+							} ex: the webhook based approaches.
+	4. No SPOF:
+		a. autoscaling with geo distribution of webservers, redis-readreplicas
+		b. configure webservers to read from closest readreplicas of redis
+	5. Handling Spikes:
+		a. autoscaling & adding more read replicas
+
+	6. Bonus Deep Dives:
+		a. How can we support category-based news feeds (Sports, Politics, Tech, etc.)?
+			i. /feed?region=US&category=sports?cursor={cursor}&limit={limit}
+			ii. Have a field called category in the Article table.
+			iii. Approach-1: (Good)
+				1) Store multiple ZSET for each category per region. ex: feed:UK:sports & also feed:UK
+				2) Con:
+					a) more memory: 25 categories *100 regions = 2500 ZSETs = 20 MB * 2500 = 50GB (Not too much though)
+					b) cache invalidation:
+						i) if an article is updated & deleted, it has to be updated/deleted in two ZSETs (not a big issue)
+			iv. Approach-2: (Great)
+				1) inmemory filtering.
+				2) increase the limit to 100, pull 100 from zset on each req & filter. (faster only)
+
+		b. What if we need trending articles & articles from well-knows publishers to be on top instead of a recently posted less-known publisher's article. (Basically not ts based ordering)?
+			i. Assign score to each article based on publisherId, ts, trending news. Store in ZSET with sorted by score. To avoid dup scores, consider score = score + monotonic integer.
+			ii.
+
+
+		c. How do we generate personalized feeds based on user reading behavior and preferences?
+			i.
+				1) Challenge:
+					a) memory: 500M * 500 * 200B = 5*10^13 = 50TB
+					b) cache invalidation when articles updated/deleted
+			ii.
+			iii. TODO - if time , read about recommendation systems

@@ -16,5 +16,11 @@ export default async function EditHldProblemPage({ params }) {
   const { slug } = await params;
   const problem = await getHldProblem(slug);
   if (!problem) notFound();
-  return <HldEditor initialProblem={problem} />;
+  return (
+    <div className="hld-original">
+      <main className="page">
+        <HldEditor initialProblem={problem} />
+      </main>
+    </div>
+  );
 }

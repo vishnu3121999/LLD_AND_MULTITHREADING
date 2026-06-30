@@ -1,14 +1,29 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import Script from "next/script";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { ArrowLeft, Edit3 } from "lucide-react";
 import hljs from "highlight.js";
 import { marked } from "marked";
 
 const MERMAID_SRC = "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js";
 
 marked.setOptions({ gfm: true, breaks: false });
+
+const hldTheme = {
+  "--hld-bg": "#f6f8fb",
+  "--hld-surface": "#ffffff",
+  "--hld-surface-2": "#f8fafc",
+  "--hld-heading": "#1f2937",
+  "--hld-text": "#475569",
+  "--hld-muted": "#64748b",
+  "--hld-border": "#dbe4ef",
+  "--hld-brand": "#4f46e5",
+  "--hld-brand-soft": "rgba(79, 70, 229, 0.1)",
+  "--hld-danger": "#dc2626",
+  "--hld-code-bg": "#070b14"
+};
 
 export function HldProblemRenderer({ problem, preview = false }) {
   const [mermaidReady, setMermaidReady] = useState(false);
@@ -21,48 +36,6 @@ export function HldProblemRenderer({ problem, preview = false }) {
     }
   }, []);
 
-  useEffect(() => {
-    if (preview) return undefined;
-
-    const toc = document.getElementById("toc-list");
-    if (!toc) return undefined;
-
-    const headings = tree.flat.map((entry) => document.getElementById(entry.id)).filter(Boolean);
-    const links = Array.from(toc.querySelectorAll("a"));
-
-    function onScroll() {
-      let active = headings[0];
-      const top = window.scrollY + 120;
-      for (const heading of headings) {
-        if (heading.offsetTop <= top) active = heading;
-        else break;
-      }
-      if (!active) return;
-      links.forEach((link) => {
-        link.classList.toggle("active", link.getAttribute("href") === `#${active.id}`);
-      });
-    }
-
-    function onTocClick(event) {
-      const link = event.currentTarget;
-      const id = link.getAttribute("href")?.slice(1);
-      const target = id ? document.getElementById(id) : null;
-      if (!target) return;
-      event.preventDefault();
-      target.scrollIntoView({ behavior: "smooth", block: "start" });
-      window.history.replaceState(null, "", `#${id}`);
-    }
-
-    links.forEach((link) => link.addEventListener("click", onTocClick));
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-
-    return () => {
-      links.forEach((link) => link.removeEventListener("click", onTocClick));
-      window.removeEventListener("scroll", onScroll);
-    };
-  }, [preview, tree.flat]);
-
   const content = (
     <>
       <Script
@@ -73,75 +46,126 @@ export function HldProblemRenderer({ problem, preview = false }) {
           setMermaidReady(true);
         }}
       />
-      {tree.nodes.map((node) => (
-        <HldSectionNode key={node.id} node={node} mermaidReady={mermaidReady} />
-      ))}
+      <div className="space-y-4">
+        {tree.nodes.map((node, index) => (
+          <HldSectionNode key={node.id} node={node} mermaidReady={mermaidReady} index={index} />
+        ))}
+      </div>
     </>
   );
 
   if (preview) {
-    return <div>{content}</div>;
+    return <div style={hldTheme}>{content}</div>;
   }
 
   return (
-    <article className="reader">
-      <aside className="reader-sidebar" id="toc">
-        <div className="toc-title">On this page</div>
-        <nav id="toc-list">
-          {tree.flat.map((entry) => (
-            <a
-              key={entry.id}
-              href={`#${entry.id}`}
-              data-depth={entry.depth}
-              className={entry.depth === 0 ? "toc-top" : ""}
-              style={{ paddingLeft: `${16 + Math.min(entry.depth, 4) * 12}px` }}
+    <article style={hldTheme} className="min-w-0 space-y-4 text-[var(--hld-text)]">
+      <header
+        id="overview"
+        className="scroll-mt-24 rounded-lg border border-[var(--hld-border)] bg-[var(--hld-surface)] p-5 shadow-[0_8px_28px_rgba(15,23,42,0.04)] sm:p-6"
+      >
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0">
+            <div className="flex flex-wrap gap-2">
+              {(problem.tags || []).map((tag) => (
+                <span
+                  key={tag}
+                  className="rounded-full border border-[var(--hld-border)] bg-[var(--hld-surface-2)] px-3 py-1 text-xs font-semibold text-[var(--hld-muted)]"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+            <h1 className="mt-4 text-3xl font-semibold leading-tight tracking-normal text-[var(--hld-heading)]">
+              {problem.title}
+            </h1>
+            {problem.summary ? (
+              <p className="mt-3 max-w-4xl text-base leading-7 text-[var(--hld-muted)]">{problem.summary}</p>
+            ) : null}
+          </div>
+          <div className="flex shrink-0 flex-wrap gap-2">
+            <Link
+              href="/hld"
+              className="inline-flex h-9 items-center gap-2 rounded-md border border-[var(--hld-border)] bg-white px-3 text-sm font-semibold text-[var(--hld-heading)] transition hover:border-[var(--hld-brand)]"
             >
-              {entry.title || "Untitled"}
-            </a>
-          ))}
-        </nav>
-      </aside>
-
-      <div className="reader-main">
-        <header className="reader-head">
-          <div className="reader-tags">
-            {(problem.tags || []).map((tag) => <span className="tag" key={tag}>{tag}</span>)}
+              <ArrowLeft size={15} aria-hidden="true" />
+              Library
+            </Link>
+            {problem.source !== "text" && (
+              <Link
+                href={`/hld/${problem.id}/edit`}
+                className="inline-flex h-9 items-center gap-2 rounded-md border border-[var(--hld-border)] bg-white px-3 text-sm font-semibold text-[var(--hld-heading)] transition hover:border-[var(--hld-brand)]"
+              >
+                <Edit3 size={15} aria-hidden="true" />
+                Edit
+              </Link>
+            )}
           </div>
-          <h1>{problem.title}</h1>
-          {problem.summary ? <p className="reader-summary">{problem.summary}</p> : null}
-          <div className="reader-meta">
-            <span>Updated {problem.updated_at ? problem.updated_at.slice(0, 10) : ""}</span>
-            <Link className="btn btn-ghost" href={`/hld/${problem.id}/edit`}>✎ Edit</Link>
-          </div>
-        </header>
+        </div>
+      </header>
 
-        <div id="content">{content}</div>
-      </div>
+      {content}
     </article>
   );
 }
 
-function HldSectionNode({ node, mermaidReady }) {
+function HldSectionNode({ node, mermaidReady, index }) {
   const Heading = node.depth === 0 ? "h2" : `h${Math.min(6, node.depth + 2)}`;
   const isTopLevel = node.depth === 0;
 
+  if (!isTopLevel) {
+    return (
+      <section className="border-l-2 border-[var(--hld-border)] pl-4" data-depth={node.depth}>
+        <Heading id={node.id} className="scroll-mt-24 text-lg font-semibold tracking-normal text-[var(--hld-heading)]">
+          {node.title || "Untitled"}
+        </Heading>
+        <div className="mt-3">
+          <NodeBody node={node} mermaidReady={mermaidReady} />
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section className={isTopLevel ? "section" : "deepdive-card"} data-depth={node.depth}>
-      <Heading id={node.id}>{node.title || "Untitled"}</Heading>
-      {node.type === "deepdive" ? (
-        <>
-          {node.children.length === 0 ? <p className="prose">No deep-dive items yet.</p> : null}
-          {node.children.map((child) => (
-            <HldSectionNode key={child.id} node={child} mermaidReady={mermaidReady} />
-          ))}
-        </>
-      ) : node.type === "diagram" ? (
-        <MermaidBlock code={node.body} caption={node.caption} ready={mermaidReady} />
-      ) : (
-        <MarkdownBlock body={node.body} />
-      )}
+    <section
+      id={node.id}
+      className="scroll-mt-24 rounded-lg border border-[var(--hld-border)] bg-[var(--hld-surface)] p-5 shadow-[0_8px_28px_rgba(15,23,42,0.04)] sm:p-6"
+      data-depth={node.depth}
+    >
+      <div className="grid gap-3 md:grid-cols-[44px_minmax(0,1fr)]">
+        <div className="grid h-9 w-9 place-items-center rounded-md bg-[var(--hld-brand-soft)] font-mono text-xs font-bold text-[var(--hld-brand)]">
+          {index + 1}
+        </div>
+        <div className="min-w-0">
+          <Heading className="text-xl font-semibold tracking-normal text-[var(--hld-heading)]">
+            {node.title || "Untitled"}
+          </Heading>
+          <div className="mt-3">
+            <NodeBody node={node} mermaidReady={mermaidReady} />
+          </div>
+        </div>
+      </div>
     </section>
   );
+}
+
+function NodeBody({ node, mermaidReady }) {
+  if (node.type === "deepdive") {
+    return (
+      <div className="space-y-4">
+        {node.children.length === 0 ? <p className="text-sm text-[var(--hld-muted)]">No deep-dive items yet.</p> : null}
+        {node.children.map((child, index) => (
+          <HldSectionNode key={child.id} node={child} mermaidReady={mermaidReady} index={index} />
+        ))}
+      </div>
+    );
+  }
+
+  if (node.type === "diagram") {
+    return <MermaidBlock code={node.body} caption={node.caption} ready={mermaidReady} />;
+  }
+
+  return <MarkdownBlock body={node.body} />;
 }
 
 function MarkdownBlock({ body }) {
@@ -159,7 +183,7 @@ function MarkdownBlock({ body }) {
     });
   }, [html]);
 
-  return <div ref={ref} className="prose" dangerouslySetInnerHTML={{ __html: html }} />;
+  return <div ref={ref} className="hld-course-prose" dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
 function MermaidBlock({ code, caption, ready }) {
@@ -188,10 +212,10 @@ function MermaidBlock({ code, caption, ready }) {
   }, [code, ready]);
 
   return (
-    <div className="diagram-wrap">
-      {ready ? <div ref={ref} /> : <pre>{code}</pre>}
-      {error ? <pre style={{ color: "#b91c1c" }}>Diagram error: {error}</pre> : null}
-      {caption ? <div className="diagram-caption">{caption}</div> : null}
+    <div className="overflow-hidden rounded-lg border border-[var(--hld-border)] bg-[var(--hld-surface-2)] p-4">
+      {ready ? <div ref={ref} className="overflow-x-auto" /> : <pre className="overflow-x-auto text-sm">{code}</pre>}
+      {error ? <pre className="mt-3 whitespace-pre-wrap text-sm text-[var(--hld-danger)]">Diagram error: {error}</pre> : null}
+      {caption ? <div className="mt-3 text-center text-xs text-[var(--hld-muted)]">{caption}</div> : null}
     </div>
   );
 }
@@ -247,12 +271,12 @@ function initializeMermaid() {
     theme: "base",
     themeVariables: {
       background: "#ffffff",
-      primaryColor: "#fef3c7",
-      primaryTextColor: "#1f2328",
-      primaryBorderColor: "#b45309",
-      lineColor: "#6b7280",
-      secondaryColor: "#dbeafe",
-      tertiaryColor: "#dcfce7",
+      primaryColor: "#eef2ff",
+      primaryTextColor: "#1f2937",
+      primaryBorderColor: "#4f46e5",
+      lineColor: "#64748b",
+      secondaryColor: "#ecfeff",
+      tertiaryColor: "#f0fdf4",
       fontFamily: "Inter, sans-serif",
       fontSize: "14px"
     },

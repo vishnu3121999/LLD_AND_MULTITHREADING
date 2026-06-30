@@ -5,5 +5,11 @@ export const metadata = {
 };
 
 export default function HldMarkdownGuidePage() {
-  return <HldMarkdownGuide />;
+  return (
+    <div className="hld-original">
+      <main className="page">
+        <HldMarkdownGuide />
+      </main>
+    </div>
+  );
 }

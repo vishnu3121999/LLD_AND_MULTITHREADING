@@ -5,5 +5,11 @@ export const metadata = {
 };
 
 export default function NewHldProblemPage() {
-  return <HldEditor />;
+  return (
+    <div className="hld-original">
+      <main className="page">
+        <HldEditor />
+      </main>
+    </div>
+  );
 }
