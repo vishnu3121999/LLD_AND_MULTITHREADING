@@ -7,7 +7,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "border-[var(--site-heading)] bg-[var(--site-heading)] text-[var(--site-bg)] hover:brightness-110",
+        default: "border-[var(--site-brand)] bg-[var(--site-brand)] text-white hover:brightness-95",
         secondary: "border-[var(--site-border)] bg-[var(--site-surface)] text-[var(--site-heading)] hover:bg-[var(--site-surface-2)]",
         outline: "border-[var(--site-border)] bg-transparent text-[var(--site-heading)] hover:bg-[var(--site-surface-2)]",
         subtle: "border-transparent bg-[var(--site-surface-2)] text-[var(--site-heading)] hover:bg-[var(--site-surface-3)]",

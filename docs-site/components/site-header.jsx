@@ -18,17 +18,21 @@ export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--site-border)] bg-[var(--site-surface)] backdrop-blur">
       <div className="site-container flex min-h-12 items-center justify-between gap-3">
-        <Link href="/" className="flex items-center gap-3 font-semibold text-[var(--site-heading)]" aria-label="01 Interview home">
+        <Link
+          href="/"
+          className="flex h-11 w-20 shrink-0 items-center justify-center rounded-md border border-[var(--site-border)] bg-[var(--site-surface-2)] px-1.5 shadow-[var(--site-shadow)] transition hover:border-[var(--site-brand)] hover:bg-[var(--site-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--site-brand)]"
+          aria-label="01 Interview home"
+        >
           <img
             src="/logo.png"
             alt="01 Interview"
-            className="h-9 w-auto rounded-sm object-contain"
+            className="h-10 w-auto object-contain"
           />
           <span className="sr-only">LLD Playbook</span>
         </Link>
 
         <div className="flex min-w-0 items-center justify-end gap-2">
-          <nav className="flex items-center gap-1" aria-label="Primary navigation">
+          <nav className="hidden items-center gap-1 sm:flex" aria-label="Primary navigation">
             {navItems.map((item) => {
               const isActive = item.href === "/" ? pathname === "/" : pathname === item.href || pathname?.startsWith(`${item.href}/`);
 

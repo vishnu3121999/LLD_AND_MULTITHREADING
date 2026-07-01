@@ -12,7 +12,7 @@ export const metadata = {
 
 export default async function HldLibraryPage() {
   const problems = await listHldProblems();
-  const solvedProblems = problems.filter((problem) => problem.source === "text");
+  const solvedProblems = problems.filter((problem) => problem.source === "markdown" || problem.source === "text");
   const groups = buildHldNavGroups(problems);
   const pageNav = [
     { href: "#library-overview", label: "Overview" },
@@ -58,7 +58,7 @@ export default async function HldLibraryPage() {
               <div className="rounded-lg border border-dashed border-[var(--hld-border)] bg-[var(--hld-surface-2)] p-8 text-center">
                 <h2 className="text-lg font-semibold text-[var(--hld-heading)]">No HLD problems found</h2>
                 <p className="mt-2 text-sm leading-6 text-[var(--hld-muted)]">
-                  Add `.txt` solved problems under `content/hld/problems` or create a new authored problem.
+                  Add Markdown solved problems under `content/hld/problems` or create a new authored problem.
                 </p>
               </div>
             )}

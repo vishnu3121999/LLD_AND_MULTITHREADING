@@ -47,7 +47,7 @@ export function ContentProtection({ children, watermark = "LLD Playbook Premium"
         />
       )}
       {enabled && (
-        <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center text-center text-2xl font-semibold uppercase tracking-normal text-slate-900 opacity-[0.06] [transform:rotate(-18deg)]">
+        <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center text-center text-2xl font-semibold uppercase tracking-normal text-[var(--site-heading)] opacity-[0.06] [transform:rotate(-18deg)]">
           {watermarkText}
         </div>
       )}

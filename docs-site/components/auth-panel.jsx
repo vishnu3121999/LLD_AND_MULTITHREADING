@@ -127,7 +127,7 @@ export function AuthPanel() {
 
   if (!supabase) {
     return (
-      <div className="rounded-2xl border border-[var(--site-border)] bg-[var(--site-surface)] p-6 text-center shadow-sm">
+      <div className="rounded-lg border border-[var(--site-border)] bg-[var(--site-surface)] p-6 text-center shadow-[var(--site-shadow)]">
         <LogoHeader title="Sign in unavailable" />
         <p className="mt-3 text-sm leading-6 text-[var(--site-muted)]">
           Authentication is not configured for this deployment.
@@ -138,9 +138,9 @@ export function AuthPanel() {
 
   if (user) {
     return (
-      <div className="rounded-2xl border border-[var(--site-border)] bg-[var(--site-surface)] p-6 shadow-sm">
+      <div className="rounded-lg border border-[var(--site-border)] bg-[var(--site-surface)] p-6 shadow-[var(--site-shadow)]">
         <LogoHeader title="Account" />
-        <div className="mt-6 rounded-xl border border-[var(--site-border)] bg-[var(--site-surface-2)] p-4">
+        <div className="mt-6 rounded-lg border border-[var(--site-border)] bg-[var(--site-surface-2)] p-4">
           <p className="text-xs font-medium uppercase tracking-wide text-[var(--site-muted)]">Signed in as</p>
           <p className="mt-1 truncate text-sm font-semibold text-[var(--site-heading)]">{user.email}</p>
         </div>
@@ -154,7 +154,7 @@ export function AuthPanel() {
   }
 
   return (
-    <form onSubmit={submit} className="rounded-2xl border border-[var(--site-border)] bg-[var(--site-surface)] p-6 shadow-sm">
+    <form onSubmit={submit} className="rounded-lg border border-[var(--site-border)] bg-[var(--site-surface)] p-6 shadow-[var(--site-shadow)]">
       <LogoHeader title={mode === "signin" ? "Sign in" : "Create account"} />
 
       <div className="mt-6 grid grid-cols-2 rounded-lg bg-[var(--site-surface-2)] p-1">

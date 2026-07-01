@@ -83,7 +83,6 @@ const sectionBlueprints = {
 };
 
 const answerFlow = [
-  ["0", "Problem brief"],
   ["1", "Functional requirements"],
   ["2", "Non-functional requirements"],
   ["3", "Core entities"],
@@ -92,9 +91,200 @@ const answerFlow = [
   ["6", "Deep dives"]
 ];
 
+const sectionTemplates = {
+  "functional-requirements": {
+    title: "Functional Requirements Template",
+    summary: "Write the visible capabilities the system must support. Keep them scoped and interview-sized.",
+    groups: [
+      {
+        title: "Expected shape",
+        items: [
+          "Users should be able to <primary action>.",
+          "Users should be able to <secondary action>.",
+          "Users should be able to <read or navigation action>."
+        ]
+      },
+      {
+        title: "Out of scope",
+        items: [
+          "Move non-essential features under Out of Scope.",
+          "Call out personalization, sharing, admin tools, analytics, or recommendations only if they matter."
+        ]
+      }
+    ]
+  },
+  "out-of-scope": {
+    title: "Out of Scope Template",
+    summary: "Use this to protect time and make the interview boundary explicit.",
+    groups: [
+      {
+        title: "Good candidates",
+        items: [
+          "Features that are useful but not central to the core system.",
+          "Expensive add-ons like personalization, social sharing, advanced search, or admin workflows."
+        ]
+      }
+    ]
+  },
+  "non-functional-requirements": {
+    title: "Non-Functional Requirements Template",
+    summary: "Convert the functional requirements into concrete quality targets and scale assumptions.",
+    groups: [
+      {
+        title: "Reliability and consistency",
+        items: [
+          "No SPOF / fault tolerance.",
+          "Decide consistency vs availability for each important functional requirement.",
+          "If availability wins, define how much staleness the system can tolerate.",
+          "If consistency wins, explain what must be immediately visible."
+        ]
+      },
+      {
+        title: "Scale and performance",
+        items: [
+          "System size, especially for existing systems or feature additions.",
+          "DAU or active tenant count when relevant.",
+          "For each functional requirement, estimate throughput and latency.",
+          "Mention hot keys or celebrity users when applicable.",
+          "Add traffic spikes only if time allows or the problem clearly needs it."
+        ]
+      }
+    ]
+  },
+  "core-entities": {
+    title: "Core Entities Template",
+    summary: "Keep this lightweight. The detailed data model can evolve during the HLD and deep dives.",
+    groups: [
+      {
+        title: "How to present it",
+        items: [
+          "Tell the interviewer you will start with a simple entity list.",
+          "Use the list only to align on vocabulary.",
+          "Document the data model more thoroughly once the architecture becomes clearer."
+        ]
+      }
+    ]
+  },
+  "api-design": {
+    title: "API Design Template",
+    summary: "Show the external contract before the architecture. Keep APIs task-oriented, not table-shaped.",
+    groups: [
+      {
+        title: "Protocol and shape",
+        items: [
+          "Explain which protocol or API style you will use.",
+          "Design APIs around user actions and system flows.",
+          "Use a full request body, not just a core entity name.",
+          "Include fields needed by the API, even if they are not stored exactly the same way."
+        ]
+      },
+      {
+        title: "Streaming cases",
+        items: [
+          "For SSE, start with polling in the HLD, optimize with cursor-based polling, then propose SSE.",
+          "For WebSockets, start with WebSockets in the HLD when bidirectional realtime communication is core."
+        ]
+      }
+    ]
+  },
+  "high-level-design": {
+    title: "High-Level Design Template",
+    summary: "Draw the system around the functional requirements and make data movement obvious.",
+    groups: [
+      {
+        title: "Diagram rules",
+        items: [
+          "Draw flows for each functional requirement.",
+          "Use dotted arrows for reads and filled arrows for writes.",
+          "Use double-headed arrows for WebSockets.",
+          "If a flow reads and writes, show both directions explicitly."
+        ]
+      },
+      {
+        title: "Data details",
+        items: [
+          "Add primary key information for tables.",
+          "Write the SQL query or access pattern for each dotted read arrow."
+        ]
+      }
+    ]
+  },
+  "deep-dives": {
+    title: "Deep Dives Template",
+    summary: "Use deep dives to close bottlenecks, failure modes, and scale gaps.",
+    groups: [
+      {
+        title: "Read latency",
+        items: [
+          "Estimate table sizes and query cost.",
+          "Consider indexing, cursor instead of offset, precompute and store, materialized views, caching, TSDB, CDN, sharding locality, and OLAP."
+        ]
+      },
+      {
+        title: "Realtime and writes",
+        items: [
+          "For SSE/WebSockets, discuss Redis pub/sub or equivalent fanout.",
+          "For write TPS, consider vertical scaling, sharding, batching, queues, load shedding, Cassandra, or TSDB."
+        ]
+      },
+      {
+        title: "Read QPS and availability",
+        items: [
+          "Use read replicas when writes are low or async replication is acceptable.",
+          "Use caching when read volume dominates.",
+          "For no SPOF, cover server replicas, autoscaling, DB sharding or replicas, R+W > RF when data loss is unacceptable, message brokers, and coordination systems."
+        ]
+      }
+    ]
+  },
+  "trade-offs": {
+    title: "Trade-Offs Template",
+    summary: "Make the chosen design defensible by comparing real alternatives.",
+    groups: [
+      {
+        title: "What to include",
+        items: [
+          "Decision or option.",
+          "Why it helps.",
+          "What it costs.",
+          "When you would switch to the alternative."
+        ]
+      }
+    ]
+  },
+  "interview-notes": {
+    title: "Interview Notes Template",
+    summary: "Keep short reminders for how to explain the solution under time pressure.",
+    groups: [
+      {
+        title: "Good notes",
+        items: [
+          "Mention the most important bottleneck.",
+          "Call out the key trade-off.",
+          "State the assumption that makes the design reasonable."
+        ]
+      }
+    ]
+  }
+};
+
 export function HldProblemRenderer({ problem, preview = false }) {
   const [mermaidReady, setMermaidReady] = useState(false);
+  const [showAllTemplates, setShowAllTemplates] = useState(false);
+  const [openTemplateIds, setOpenTemplateIds] = useState(() => new Set());
   const solution = useMemo(() => prepareSolution(problem?.sections || []), [problem?.sections]);
+
+  function toggleTemplate(nodeId) {
+    setOpenTemplateIds((current) => {
+      const next = new Set(current);
+      if (next.has(nodeId)) {
+        next.delete(nodeId);
+      } else {
+        next.add(nodeId);
+      }
+      return next;
+    });
+  }
 
   useEffect(() => {
     if (typeof window !== "undefined" && window.mermaid) {
@@ -114,15 +304,11 @@ export function HldProblemRenderer({ problem, preview = false }) {
         }}
       />
       <div className="space-y-4">
-        {solution.visibleSections.map((node, index) => (
-          <SolutionSection
-            key={node.id}
-            index={index}
-            mermaidReady={mermaidReady}
-            node={node}
-            outOfScopeNode={node.slug === "functional-requirements" ? solution.outOfScopeNode : null}
-          />
-        ))}
+        {renderSolutionSections(solution, mermaidReady, {
+          openTemplateIds,
+          showAllTemplates,
+          onToggleTemplate: toggleTemplate
+        })}
       </div>
     </>
   );
@@ -155,6 +341,15 @@ export function HldProblemRenderer({ problem, preview = false }) {
               </h1>
             </div>
             <div className="flex shrink-0 flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setShowAllTemplates((current) => !current)}
+                className="inline-flex h-9 items-center gap-2 rounded-md border border-[var(--hld-border)] bg-[var(--hld-surface)] px-3 text-sm font-semibold text-[var(--hld-heading)] transition hover:border-[var(--hld-brand)] hover:bg-[var(--hld-surface-2)]"
+                aria-pressed={showAllTemplates}
+              >
+                <FileText size={15} aria-hidden="true" />
+                {showAllTemplates ? "Hide templates" : "Show templates"}
+              </button>
               <Link
                 href="/hld"
                 className="inline-flex h-9 items-center gap-2 rounded-md border border-[var(--hld-border)] bg-[var(--hld-surface)] px-3 text-sm font-semibold text-[var(--hld-heading)] transition hover:border-[var(--hld-brand)] hover:bg-[var(--hld-surface-2)]"
@@ -162,7 +357,7 @@ export function HldProblemRenderer({ problem, preview = false }) {
                 <ArrowLeft size={15} aria-hidden="true" />
                 Library
               </Link>
-              {problem.source !== "text" && (
+              {problem.source === "json" && (
                 <Link
                   href={`/hld/${problem.id}/edit`}
                   className="inline-flex h-9 items-center gap-2 rounded-md border border-[var(--hld-border)] bg-[var(--hld-surface)] px-3 text-sm font-semibold text-[var(--hld-heading)] transition hover:border-[var(--hld-brand)] hover:bg-[var(--hld-surface-2)]"
@@ -177,7 +372,7 @@ export function HldProblemRenderer({ problem, preview = false }) {
           <div className="mt-5 border-t border-[var(--hld-border)] pt-5">
             <div className="flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--hld-brand)]">
               <FileText size={14} aria-hidden="true" />
-              0 · What is this system?
+              Overview
             </div>
             <p className="mt-2 max-w-4xl text-base leading-7 text-[var(--hld-muted)]">
               {problem.summary || "Problem summary is not available in the source notes."}
@@ -210,7 +405,54 @@ export function HldProblemRenderer({ problem, preview = false }) {
   );
 }
 
-function SolutionSection({ node, mermaidReady, index, outOfScopeNode }) {
+function renderSolutionSections(solution, mermaidReady, templateControls) {
+  const items = [];
+  const sections = solution.visibleSections;
+
+  for (let index = 0; index < sections.length; index += 1) {
+    const node = sections[index];
+    const nextNode = sections[index + 1];
+
+    if (node.slug === "functional-requirements" && nextNode?.slug === "non-functional-requirements") {
+      items.push(
+        <div key="requirements-pair" className="grid gap-4 xl:grid-cols-2">
+          <SolutionSection
+            compact
+            index={index}
+            mermaidReady={mermaidReady}
+            node={node}
+            templateControls={templateControls}
+            outOfScopeNode={solution.outOfScopeNode}
+          />
+          <SolutionSection
+            compact
+            index={index + 1}
+            mermaidReady={mermaidReady}
+            node={nextNode}
+            templateControls={templateControls}
+          />
+        </div>
+      );
+      index += 1;
+      continue;
+    }
+
+    items.push(
+      <SolutionSection
+        key={node.id}
+        index={index}
+        mermaidReady={mermaidReady}
+        node={node}
+        templateControls={templateControls}
+        outOfScopeNode={node.slug === "functional-requirements" ? solution.outOfScopeNode : null}
+      />
+    );
+  }
+
+  return items;
+}
+
+function SolutionSection({ node, mermaidReady, index, outOfScopeNode, templateControls, compact = false }) {
   const blueprint = sectionBlueprints[node.slug] || {
     number: String(index + 1),
     label: "Design Notes",
@@ -218,14 +460,16 @@ function SolutionSection({ node, mermaidReady, index, outOfScopeNode }) {
     icon: FileText
   };
   const Icon = blueprint.icon;
+  const template = getSectionTemplate(node);
+  const isTemplateOpen = Boolean(templateControls?.showAllTemplates || templateControls?.openTemplateIds?.has(node.id));
 
   return (
     <section
       id={node.id}
       className="scroll-mt-24 overflow-hidden rounded-lg border border-[var(--hld-border)] bg-[var(--hld-surface)] shadow-[0_8px_28px_rgba(15,23,42,0.04)]"
     >
-      <div className="grid md:grid-cols-[76px_minmax(0,1fr)]">
-        <div className="border-b border-[var(--hld-border)] bg-[var(--hld-surface-2)] p-5 md:border-b-0 md:border-r">
+      <div className={compact ? "grid" : "grid md:grid-cols-[76px_minmax(0,1fr)]"}>
+        <div className={compact ? "border-b border-[var(--hld-border)] bg-[var(--hld-surface-2)] px-5 py-4" : "border-b border-[var(--hld-border)] bg-[var(--hld-surface-2)] p-5 md:border-b-0 md:border-r"}>
           <div className="grid h-10 w-10 place-items-center rounded-md bg-[var(--hld-brand-soft)] font-mono text-sm font-bold text-[var(--hld-brand)]">
             {blueprint.number}
           </div>
@@ -238,15 +482,28 @@ function SolutionSection({ node, mermaidReady, index, outOfScopeNode }) {
                 <Icon size={14} aria-hidden="true" />
                 {blueprint.label}
               </div>
-              <h2 className="mt-2 text-2xl font-semibold tracking-normal text-[var(--hld-heading)]">
+              <h2 className={compact ? "mt-2 text-xl font-semibold leading-tight tracking-normal text-[var(--hld-heading)]" : "mt-2 text-2xl font-semibold tracking-normal text-[var(--hld-heading)]"}>
                 {node.title || "Untitled"}
               </h2>
             </div>
+            <button
+              type="button"
+              onClick={() => templateControls?.onToggleTemplate?.(node.id)}
+              className="inline-flex h-8 shrink-0 items-center gap-2 self-start rounded-md border border-[var(--hld-border)] bg-[var(--hld-surface)] px-2.5 text-xs font-semibold text-[var(--hld-muted)] transition hover:border-[var(--hld-brand)] hover:bg-[var(--hld-surface-2)] hover:text-[var(--hld-heading)]"
+              aria-expanded={isTemplateOpen}
+            >
+              <FileText size={14} aria-hidden="true" />
+              {isTemplateOpen && !templateControls?.showAllTemplates ? "Hide template" : "Template"}
+            </button>
           </div>
 
           <p className="mt-2 max-w-4xl text-sm leading-6 text-[var(--hld-muted)]">
             {blueprint.hint}
           </p>
+
+          {isTemplateOpen && (
+            <TemplatePanel template={template} />
+          )}
 
           {Array.isArray(node.images) && node.images.length > 0 && (
             <SectionImages images={node.images} />
@@ -258,10 +515,24 @@ function SolutionSection({ node, mermaidReady, index, outOfScopeNode }) {
 
           {outOfScopeNode && (
             <div id={outOfScopeNode.id} className="mt-6 scroll-mt-24 border-l-2 border-[var(--hld-brand)] pl-4">
-              <div className="flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--hld-brand)]">
-                <Ban size={14} aria-hidden="true" />
-                Out of Scope
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--hld-brand)]">
+                  <Ban size={14} aria-hidden="true" />
+                  Out of Scope
+                </div>
+                <button
+                  type="button"
+                  onClick={() => templateControls?.onToggleTemplate?.(outOfScopeNode.id)}
+                  className="inline-flex h-8 shrink-0 items-center gap-2 self-start rounded-md border border-[var(--hld-border)] bg-[var(--hld-surface)] px-2.5 text-xs font-semibold text-[var(--hld-muted)] transition hover:border-[var(--hld-brand)] hover:bg-[var(--hld-surface-2)] hover:text-[var(--hld-heading)]"
+                  aria-expanded={Boolean(templateControls?.showAllTemplates || templateControls?.openTemplateIds?.has(outOfScopeNode.id))}
+                >
+                  <FileText size={14} aria-hidden="true" />
+                  {templateControls?.openTemplateIds?.has(outOfScopeNode.id) && !templateControls?.showAllTemplates ? "Hide template" : "Template"}
+                </button>
               </div>
+              {(templateControls?.showAllTemplates || templateControls?.openTemplateIds?.has(outOfScopeNode.id)) && (
+                <TemplatePanel template={getSectionTemplate(outOfScopeNode)} />
+              )}
               <div className="mt-3">
                 <SectionBody node={outOfScopeNode} mermaidReady={mermaidReady} compact />
               </div>
@@ -271,6 +542,59 @@ function SolutionSection({ node, mermaidReady, index, outOfScopeNode }) {
       </div>
     </section>
   );
+}
+
+function TemplatePanel({ template }) {
+  return (
+    <div className="mt-4 rounded-lg border border-[var(--hld-border)] bg-[var(--hld-surface-2)] p-4">
+      <div className="flex items-start gap-3">
+        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-[var(--hld-brand-soft)] text-[var(--hld-brand)]">
+          <FileText size={15} aria-hidden="true" />
+        </div>
+        <div className="min-w-0">
+          <div className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--hld-brand)]">
+            Template
+          </div>
+          <h3 className="mt-1 text-sm font-semibold tracking-normal text-[var(--hld-heading)]">
+            {template.title}
+          </h3>
+          <p className="mt-1 text-sm leading-6 text-[var(--hld-muted)]">
+            {template.summary}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-3 lg:grid-cols-2">
+        {template.groups.map((group) => (
+          <div key={group.title} className="rounded-md border border-[var(--hld-border)] bg-[var(--hld-surface)] p-3">
+            <div className="text-xs font-semibold text-[var(--hld-heading)]">{group.title}</div>
+            <ul className="mt-2 list-disc space-y-1.5 pl-4 text-xs leading-5 text-[var(--hld-muted)]">
+              {group.items.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function getSectionTemplate(node) {
+  return sectionTemplates[node.slug] || {
+    title: `${node.title || "Section"} Template`,
+    summary: "Use this section for problem-specific elaboration that does not fit the standard HLD flow.",
+    groups: [
+      {
+        title: "Suggested structure",
+        items: [
+          "State the problem or decision clearly.",
+          "List the important assumptions.",
+          "Explain the chosen approach and the trade-off."
+        ]
+      }
+    ]
+  };
 }
 
 function SectionBody({ node, mermaidReady }) {
@@ -297,6 +621,14 @@ function SectionBody({ node, mermaidReady }) {
 
   if (node.type === "diagram") {
     return <MermaidBlock code={node.body} caption={node.caption} ready={mermaidReady} />;
+  }
+
+  if (node.slug === "non-functional-requirements") {
+    return <NonFunctionalRequirementsBlock body={stripEmptyBulletOnlyLines(node.body)} />;
+  }
+
+  if (node.slug === "api-design") {
+    return <ApiDesignBlock body={stripEmptyBulletOnlyLines(node.body)} />;
   }
 
   if (node.slug === "core-entities") {
@@ -348,6 +680,132 @@ function CoreEntitiesBlock({ body }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+function NonFunctionalRequirementsBlock({ body }) {
+  const outline = useMemo(() => parseNfrOutline(body), [body]);
+  if (outline.length === 0) return <MarkdownBlock body={body} />;
+
+  return (
+    <div className="space-y-3">
+      {outline.map((item, index) => (
+        <NfrOutlineItem key={`${item.text}-${index}`} item={item} />
+      ))}
+    </div>
+  );
+}
+
+function NfrOutlineItem({ item }) {
+  const hasChildren = item.children.length > 0;
+
+  return (
+    <section className="border-t border-[var(--hld-border)] pt-3 first:border-t-0 first:pt-0">
+      <h3 className="text-sm font-semibold leading-6 tracking-normal text-[var(--hld-heading)]">
+        {stripTrailingColon(item.text)}
+      </h3>
+      {hasChildren && <NfrSummaryList items={item.children} />}
+    </section>
+  );
+}
+
+function NfrSummaryList({ items, depth = 0 }) {
+  return (
+    <ul className={depth === 0 ? "mt-2 space-y-1.5 text-sm leading-6 text-[var(--hld-muted)]" : "mt-1 space-y-1 pl-4 text-sm leading-6 text-[var(--hld-muted)]"}>
+      {items.map((item, index) => (
+        <li key={`${item.text}-${index}`}>
+          <div className="flex gap-2">
+            <span className="shrink-0 text-[var(--hld-brand)]">-</span>
+            <span className={depth === 0 ? "font-medium text-[var(--hld-heading)]" : undefined}>
+              {stripTrailingColon(item.text)}
+            </span>
+          </div>
+          {item.children.length > 0 && (
+            <NfrSummaryList items={item.children} depth={depth + 1} />
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function ApiDesignBlock({ body }) {
+  const parsed = useMemo(() => parseApiDesign(body), [body]);
+
+  if (parsed.endpoints.length === 0) {
+    return <MarkdownBlock body={body} />;
+  }
+
+  return (
+    <div className="space-y-4">
+      {parsed.intro && (
+        <div className="rounded-lg border border-[var(--hld-border)] bg-[var(--hld-surface-2)] p-4">
+          <MarkdownBlock body={parsed.intro} />
+        </div>
+      )}
+
+      <div className="grid gap-3">
+        {parsed.endpoints.map((endpoint, index) => (
+          <ApiEndpointCard key={`${endpoint.method}-${endpoint.path}-${index}`} endpoint={endpoint} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ApiEndpointCard({ endpoint }) {
+  return (
+    <div className="overflow-hidden rounded-lg border border-[var(--hld-border)] bg-[var(--hld-surface)]">
+      <div className="flex flex-col gap-3 border-b border-[var(--hld-border)] bg-[var(--hld-surface-2)] px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="rounded-md border border-[var(--hld-border)] bg-[var(--hld-brand-soft)] px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--hld-brand)]">
+            {endpoint.method}
+          </span>
+          <code className="min-w-0 break-all rounded-md border border-[var(--hld-border)] bg-[var(--hld-surface)] px-2.5 py-1 font-mono text-[13px] font-semibold text-[var(--hld-heading)]">
+            {endpoint.path}
+          </code>
+        </div>
+        {endpoint.returns && (
+          <span className="self-start rounded-full border border-[var(--hld-border)] bg-[var(--hld-surface)] px-3 py-1 text-xs font-semibold text-[var(--hld-muted)]">
+            returns {endpoint.returns}
+          </span>
+        )}
+      </div>
+
+      <div className="space-y-4 p-4">
+        {endpoint.notes.length > 0 && (
+          <div className="rounded-md border border-[var(--hld-border)] bg-[var(--hld-surface-2)] px-3 py-2">
+            <MarkdownBlock body={endpoint.notes.join("\n\n")} />
+          </div>
+        )}
+
+        {endpoint.codeBlocks.length > 0 && (
+          <div className="grid gap-3 lg:grid-cols-2">
+            {endpoint.codeBlocks.map((block, index) => (
+              <ApiCodeBlock key={`${block.title}-${index}`} block={block} />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ApiCodeBlock({ block }) {
+  return (
+    <div className="overflow-hidden rounded-md border border-[var(--hld-border)] bg-[var(--hld-surface)]">
+      <div className="flex items-center justify-between gap-3 border-b border-[var(--hld-border)] bg-[var(--hld-surface-2)] px-3 py-2">
+        <span className="text-xs font-semibold text-[var(--hld-heading)]">{block.title}</span>
+        {block.lang && (
+          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--hld-muted)]">
+            {block.lang}
+          </span>
+        )}
+      </div>
+      <pre className="max-h-72 overflow-auto bg-[var(--hld-surface)] p-3 font-mono text-[13px] leading-6 text-[var(--hld-heading)]">
+        <code>{block.code}</code>
+      </pre>
+    </div>
   );
 }
 
@@ -467,6 +925,179 @@ function extractPlainItems(body) {
         .trim()
     )
     .filter(Boolean);
+}
+
+function parseNfrOutline(body) {
+  const root = { children: [] };
+  const stack = [{ indent: -1, node: root }];
+  const lines = String(body || "").replace(/\r\n/g, "\n").split("\n");
+
+  lines.forEach((line) => {
+    if (!line.trim()) return;
+
+    const indent = line.length - line.trimStart().length;
+    const text = line
+      .trim()
+      .replace(/^(?:\d+[.)]|[-*])\s+/, "")
+      .trim();
+
+    if (!text) return;
+
+    const node = { text, children: [] };
+    while (stack.length > 1 && indent <= stack[stack.length - 1].indent) {
+      stack.pop();
+    }
+
+    stack[stack.length - 1].node.children.push(node);
+    stack.push({ indent, node });
+  });
+
+  return root.children;
+}
+
+function stripTrailingColon(value) {
+  return String(value || "").trim().replace(/\s*:\s*$/, "");
+}
+
+function parseApiDesign(body) {
+  const tokens = tokenizeMarkdownFences(body);
+  const intro = [];
+  const endpoints = [];
+  let currentEndpoint = null;
+  let pendingText = "";
+
+  tokens.forEach((token) => {
+    if (token.type === "text") {
+      pendingText = joinMarkdownText(pendingText, token.value);
+      return;
+    }
+
+    const signature = parseEndpointSignature(token.code);
+    if (signature) {
+      if (currentEndpoint && pendingText.trim()) {
+        currentEndpoint.notes.push(pendingText.trim());
+      } else if (!currentEndpoint && pendingText.trim()) {
+        intro.push(pendingText.trim());
+      }
+
+      currentEndpoint = {
+        ...signature,
+        notes: [],
+        codeBlocks: []
+      };
+      endpoints.push(currentEndpoint);
+      pendingText = "";
+      return;
+    }
+
+    if (currentEndpoint) {
+      const title = inferApiCodeTitle(pendingText, token.lang, token.code);
+      if (pendingText.trim() && !isApiCodeLeadOnly(pendingText)) currentEndpoint.notes.push(pendingText.trim());
+      currentEndpoint.codeBlocks.push({
+        title,
+        lang: token.lang || "text",
+        code: token.code.trim()
+      });
+      pendingText = "";
+      return;
+    }
+
+    intro.push(
+      [
+        pendingText.trim(),
+        `\`\`\`${token.lang || ""}`,
+        token.code.trim(),
+        "```"
+      ].filter(Boolean).join("\n")
+    );
+    pendingText = "";
+  });
+
+  if (pendingText.trim()) {
+    if (currentEndpoint) currentEndpoint.notes.push(pendingText.trim());
+    else intro.push(pendingText.trim());
+  }
+
+  return {
+    intro: intro.filter(Boolean).join("\n\n"),
+    endpoints
+  };
+}
+
+function tokenizeMarkdownFences(body) {
+  const lines = String(body || "").replace(/\r\n/g, "\n").split("\n");
+  const tokens = [];
+  let textLines = [];
+
+  function flushText() {
+    const value = textLines.join("\n").trim();
+    if (value) tokens.push({ type: "text", value });
+    textLines = [];
+  }
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const fence = lines[index].match(/^```([A-Za-z0-9_-]*)\s*$/);
+    if (!fence) {
+      textLines.push(lines[index]);
+      continue;
+    }
+
+    flushText();
+    const lang = fence[1] || "";
+    const codeLines = [];
+    index += 1;
+
+    while (index < lines.length && !/^```\s*$/.test(lines[index])) {
+      codeLines.push(lines[index]);
+      index += 1;
+    }
+
+    tokens.push({ type: "code", lang, code: codeLines.join("\n") });
+  }
+
+  flushText();
+  return tokens;
+}
+
+function parseEndpointSignature(code) {
+  const firstLine = String(code || "").split("\n").map((line) => line.trim()).find(Boolean) || "";
+  const match = firstLine.match(/^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s+(.+?)(?:\s*->\s*(.+))?$/i);
+  if (!match) return null;
+
+  return {
+    method: match[1].toUpperCase(),
+    path: match[2].trim(),
+    returns: (match[3] || "").trim()
+  };
+}
+
+function inferApiCodeTitle(leadText, lang, code) {
+  const text = String(leadText || "").toLowerCase();
+  const firstLine = String(code || "").trim().split("\n")[0] || "";
+
+  if (/\b(response|returns?|status|location)\b/.test(text) || /^\d{3}\b/.test(firstLine)) {
+    return "Response";
+  }
+
+  if (/\b(request|payload|body|post|put|patch)\b/.test(text)) {
+    return "Request";
+  }
+
+  if (String(lang || "").toLowerCase() === "json") {
+    return "Payload";
+  }
+
+  return "Example";
+}
+
+function isApiCodeLeadOnly(value) {
+  return /^(request|payload|body|response|returns?)\s*:?\s*$/i.test(String(value || "").trim());
+}
+
+function joinMarkdownText(current, next) {
+  if (!current.trim()) return next;
+  if (!next.trim()) return current;
+  return `${current.trim()}\n\n${next.trim()}`;
 }
 
 function slugify(value) {

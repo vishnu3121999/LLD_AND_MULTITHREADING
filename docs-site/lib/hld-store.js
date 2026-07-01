@@ -34,12 +34,16 @@ export async function listHldProblems() {
       problem = await readDirectoryHldProblem(id);
     } else if (entry.isFile()) {
       const ext = path.extname(entry.name);
-      if (ext !== ".json" && ext !== ".txt") continue;
+      if (ext !== ".json" && ext !== ".md" && ext !== ".txt") continue;
 
       id = entry.name.slice(0, -ext.length);
-      problem = ext === ".json"
-        ? await readHldProblemFile(id)
-        : await readTextHldProblemFile(id);
+      if (ext === ".json") {
+        problem = await readHldProblemFile(id);
+      } else if (ext === ".md") {
+        problem = await readMarkdownHldProblemFile(id);
+      } else {
+        problem = await readTextHldProblemFile(id);
+      }
     }
 
     if (!problem) continue;
@@ -62,7 +66,13 @@ export async function listHldProblems() {
 
 export async function getHldProblem(id) {
   if (!isValidId(id)) return null;
-  return (await readDirectoryHldProblem(id)) || (await readHldProblemFile(id)) || readTextHldProblemFile(id);
+  return (
+    (await readDirectoryHldProblem(id)) ||
+    (await readHldProblemFile(id)) ||
+    (await readMarkdownHldProblemFile(id)) ||
+    (await readTextHldProblemFile(id)) ||
+    findHldProblemByPublicId(id)
+  );
 }
 
 export async function createHldProblem(payload) {
@@ -313,6 +323,58 @@ async function readTextHldProblemFile(id, target = path.join(HLD_DATA_DIR, `${id
   }
 }
 
+async function readMarkdownHldProblemFile(id, target = path.join(HLD_DATA_DIR, `${id}.md`), assetDir = path.join(HLD_DATA_DIR, id)) {
+  if (!isValidId(id)) return null;
+
+  try {
+    const [raw, fileStat] = await Promise.all([
+      readFile(target, "utf8"),
+      stat(target)
+    ]);
+    const images = await collectProblemImages(id, assetDir);
+    const parsed = parseMarkdownProblem(raw, id);
+
+    return {
+      id: isValidId(parsed.id) ? parsed.id : id,
+      title: parsed.title || titleFromId(id),
+      summary: parsed.summary || "Solved high-level design problem.",
+      tags: parsed.tags,
+      source: "markdown",
+      created_at: parsed.created_at || fileStat.birthtime.toISOString(),
+      updated_at: parsed.updated_at || fileStat.mtime.toISOString(),
+      images,
+      sections: parsed.sections.map((section) => ({
+        ...section,
+        body: rewriteMarkdownAssetRefs(section.body, id)
+      }))
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function findHldProblemByPublicId(id) {
+  const entries = await readdir(HLD_DATA_DIR, { withFileTypes: true }).catch(() => []);
+
+  for (const entry of entries) {
+    let problem = null;
+
+    if (entry.isDirectory()) {
+      problem = await readDirectoryHldProblem(entry.name);
+    } else if (entry.isFile()) {
+      const ext = path.extname(entry.name);
+      const fileId = entry.name.slice(0, -ext.length);
+      if (ext === ".json") problem = await readHldProblemFile(fileId);
+      if (ext === ".md") problem = await readMarkdownHldProblemFile(fileId);
+      if (ext === ".txt") problem = await readTextHldProblemFile(fileId);
+    }
+
+    if (problem?.id === id) return problem;
+  }
+
+  return null;
+}
+
 async function readDirectoryHldProblem(id) {
   if (!isValidId(id)) return null;
 
@@ -323,12 +385,21 @@ async function readDirectoryHldProblem(id) {
     const jsonFile = files.includes(`${id}.json`)
       ? `${id}.json`
       : files.find((file) => path.extname(file) === ".json");
+    const markdownFile = files.includes("index.md")
+      ? "index.md"
+      : files.includes(`${id}.md`)
+        ? `${id}.md`
+        : files.find((file) => path.extname(file) === ".md");
     const textFile = files.includes(`${id}.txt`)
       ? `${id}.txt`
       : files.find((file) => path.extname(file) === ".txt");
 
     if (jsonFile) {
       return readHldProblemFile(id, path.join(dir, jsonFile), dir);
+    }
+
+    if (markdownFile) {
+      return readMarkdownHldProblemFile(id, path.join(dir, markdownFile), dir);
     }
 
     if (textFile) {
@@ -411,6 +482,142 @@ function parseTextProblemSections(raw) {
       body: section.bodyLines.join("\n").trim()
     }))
     .filter((section) => section.body);
+}
+
+function parseMarkdownProblem(raw, id) {
+  const { data, content } = parseFrontmatter(raw);
+  const title = stringValue(data.title) || titleFromId(id);
+  const body = stripMatchingTitleHeading(content, title);
+
+  return {
+    id: stringValue(data.slug) || id,
+    title,
+    summary: stringValue(data.summary),
+    tags: normalizeTags(data.tags),
+    created_at: stringValue(data.created_at),
+    updated_at: stringValue(data.updated_at),
+    sections: parseMarkdownSections(body)
+  };
+}
+
+function parseFrontmatter(raw) {
+  const content = String(raw || "").replace(/\r\n/g, "\n");
+  if (!content.startsWith("---\n")) return { data: {}, content };
+
+  const end = content.indexOf("\n---", 4);
+  if (end === -1) return { data: {}, content };
+
+  const frontmatter = content.slice(4, end).trim();
+  const markdown = content.slice(end + 4).replace(/^\n+/, "");
+  return { data: parseSimpleYaml(frontmatter), content: markdown };
+}
+
+function parseSimpleYaml(source) {
+  const data = {};
+  const lines = String(source || "").split("\n");
+  let currentKey = "";
+
+  for (const rawLine of lines) {
+    const line = rawLine.replace(/\s+$/, "");
+    if (!line.trim() || line.trimStart().startsWith("#")) continue;
+
+    const listItem = line.match(/^\s+-\s+(.+)$/);
+    if (listItem && currentKey) {
+      if (!Array.isArray(data[currentKey])) data[currentKey] = [];
+      data[currentKey].push(cleanYamlScalar(listItem[1]));
+      continue;
+    }
+
+    const pair = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
+    if (!pair) continue;
+
+    currentKey = pair[1];
+    const value = pair[2].trim();
+    if (!value) {
+      data[currentKey] = [];
+    } else if (value.startsWith("[") && value.endsWith("]")) {
+      data[currentKey] = value
+        .slice(1, -1)
+        .split(",")
+        .map((item) => cleanYamlScalar(item))
+        .filter(Boolean);
+    } else {
+      data[currentKey] = cleanYamlScalar(value);
+    }
+  }
+
+  return data;
+}
+
+function cleanYamlScalar(value) {
+  return String(value || "")
+    .trim()
+    .replace(/^['"]|['"]$/g, "");
+}
+
+function stringValue(value) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function stripMatchingTitleHeading(content, title) {
+  const lines = String(content || "").replace(/\r\n/g, "\n").split("\n");
+  const firstContentIndex = lines.findIndex((line) => line.trim());
+  if (firstContentIndex === -1) return "";
+
+  const first = lines[firstContentIndex].trim();
+  const heading = first.match(/^#\s+(.+)$/);
+  if (!heading || slugify(heading[1]) !== slugify(title)) return lines.join("\n").trim();
+
+  return [...lines.slice(0, firstContentIndex), ...lines.slice(firstContentIndex + 1)].join("\n").trim();
+}
+
+function parseMarkdownSections(markdown) {
+  const lines = String(markdown || "").replace(/\r\n/g, "\n").split("\n");
+  const sections = [];
+  let current = null;
+  const introLines = [];
+
+  for (const line of lines) {
+    const heading = line.match(/^##\s+(.+)$/);
+    if (heading) {
+      if (current) sections.push(current);
+      current = { type: "markdown", title: heading[1].trim(), bodyLines: [] };
+      continue;
+    }
+
+    if (current) {
+      current.bodyLines.push(line);
+    } else {
+      introLines.push(line);
+    }
+  }
+
+  if (current) sections.push(current);
+
+  const intro = introLines.join("\n").trim();
+  const parsedSections = sections
+    .map((section) => ({
+      type: "markdown",
+      title: section.title,
+      body: section.bodyLines.join("\n").trim()
+    }))
+    .filter((section) => section.title || section.body);
+
+  if (intro) {
+    return [
+      { type: "markdown", title: "Problem Brief", body: intro },
+      ...parsedSections
+    ];
+  }
+
+  return parsedSections;
+}
+
+function rewriteMarkdownAssetRefs(body, id) {
+  return String(body || "").replace(/(!\[[^\]]*]\()\.\/([^)]+)\)/g, (_match, prefix, asset) => {
+    const [fileName, suffix = ""] = asset.split(/(?=[?#])/);
+    return `${prefix}/api/hld/assets/${id}/${encodeURIComponent(fileName)}${suffix})`;
+  });
 }
 
 function detectTextHeading(line) {

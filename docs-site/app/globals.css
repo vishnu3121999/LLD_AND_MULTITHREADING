@@ -1365,6 +1365,17 @@
   color: #64748b;
 }
 
+.hld-course-prose img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1rem auto;
+  border: 1px solid var(--site-border);
+  border-radius: 0.5rem;
+  background: var(--site-surface);
+  padding: 0.5rem;
+}
+
 .hld-course-prose pre code.hljs {
   display: block;
   background: transparent;
@@ -2342,6 +2353,11 @@ body {
 [data-site-theme="midnight"] .hld-course-prose td,
 [data-site-theme="midnight"] .hld-course-prose code:not(pre code) {
   border-color: var(--site-border);
+}
+
+[data-site-theme="midnight"] .hld-course-prose img {
+  border-color: var(--site-border);
+  background: var(--site-surface-2);
 }
 
 [data-site-theme="midnight"] .hld-course-prose pre {
