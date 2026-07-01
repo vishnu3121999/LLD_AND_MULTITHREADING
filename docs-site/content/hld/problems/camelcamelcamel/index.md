@@ -1,5 +1,5 @@
 ---
-title: Design CamelCamelCamel
+title: CamelCamelCamel
 slug: camelcamelcamel
 summary: Price history, product crawling, and price-drop notifications for a large-scale commerce tracking system.
 tags:
@@ -32,10 +32,10 @@ CAP Theorem:
       availability > consistency :
          Minor delay (1–5 sec) in analytics updates is acceptable.
 Throughput & Latencies:
-   FR-1 (Url creation):
+   Url creation (FR-1):
       Write TPS = 1M/day = 10/s
       Write Latency = never mind
-   FR-2 (Url access):
+   Url access (FR-2):
       Read QPS = 100M/day = 1k/s
       Read Latency = 100ms
 Handle Celebrity/Hot keys

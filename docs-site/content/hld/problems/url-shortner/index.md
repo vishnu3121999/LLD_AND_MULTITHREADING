@@ -24,23 +24,23 @@ difficulty: Hard
 
 ## Non-Functional Requirements
 
-1. No single point of failure (fault tolerance).
-2. CAP Theorem:
-   3. Url conversion & access:
-      4. availability > consistency 
-         5. 1-5 sec inconsistency allowed
-   6. Analytics record & view:
-      7. availability > consistency :
-         8. Minor delay (1–5 sec) in analytics updates is acceptable.
-9. Throughput & Latencies:
-   10. FR-1 (Url creation):
-       11. Write TPS = 1M/day = 10/s
-       12. Write Latency = never mind
-   13. FR-2 (Url access):
-       14. Read QPS = 100M/day = 1k/s
-       15. Read Latency = 100ms 
-16. Handle Celebrity/Hot keys 
-17. Handle traffic spikes in cost effective way (optional, only if time at end)
+No single point of failure (fault tolerance).
+CAP Theorem:
+  Url conversion & access (FR-1 & FR-2):
+    availability > consistency
+      1-5 sec inconsistency allowed
+  Analytics record & view (FR-3 & FR-4):
+    availability > consistency :
+      Minor delay (1–5 sec) in analytics updates is acceptable.
+Throughput & Latencies:
+  Url creation (FR-1):
+    Write TPS = 1M/day = 10/s
+    Write Latency = never mind
+  Url access (FR-2):
+    Read QPS = 100M/day = 1k/s
+    Read Latency = 100ms
+Handle Celebrity/Hot keys
+Handle traffic spikes in cost effective way (optional, only if time at end)
 
 ## Core Entities
 
