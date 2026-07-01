@@ -6,7 +6,7 @@ export const Textarea = forwardRef(function Textarea({ className, ...props }, re
     <textarea
       ref={ref}
       className={cn(
-        "min-h-28 w-full resize-y rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-950 outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200",
+        "min-h-28 w-full resize-y rounded-md border border-[var(--site-border)] bg-[var(--site-surface)] px-3 py-2 text-sm text-[var(--site-heading)] outline-none transition placeholder:text-[var(--site-muted)] focus:border-[var(--site-brand)] focus:ring-2 focus:ring-[var(--site-brand-soft)]",
         className
       )}
       {...props}

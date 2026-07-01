@@ -75,7 +75,7 @@ export default function ConcurrencyPage() {
                               <Link
                                 key={lesson.slug}
                                 href={`/concurrency/${lesson.slug}`}
-                                className="rounded-md px-2 py-1.5 text-xs font-semibold text-[var(--cor-muted)] transition hover:bg-white hover:text-[var(--cor-heading)]"
+                                className="rounded-md px-2 py-1.5 text-xs font-semibold text-[var(--cor-muted)] transition hover:bg-[var(--cor-surface)] hover:text-[var(--cor-heading)]"
                               >
                                 {lesson.title}
                               </Link>

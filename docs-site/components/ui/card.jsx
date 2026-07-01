@@ -1,7 +1,7 @@
 import { cn } from "../../lib/utils";
 
 export function Card({ className, ...props }) {
-  return <div className={cn("rounded-lg border border-slate-200 bg-white shadow-soft", className)} {...props} />;
+  return <div className={cn("rounded-lg border border-[var(--site-border)] bg-[var(--site-surface)] shadow-soft", className)} {...props} />;
 }
 
 export function CardHeader({ className, ...props }) {
@@ -9,11 +9,11 @@ export function CardHeader({ className, ...props }) {
 }
 
 export function CardTitle({ className, ...props }) {
-  return <h3 className={cn("text-lg font-semibold leading-tight text-slate-950", className)} {...props} />;
+  return <h3 className={cn("text-lg font-semibold leading-tight text-[var(--site-heading)]", className)} {...props} />;
 }
 
 export function CardDescription({ className, ...props }) {
-  return <p className={cn("text-sm leading-6 text-slate-600", className)} {...props} />;
+  return <p className={cn("text-sm leading-6 text-[var(--site-muted)]", className)} {...props} />;
 }
 
 export function CardContent({ className, ...props }) {

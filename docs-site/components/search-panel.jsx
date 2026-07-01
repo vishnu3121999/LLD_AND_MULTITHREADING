@@ -27,7 +27,7 @@ export function SearchPanel({ compact = false }) {
   return (
     <div className="w-full">
       <label className="relative block">
-        <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} aria-hidden="true" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--site-muted)]" size={18} aria-hidden="true" />
         <Input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
@@ -38,14 +38,14 @@ export function SearchPanel({ compact = false }) {
       </label>
 
       {results.length > 0 && (
-        <div className={compact ? "mt-3 space-y-2" : "mt-4 divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white"}>
+        <div className={compact ? "mt-3 space-y-2" : "mt-4 divide-y divide-[var(--site-border)] rounded-lg border border-[var(--site-border)] bg-[var(--site-surface)]"}>
           {results.map((result) => (
-            <Link key={result.href} href={result.href} className="block p-4 hover:bg-slate-50">
+            <Link key={result.href} href={result.href} className="block p-4 hover:bg-[var(--site-surface-2)]">
               <div className="flex items-center justify-between gap-3">
-                <strong className="text-sm text-slate-950">{result.title}</strong>
-                <span className="rounded-md border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs text-slate-600">{result.type}</span>
+                <strong className="text-sm text-[var(--site-heading)]">{result.title}</strong>
+                <span className="rounded-md border border-[var(--site-border)] bg-[var(--site-surface-2)] px-2 py-0.5 text-xs text-[var(--site-muted)]">{result.type}</span>
               </div>
-              <p className="mt-1 text-sm leading-6 text-slate-600">{result.excerpt}</p>
+              <p className="mt-1 text-sm leading-6 text-[var(--site-muted)]">{result.excerpt}</p>
             </Link>
           ))}
         </div>

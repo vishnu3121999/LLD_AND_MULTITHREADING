@@ -22,19 +22,19 @@ export const metadata = {
 };
 
 const pageTheme = {
-  "--cor-bg": "#f5f7fb",
-  "--cor-surface": "#ffffff",
-  "--cor-surface-2": "#f8fafc",
-  "--cor-text": "#0f172a",
-  "--cor-muted": "#5b677b",
-  "--cor-border": "#dbe3ef",
-  "--cor-brand": "#4f46e5",
-  "--cor-brand-soft": "rgba(79, 70, 229, 0.12)",
-  "--cor-good": "#0f766e",
-  "--cor-danger": "#dc2626",
-  "--cor-code-bg": "#050911",
-  "--cor-code-top": "#171d29",
-  "--cor-code-border": "#293140"
+  "--cor-bg": "var(--site-bg)",
+  "--cor-surface": "var(--site-surface)",
+  "--cor-surface-2": "var(--site-surface-2)",
+  "--cor-text": "var(--site-heading)",
+  "--cor-muted": "var(--site-muted)",
+  "--cor-border": "var(--site-border)",
+  "--cor-brand": "var(--site-brand)",
+  "--cor-brand-soft": "var(--site-brand-soft)",
+  "--cor-good": "var(--site-good)",
+  "--cor-danger": "var(--site-danger)",
+  "--cor-code-bg": "var(--site-code-bg)",
+  "--cor-code-top": "var(--site-code-top)",
+  "--cor-code-border": "var(--site-code-border)"
 };
 
 const decisionSignals = [

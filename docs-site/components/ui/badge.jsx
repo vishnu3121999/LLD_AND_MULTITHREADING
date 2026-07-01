@@ -1,7 +1,7 @@
 import { cn } from "../../lib/utils";
 
 const variants = {
-  default: "border-slate-200 bg-slate-100 text-slate-700",
+  default: "border-[var(--site-border)] bg-[var(--site-surface-2)] text-[var(--site-text)]",
   teal: "border-teal-200 bg-teal-50 text-teal-800",
   amber: "border-amber-200 bg-amber-50 text-amber-800",
   blue: "border-blue-200 bg-blue-50 text-blue-800",

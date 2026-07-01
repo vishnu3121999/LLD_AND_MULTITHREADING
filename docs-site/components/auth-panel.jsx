@@ -127,9 +127,9 @@ export function AuthPanel() {
 
   if (!supabase) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm">
+      <div className="rounded-2xl border border-[var(--site-border)] bg-[var(--site-surface)] p-6 text-center shadow-sm">
         <LogoHeader title="Sign in unavailable" />
-        <p className="mt-3 text-sm leading-6 text-slate-600">
+        <p className="mt-3 text-sm leading-6 text-[var(--site-muted)]">
           Authentication is not configured for this deployment.
         </p>
       </div>
@@ -138,11 +138,11 @@ export function AuthPanel() {
 
   if (user) {
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="rounded-2xl border border-[var(--site-border)] bg-[var(--site-surface)] p-6 shadow-sm">
         <LogoHeader title="Account" />
-        <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Signed in as</p>
-          <p className="mt-1 truncate text-sm font-semibold text-slate-950">{user.email}</p>
+        <div className="mt-6 rounded-xl border border-[var(--site-border)] bg-[var(--site-surface-2)] p-4">
+          <p className="text-xs font-medium uppercase tracking-wide text-[var(--site-muted)]">Signed in as</p>
+          <p className="mt-1 truncate text-sm font-semibold text-[var(--site-heading)]">{user.email}</p>
         </div>
         <Button className="mt-5 w-full" variant="outline" onClick={signOut} disabled={loading}>
           {loading && <Loader2 className="animate-spin" size={16} aria-hidden="true" />}
@@ -154,15 +154,15 @@ export function AuthPanel() {
   }
 
   return (
-    <form onSubmit={submit} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <form onSubmit={submit} className="rounded-2xl border border-[var(--site-border)] bg-[var(--site-surface)] p-6 shadow-sm">
       <LogoHeader title={mode === "signin" ? "Sign in" : "Create account"} />
 
-      <div className="mt-6 grid grid-cols-2 rounded-lg bg-slate-100 p-1">
+      <div className="mt-6 grid grid-cols-2 rounded-lg bg-[var(--site-surface-2)] p-1">
         <button
           type="button"
           className={cn(
             "h-9 rounded-md text-sm font-semibold transition",
-            mode === "signin" ? "bg-white text-slate-950 shadow-sm" : "text-slate-500 hover:text-slate-950"
+            mode === "signin" ? "bg-[var(--site-surface)] text-[var(--site-heading)] shadow-sm" : "text-[var(--site-muted)] hover:text-[var(--site-heading)]"
           )}
           onClick={() => {
             setMode("signin");
@@ -175,7 +175,7 @@ export function AuthPanel() {
           type="button"
           className={cn(
             "h-9 rounded-md text-sm font-semibold transition",
-            mode === "signup" ? "bg-white text-slate-950 shadow-sm" : "text-slate-500 hover:text-slate-950"
+            mode === "signup" ? "bg-[var(--site-surface)] text-[var(--site-heading)] shadow-sm" : "text-[var(--site-muted)] hover:text-[var(--site-heading)]"
           )}
           onClick={() => {
             setMode("signup");
@@ -188,7 +188,7 @@ export function AuthPanel() {
 
       <div className="mt-5 space-y-4">
         <label className="block space-y-2">
-          <span className="text-sm font-medium text-slate-700">Email</span>
+          <span className="text-sm font-medium text-[var(--site-text)]">Email</span>
           <Input
             type="email"
             required
@@ -199,7 +199,7 @@ export function AuthPanel() {
           />
         </label>
         <label className="block space-y-2">
-          <span className="text-sm font-medium text-slate-700">Password</span>
+          <span className="text-sm font-medium text-[var(--site-text)]">Password</span>
           <Input
             type="password"
             required
@@ -230,7 +230,7 @@ function LogoHeader({ title }) {
   return (
     <div className="text-center">
       <img src="/logo.png" alt="01 Interview" className="mx-auto h-16 w-auto object-contain" />
-      <h1 className="mt-5 text-2xl font-semibold tracking-tight text-slate-950">{title}</h1>
+      <h1 className="mt-5 text-2xl font-semibold tracking-tight text-[var(--site-heading)]">{title}</h1>
     </div>
   );
 }

@@ -36,9 +36,9 @@ export default async function ProblemPage({ params }) {
 
       <div className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)_280px]">
         <aside className="hidden lg:block">
-          <div className="sticky top-24 space-y-2 rounded-lg border border-slate-200 bg-white p-3">
+          <div className="sticky top-24 space-y-2 rounded-lg border border-[var(--site-border)] bg-[var(--site-surface)] p-3">
             {["Overview", "Actors", "Entities", "Services", "Patterns", "Concurrency", "Code", "Mistakes"].map((item) => (
-              <a key={item} href={`#${item.toLowerCase()}`} className="block rounded-md px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 hover:text-slate-950">
+              <a key={item} href={`#${item.toLowerCase()}`} className="block rounded-md px-3 py-2 text-sm text-[var(--site-muted)] hover:bg-[var(--site-surface-2)] hover:text-[var(--site-heading)]">
                 {item}
               </a>
             ))}
@@ -46,14 +46,14 @@ export default async function ProblemPage({ params }) {
         </aside>
 
         <article className="min-w-0">
-          <div className="mb-6 rounded-lg border border-slate-200 bg-white p-6 shadow-soft">
+          <div className="mb-6 rounded-lg border border-[var(--site-border)] bg-[var(--site-surface)] p-6 shadow-soft">
             <div className="flex flex-wrap gap-2">
               <Badge variant="blue">{problem.category}</Badge>
               <Badge variant={problem.hasConcurrency ? "red" : "teal"}>{problem.systemType}</Badge>
               <Badge variant="amber">{problem.difficulty}</Badge>
             </div>
-            <h1 className="mt-4 text-4xl font-semibold tracking-normal text-slate-950">{problem.title}</h1>
-            <p className="mt-3 text-lg leading-8 text-slate-600">{problem.overview}</p>
+            <h1 className="mt-4 text-4xl font-semibold tracking-normal text-[var(--site-heading)]">{problem.title}</h1>
+            <p className="mt-3 text-lg leading-8 text-[var(--site-muted)]">{problem.overview}</p>
           </div>
 
           <Tabs defaultValue="learning">
@@ -85,9 +85,9 @@ export default async function ProblemPage({ params }) {
             </TabsContent>
           </Tabs>
 
-          <section id="code" className="mt-6 rounded-lg border border-slate-200 bg-white">
-            <div className="border-b border-slate-200 p-5">
-              <h2 className="text-xl font-semibold tracking-normal text-slate-950">Code Skeleton</h2>
+          <section id="code" className="mt-6 rounded-lg border border-[var(--site-border)] bg-[var(--site-surface)]">
+            <div className="border-b border-[var(--site-border)] p-5">
+              <h2 className="text-xl font-semibold tracking-normal text-[var(--site-heading)]">Code Skeleton</h2>
             </div>
             <ContentProtection watermark={problem.title}>
               <pre className="overflow-auto rounded-b-lg bg-slate-950 p-5 text-sm leading-6 text-slate-100"><code>{problem.code}</code></pre>
@@ -105,7 +105,7 @@ export default async function ProblemPage({ params }) {
                 <CardTitle className="text-base">Premium Protection</CardTitle>
               </div>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm leading-6 text-slate-600">
+            <CardContent className="space-y-3 text-sm leading-6 text-[var(--site-muted)]">
               <p>Protected sections add watermarking, disabled selection, copy/context-menu friction, and route hooks for auth and payment checks.</p>
               <p>No browser control can fully stop determined copying; the goal is to reduce casual copying and protect premium access paths.</p>
               <Button asChild variant="outline" className="w-full">
@@ -131,20 +131,20 @@ export default async function ProblemPage({ params }) {
 
 function Section({ id, title, children }) {
   return (
-    <section id={id} className="rounded-lg border border-slate-200 bg-white p-5">
-      <h2 className="text-xl font-semibold tracking-normal text-slate-950">{title}</h2>
-      <div className="mt-3 space-y-3 text-sm leading-7 text-slate-600">{children}</div>
+    <section id={id} className="rounded-lg border border-[var(--site-border)] bg-[var(--site-surface)] p-5">
+      <h2 className="text-xl font-semibold tracking-normal text-[var(--site-heading)]">{title}</h2>
+      <div className="mt-3 space-y-3 text-sm leading-7 text-[var(--site-muted)]">{children}</div>
     </section>
   );
 }
 
 function GridSection({ id, title, items, mono = false, className = "" }) {
   return (
-    <section id={id} className={`rounded-lg border border-slate-200 bg-white p-5 ${className}`}>
-      <h2 className="text-xl font-semibold tracking-normal text-slate-950">{title}</h2>
+    <section id={id} className={`rounded-lg border border-[var(--site-border)] bg-[var(--site-surface)] p-5 ${className}`}>
+      <h2 className="text-xl font-semibold tracking-normal text-[var(--site-heading)]">{title}</h2>
       <div className="mt-4 grid gap-2 sm:grid-cols-2">
         {items.map((item) => (
-          <div key={item} className={`rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 ${mono ? "font-mono" : ""}`}>
+          <div key={item} className={`rounded-md border border-[var(--site-border)] bg-[var(--site-surface-2)] p-3 text-sm text-[var(--site-text)] ${mono ? "font-mono" : ""}`}>
             {item}
           </div>
         ))}

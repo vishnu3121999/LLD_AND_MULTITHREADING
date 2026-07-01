@@ -15,20 +15,20 @@ import {
 import { concurrencyModules } from "../../../../lib/concurrency-curriculum";
 
 const shellTheme = {
-  "--cor-bg": "#f6f8fb",
-  "--cor-surface": "#ffffff",
-  "--cor-surface-2": "#f8fafc",
-  "--cor-heading": "#1f2937",
-  "--cor-text": "#475569",
-  "--cor-muted": "#64748b",
-  "--cor-border": "#dbe4ef",
-  "--cor-brand": "#4f46e5",
-  "--cor-brand-soft": "rgba(79, 70, 229, 0.1)",
-  "--cor-good": "#0f766e",
-  "--cor-danger": "#dc2626",
-  "--cor-code-bg": "#070b14",
-  "--cor-code-top": "#111827",
-  "--cor-code-border": "#273244"
+  "--cor-bg": "var(--site-bg)",
+  "--cor-surface": "var(--site-surface)",
+  "--cor-surface-2": "var(--site-surface-2)",
+  "--cor-heading": "var(--site-heading)",
+  "--cor-text": "var(--site-text)",
+  "--cor-muted": "var(--site-muted)",
+  "--cor-border": "var(--site-border)",
+  "--cor-brand": "var(--site-brand)",
+  "--cor-brand-soft": "var(--site-brand-soft)",
+  "--cor-good": "var(--site-good)",
+  "--cor-danger": "var(--site-danger)",
+  "--cor-code-bg": "var(--site-code-bg)",
+  "--cor-code-top": "var(--site-code-top)",
+  "--cor-code-border": "var(--site-code-border)"
 };
 
 const completionStorageKey = "lld-concurrency-completed-lessons";
@@ -226,13 +226,13 @@ function CurriculumNav({
           <button
             type="button"
             onClick={onToggleRail}
-            className="grid h-9 w-9 place-items-center rounded-md border border-[var(--cor-border)] bg-white text-[var(--cor-muted)] transition hover:border-[var(--cor-brand)] hover:text-[var(--cor-brand)]"
+            className="grid h-9 w-9 place-items-center rounded-md border border-[var(--cor-border)] bg-[var(--cor-surface)] text-[var(--cor-muted)] transition hover:border-[var(--cor-brand)] hover:text-[var(--cor-brand)]"
             aria-label="Expand course contents"
           >
             <PanelLeftOpen size={17} aria-hidden="true" />
           </button>
           <BookOpenCheck size={18} className="text-[var(--cor-brand)]" aria-hidden="true" />
-          <div className="flex h-24 w-2 items-end overflow-hidden rounded-full bg-[#e5ebf3]" aria-label={`${progress}% complete`}>
+          <div className="flex h-24 w-2 items-end overflow-hidden rounded-full bg-[var(--site-surface-3)]" aria-label={`${progress}% complete`}>
             <div
               className="w-full rounded-full bg-[var(--cor-brand)] transition-[height] duration-300"
               style={{ height: `${progress}%` }}
@@ -251,8 +251,8 @@ function CurriculumNav({
                   onClick={() => onToggleModule(module.id)}
                   className={`grid h-9 w-9 place-items-center rounded-md border text-[11px] font-semibold transition ${
                     isActiveModule
-                      ? "border-slate-300 bg-white text-[var(--cor-heading)] shadow-sm"
-                      : "border-transparent text-[var(--cor-muted)] hover:border-[var(--cor-border)] hover:bg-white"
+                      ? "border-[var(--cor-border)] bg-[var(--cor-surface)] text-[var(--cor-heading)] shadow-sm"
+                      : "border-transparent text-[var(--cor-muted)] hover:border-[var(--cor-border)] hover:bg-[var(--cor-surface)]"
                   }`}
                   aria-label={module.title}
                 >
@@ -283,7 +283,7 @@ function CurriculumNav({
             <button
               type="button"
               onClick={onToggleRail}
-              className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-[var(--cor-border)] bg-white text-[var(--cor-muted)] transition hover:border-[var(--cor-brand)] hover:text-[var(--cor-brand)]"
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-[var(--cor-border)] bg-[var(--cor-surface)] text-[var(--cor-muted)] transition hover:border-[var(--cor-brand)] hover:text-[var(--cor-brand)]"
               aria-label="Collapse course contents"
             >
               <PanelLeftClose size={16} aria-hidden="true" />
@@ -294,7 +294,7 @@ function CurriculumNav({
           <span>{completedCount} of {lessonCount} complete</span>
           <span>{progress}%</span>
         </div>
-        <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#e5ebf3]">
+        <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--site-surface-3)]">
           <div
             className="h-full rounded-full bg-[var(--cor-brand)] transition-[width] duration-300"
             style={{ width: `${progress}%` }}
@@ -412,8 +412,8 @@ function LessonNavItem({ activeSlug, completedSet, lesson, onToggleComplete }) {
     <div
       className={`group flex min-h-9 items-start gap-1 rounded-md border transition ${
         isActive
-          ? "border-slate-200 bg-white text-[var(--cor-heading)] shadow-[0_6px_16px_rgba(15,23,42,0.06)]"
-          : "border-transparent text-[var(--cor-muted)] hover:border-[var(--cor-border)] hover:bg-white hover:text-[var(--cor-heading)]"
+          ? "border-[var(--cor-border)] bg-[var(--cor-surface)] text-[var(--cor-heading)] shadow-[var(--site-shadow)]"
+          : "border-transparent text-[var(--cor-muted)] hover:border-[var(--cor-border)] hover:bg-[var(--cor-surface)] hover:text-[var(--cor-heading)]"
       }`}
     >
       <button
@@ -422,7 +422,7 @@ function LessonNavItem({ activeSlug, completedSet, lesson, onToggleComplete }) {
         className={`ml-1 mt-1.5 grid h-6 w-6 flex-none place-items-center rounded-md transition ${
           isComplete
             ? "text-[var(--cor-good)] hover:bg-[rgba(15,118,110,0.08)]"
-            : "text-slate-300 hover:bg-slate-100 hover:text-[var(--cor-brand)]"
+            : "text-[var(--cor-muted)] hover:bg-[var(--cor-surface-2)] hover:text-[var(--cor-brand)]"
         }`}
         aria-label={isComplete ? `Mark ${lesson.title} incomplete` : `Mark ${lesson.title} complete`}
         title={isComplete ? "Mark incomplete" : "Mark complete"}

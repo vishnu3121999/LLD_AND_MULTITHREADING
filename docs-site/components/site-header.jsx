@@ -16,9 +16,9 @@ export function SiteHeader() {
   if (pathname?.startsWith("/lld-template")) return null;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-[var(--site-border)] bg-[var(--site-surface)] backdrop-blur">
       <div className="site-container flex min-h-12 items-center justify-between gap-3">
-        <Link href="/" className="flex items-center gap-3 font-semibold text-slate-950" aria-label="01 Interview home">
+        <Link href="/" className="flex items-center gap-3 font-semibold text-[var(--site-heading)]" aria-label="01 Interview home">
           <img
             src="/logo.png"
             alt="01 Interview"
@@ -37,8 +37,8 @@ export function SiteHeader() {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "inline-flex h-8 items-center rounded-md px-2.5 text-[13px] font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 sm:px-3",
-                    isActive && "bg-slate-100 text-slate-950"
+                    "inline-flex h-8 items-center rounded-md px-2.5 text-[13px] font-semibold text-[var(--site-muted)] transition hover:bg-[var(--site-surface-2)] hover:text-[var(--site-heading)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--site-brand)] sm:px-3",
+                    isActive && "bg-[var(--site-surface-2)] text-[var(--site-heading)]"
                   )}
                 >
                   {item.label}
@@ -94,10 +94,10 @@ function HeaderAuthButton({ pathname }) {
     return (
       <Link
         href={`/auth${next}`}
-        className="inline-flex h-8 items-center gap-2 rounded-full border border-slate-200 bg-white py-1 pl-1 pr-3 text-[13px] font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950"
+        className="inline-flex h-8 items-center gap-2 rounded-full border border-[var(--site-border)] bg-[var(--site-surface)] py-1 pl-1 pr-3 text-[13px] font-semibold text-[var(--site-text)] shadow-sm transition hover:border-[var(--site-brand)] hover:bg-[var(--site-surface-2)] hover:text-[var(--site-heading)]"
         aria-label={`Account for ${user.email}`}
       >
-        <span className="grid h-6 w-6 place-items-center rounded-full bg-slate-950 text-[11px] font-semibold text-white">
+        <span className="grid h-6 w-6 place-items-center rounded-full bg-[var(--site-heading)] text-[11px] font-semibold text-[var(--site-bg)]">
           {getInitials(user.email)}
         </span>
         <span className="hidden max-w-24 truncate sm:inline">Account</span>

@@ -14,17 +14,17 @@ import {
 } from "lucide-react";
 
 const dashboardTheme = {
-  "--cor-bg": "#f5f7fb",
-  "--cor-surface": "#ffffff",
-  "--cor-surface-2": "#f8fafc",
-  "--cor-text": "#0f172a",
-  "--cor-muted": "#5b677b",
-  "--cor-border": "#dbe3ef",
-  "--cor-brand": "#4f46e5",
-  "--cor-brand-soft": "rgba(79, 70, 229, 0.12)",
-  "--cor-code-bg": "#050911",
-  "--cor-code-top": "#171d29",
-  "--cor-code-border": "#293140"
+  "--cor-bg": "var(--site-bg)",
+  "--cor-surface": "var(--site-surface)",
+  "--cor-surface-2": "var(--site-surface-2)",
+  "--cor-text": "var(--site-heading)",
+  "--cor-muted": "var(--site-muted)",
+  "--cor-border": "var(--site-border)",
+  "--cor-brand": "var(--site-brand)",
+  "--cor-brand-soft": "var(--site-brand-soft)",
+  "--cor-code-bg": "var(--site-code-bg)",
+  "--cor-code-top": "var(--site-code-top)",
+  "--cor-code-border": "var(--site-code-border)"
 };
 
 const lldSections = [
@@ -134,7 +134,7 @@ export default function HomePage() {
             <div className="flex flex-wrap gap-2 lg:justify-end">
               <a
                 href="#lld-academy"
-                className="inline-flex h-10 items-center gap-2 rounded-md border border-[var(--cor-border)] bg-[var(--cor-surface-2)] px-3 text-sm font-black text-[var(--cor-text)] transition hover:border-[var(--cor-brand)] hover:bg-white"
+                className="inline-flex h-10 items-center gap-2 rounded-md border border-[var(--cor-border)] bg-[var(--cor-surface-2)] px-3 text-sm font-black text-[var(--cor-text)] transition hover:border-[var(--cor-brand)] hover:bg-[var(--cor-surface)]"
               >
                 <BookOpenCheck size={16} aria-hidden="true" />
                 LLD
@@ -144,7 +144,7 @@ export default function HomePage() {
               </a>
               <a
                 href="#hld-academy"
-                className="inline-flex h-10 items-center gap-2 rounded-md border border-[var(--cor-border)] bg-[var(--cor-surface-2)] px-3 text-sm font-black text-[var(--cor-text)] transition hover:border-[var(--cor-brand)] hover:bg-white"
+                className="inline-flex h-10 items-center gap-2 rounded-md border border-[var(--cor-border)] bg-[var(--cor-surface-2)] px-3 text-sm font-black text-[var(--cor-text)] transition hover:border-[var(--cor-brand)] hover:bg-[var(--cor-surface)]"
               >
                 <Network size={16} aria-hidden="true" />
                 HLD
@@ -180,12 +180,8 @@ export default function HomePage() {
 }
 
 function AcademyPanel({ id, title, subtitle, sections, tone }) {
-  const toneClass = tone === "hld"
-    ? "from-cyan-50 via-white to-white"
-    : "from-indigo-50 via-white to-white";
-
   return (
-    <section id={id} className={`scroll-mt-20 rounded-lg border border-[var(--cor-border)] bg-gradient-to-br ${toneClass} p-4 shadow-[0_8px_28px_rgba(15,23,42,0.04)] sm:p-5`}>
+    <section id={id} className="scroll-mt-20 rounded-lg border border-[var(--cor-border)] bg-[linear-gradient(135deg,var(--cor-brand-soft),var(--cor-surface)_42%,var(--cor-surface-2))] p-4 shadow-[var(--site-shadow)] sm:p-5">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3 border-b border-[var(--cor-border)] pb-4">
         <div>
           <h2 className="text-2xl font-black tracking-normal">{title}</h2>

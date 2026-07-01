@@ -15,8 +15,8 @@ export default function ProblemsPage() {
       <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <Badge variant="blue">Solved library</Badge>
-          <h1 className="mt-4 text-4xl font-semibold tracking-normal text-slate-950">LLD Problems</h1>
-          <p className="mt-3 max-w-3xl text-lg leading-8 text-slate-600">
+          <h1 className="mt-4 text-4xl font-semibold tracking-normal text-[var(--site-heading)]">LLD Problems</h1>
+          <p className="mt-3 max-w-3xl text-lg leading-8 text-[var(--site-muted)]">
             Start with the MVP set: Parking Lot, TicTacToe, Vending Machine, BookMyShow, and Splitwise.
           </p>
         </div>
@@ -29,7 +29,7 @@ export default function ProblemsPage() {
       </div>
 
       <div className="mb-6 flex flex-wrap items-center gap-2">
-        <span className="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
+        <span className="inline-flex items-center gap-2 text-sm font-medium text-[var(--site-text)]">
           <Filter size={16} aria-hidden="true" />
           Categories
         </span>
@@ -50,13 +50,13 @@ export default function ProblemsPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-2 text-sm">
-                <div className="rounded-md bg-slate-50 p-3">
-                  <span className="block text-xs text-slate-500">Difficulty</span>
-                  <strong className="text-slate-900">{problem.difficulty}</strong>
+                <div className="rounded-md bg-[var(--site-surface-2)] p-3">
+                  <span className="block text-xs text-[var(--site-muted)]">Difficulty</span>
+                  <strong className="text-[var(--site-heading)]">{problem.difficulty}</strong>
                 </div>
-                <div className="rounded-md bg-slate-50 p-3">
-                  <span className="block text-xs text-slate-500">Concurrency</span>
-                  <strong className="text-slate-900">{problem.hasConcurrency ? "Yes" : "No"}</strong>
+                <div className="rounded-md bg-[var(--site-surface-2)] p-3">
+                  <span className="block text-xs text-[var(--site-muted)]">Concurrency</span>
+                  <strong className="text-[var(--site-heading)]">{problem.hasConcurrency ? "Yes" : "No"}</strong>
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">

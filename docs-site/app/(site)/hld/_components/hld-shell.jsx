@@ -14,18 +14,18 @@ import {
 } from "lucide-react";
 
 const shellTheme = {
-  "--hld-bg": "#f6f8fb",
-  "--hld-surface": "#ffffff",
-  "--hld-surface-2": "#f8fafc",
-  "--hld-heading": "#1f2937",
-  "--hld-text": "#475569",
-  "--hld-muted": "#64748b",
-  "--hld-border": "#dbe4ef",
-  "--hld-brand": "#4f46e5",
-  "--hld-brand-soft": "rgba(79, 70, 229, 0.1)",
-  "--hld-good": "#0f766e",
-  "--hld-danger": "#dc2626",
-  "--hld-code-bg": "#070b14"
+  "--hld-bg": "var(--site-bg)",
+  "--hld-surface": "var(--site-surface)",
+  "--hld-surface-2": "var(--site-surface-2)",
+  "--hld-heading": "var(--site-heading)",
+  "--hld-text": "var(--site-text)",
+  "--hld-muted": "var(--site-muted)",
+  "--hld-border": "var(--site-border)",
+  "--hld-brand": "var(--site-brand)",
+  "--hld-brand-soft": "var(--site-brand-soft)",
+  "--hld-good": "var(--site-good)",
+  "--hld-danger": "var(--site-danger)",
+  "--hld-code-bg": "var(--site-code-bg)"
 };
 
 const completionStorageKey = "hld-completed-problems";
@@ -227,13 +227,13 @@ function HldCourseNav({
           <button
             type="button"
             onClick={onToggleRail}
-            className="grid h-9 w-9 place-items-center rounded-md border border-[var(--hld-border)] bg-white text-[var(--hld-muted)] transition hover:border-[var(--hld-brand)] hover:text-[var(--hld-brand)]"
+            className="grid h-9 w-9 place-items-center rounded-md border border-[var(--hld-border)] bg-[var(--hld-surface)] text-[var(--hld-muted)] transition hover:border-[var(--hld-brand)] hover:text-[var(--hld-brand)]"
             aria-label="Expand HLD contents"
           >
             <PanelLeftOpen size={17} aria-hidden="true" />
           </button>
           <BookOpenCheck size={18} className="text-[var(--hld-brand)]" aria-hidden="true" />
-          <div className="flex h-24 w-2 items-end overflow-hidden rounded-full bg-[#e5ebf3]" aria-label={`${progress}% complete`}>
+          <div className="flex h-24 w-2 items-end overflow-hidden rounded-full bg-[var(--site-surface-3)]" aria-label={`${progress}% complete`}>
             <div
               className="w-full rounded-full bg-[var(--hld-brand)] transition-[height] duration-300"
               style={{ height: `${progress}%` }}
@@ -252,8 +252,8 @@ function HldCourseNav({
                   onClick={() => onToggleGroup(group.id)}
                   className={`grid h-9 w-9 place-items-center rounded-md border text-[11px] font-semibold transition ${
                     isActiveGroup
-                      ? "border-slate-300 bg-white text-[var(--hld-heading)] shadow-sm"
-                      : "border-transparent text-[var(--hld-muted)] hover:border-[var(--hld-border)] hover:bg-white"
+                      ? "border-[var(--hld-border)] bg-[var(--hld-surface)] text-[var(--hld-heading)] shadow-sm"
+                      : "border-transparent text-[var(--hld-muted)] hover:border-[var(--hld-border)] hover:bg-[var(--hld-surface)]"
                   }`}
                   aria-label={group.title}
                 >
@@ -284,7 +284,7 @@ function HldCourseNav({
             <button
               type="button"
               onClick={onToggleRail}
-              className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-[var(--hld-border)] bg-white text-[var(--hld-muted)] transition hover:border-[var(--hld-brand)] hover:text-[var(--hld-brand)]"
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-md border border-[var(--hld-border)] bg-[var(--hld-surface)] text-[var(--hld-muted)] transition hover:border-[var(--hld-brand)] hover:text-[var(--hld-brand)]"
               aria-label="Collapse HLD contents"
             >
               <PanelLeftClose size={16} aria-hidden="true" />
@@ -295,7 +295,7 @@ function HldCourseNav({
           <span>{completedCount} of {itemCount} complete</span>
           <span>{progress}%</span>
         </div>
-        <div className="mt-2 h-2 overflow-hidden rounded-full bg-[#e5ebf3]">
+        <div className="mt-2 h-2 overflow-hidden rounded-full bg-[var(--site-surface-3)]">
           <div
             className="h-full rounded-full bg-[var(--hld-brand)] transition-[width] duration-300"
             style={{ width: `${progress}%` }}
@@ -370,8 +370,8 @@ function HldNavItem({ activeSlug, completedSet, item, onToggleComplete }) {
     <div
       className={`group flex min-h-9 items-start gap-1 rounded-md border transition ${
         isActive
-          ? "border-slate-200 bg-white text-[var(--hld-heading)] shadow-[0_6px_16px_rgba(15,23,42,0.06)]"
-          : "border-transparent text-[var(--hld-muted)] hover:border-[var(--hld-border)] hover:bg-white hover:text-[var(--hld-heading)]"
+          ? "border-[var(--hld-border)] bg-[var(--hld-surface)] text-[var(--hld-heading)] shadow-[var(--site-shadow)]"
+          : "border-transparent text-[var(--hld-muted)] hover:border-[var(--hld-border)] hover:bg-[var(--hld-surface)] hover:text-[var(--hld-heading)]"
       }`}
     >
       <button
@@ -380,7 +380,7 @@ function HldNavItem({ activeSlug, completedSet, item, onToggleComplete }) {
         className={`ml-1 mt-1.5 grid h-6 w-6 flex-none place-items-center rounded-md transition ${
           isComplete
             ? "text-[var(--hld-good)] hover:bg-[rgba(15,118,110,0.08)]"
-            : "text-slate-300 hover:bg-slate-100 hover:text-[var(--hld-brand)]"
+            : "text-[var(--hld-muted)] hover:bg-[var(--hld-surface-2)] hover:text-[var(--hld-brand)]"
         }`}
         aria-label={isComplete ? `Mark ${item.title} incomplete` : `Mark ${item.title} complete`}
         title={isComplete ? "Mark incomplete" : "Mark complete"}

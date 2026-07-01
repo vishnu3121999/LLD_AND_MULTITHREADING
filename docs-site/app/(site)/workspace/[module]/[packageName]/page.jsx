@@ -34,7 +34,7 @@ export default async function WorkspacePackagePage({ params }) {
   if (!page) notFound();
 
   return (
-    <main className="workspace-route border-t border-slate-200 bg-slate-50">
+    <main className="workspace-route border-t border-[var(--site-border)] bg-[var(--site-bg)]">
       <DocsWorkspace initialModule={page.module} initialPackage={page.packageName} />
     </main>
   );

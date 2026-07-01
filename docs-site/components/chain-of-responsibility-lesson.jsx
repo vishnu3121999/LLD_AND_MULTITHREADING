@@ -501,17 +501,23 @@ export function ChainOfResponsibilityLesson() {
   const [accent, setAccent] = useState("#4f46e5");
 
   useEffect(() => {
-    const savedTheme = window.localStorage.getItem("cor-theme");
     const savedAccent = window.localStorage.getItem("cor-accent-color");
-    if (savedTheme === "dark" || savedTheme === "light") setTheme(savedTheme);
+    setTheme(readSiteLessonTheme());
     if (savedAccent) setAccent(savedAccent);
+
+    function syncTheme(event) {
+      setTheme(event.detail?.theme === "midnight" ? "dark" : readSiteLessonTheme());
+    }
+
+    window.addEventListener("lld-site-theme-change", syncTheme);
+    return () => window.removeEventListener("lld-site-theme-change", syncTheme);
   }, []);
 
   function toggleTheme() {
     setTheme((current) => {
-      const next = current === "dark" ? "light" : "dark";
-      window.localStorage.setItem("cor-theme", next);
-      return next;
+      const next = current === "dark" ? "studio" : "midnight";
+      applySiteLessonTheme(next);
+      return next === "midnight" ? "dark" : "light";
     });
   }
 
@@ -522,51 +528,29 @@ export function ChainOfResponsibilityLesson() {
 
   const vars = useMemo(() => {
     const soft = rgbaFromHex(accent, 0.12);
-    const light = {
-      "--cor-bg": "#f5f7fb",
-      "--cor-surface": "#ffffff",
-      "--cor-surface-2": "#f8fafc",
-      "--cor-text": "#0f172a",
-      "--cor-muted": "#5b677b",
-      "--cor-border": "#dbe3ef",
-      "--cor-code-bg": "#ffffff",
-      "--cor-code-top": "#f2f5fa",
-      "--cor-code-border": "#d8e1ef",
-      "--cor-uml-panel": "#f7f9fd",
-      "--cor-uml-stage": "#ffffff",
-      "--cor-uml-card": "#fbfcff",
-      "--cor-uml-title": "#eaf0fb",
-      "--cor-uml-border": "#6e7c96",
-      "--cor-good": "#0f766e",
-      "--cor-warn": "#b45309",
-      "--cor-danger": "#dc2626"
-    };
-    const dark = {
-      "--cor-bg": "#0d1118",
-      "--cor-surface": "#151b25",
-      "--cor-surface-2": "#101620",
-      "--cor-text": "#e8edf7",
-      "--cor-muted": "#9faac0",
-      "--cor-border": "#283041",
-      "--cor-code-bg": "#050911",
-      "--cor-code-top": "#171d29",
-      "--cor-code-border": "#293140",
-      "--cor-uml-panel": "#111724",
-      "--cor-uml-stage": "#171e2b",
-      "--cor-uml-card": "#181f2b",
-      "--cor-uml-title": "#20293a",
-      "--cor-uml-border": "#8b9ab2",
-      "--cor-good": "#5eead4",
-      "--cor-warn": "#fbbf24",
-      "--cor-danger": "#fb7185"
-    };
 
     return {
       "--cor-brand": accent,
       "--cor-brand-soft": soft,
-      ...(theme === "dark" ? dark : light)
+      "--cor-bg": "var(--site-bg)",
+      "--cor-surface": "var(--site-surface)",
+      "--cor-surface-2": "var(--site-surface-2)",
+      "--cor-text": "var(--site-heading)",
+      "--cor-muted": "var(--site-muted)",
+      "--cor-border": "var(--site-border)",
+      "--cor-code-bg": "var(--site-code-bg)",
+      "--cor-code-top": "var(--site-code-top)",
+      "--cor-code-border": "var(--site-code-border)",
+      "--cor-uml-panel": "var(--site-surface-2)",
+      "--cor-uml-stage": "var(--site-surface)",
+      "--cor-uml-card": "var(--site-surface)",
+      "--cor-uml-title": "var(--site-surface-2)",
+      "--cor-uml-border": "var(--site-muted)",
+      "--cor-good": "var(--site-good)",
+      "--cor-warn": "#f59e0b",
+      "--cor-danger": "var(--site-danger)"
     };
-  }, [accent, theme]);
+  }, [accent]);
 
   return (
     <main style={vars} className="min-h-screen bg-[var(--cor-bg)] text-[var(--cor-text)]">
@@ -811,6 +795,19 @@ export function ChainOfResponsibilityLesson() {
       </div>
     </main>
   );
+}
+
+function readSiteLessonTheme() {
+  return document.documentElement.dataset.siteTheme === "midnight" ? "dark" : "light";
+}
+
+function applySiteLessonTheme(theme) {
+  const normalizedTheme = theme === "midnight" ? "midnight" : "studio";
+  document.documentElement.dataset.siteTheme = normalizedTheme;
+  document.documentElement.classList.toggle("site-midnight", normalizedTheme === "midnight");
+  document.documentElement.classList.toggle("site-studio", normalizedTheme === "studio");
+  window.localStorage.setItem("lld-playbook.site-theme.local", normalizedTheme);
+  window.dispatchEvent(new CustomEvent("lld-site-theme-change", { detail: { theme: normalizedTheme } }));
 }
 
 function Pill({ children }) {
@@ -1089,7 +1086,7 @@ function UmlDiagram({ diagram }) {
               className="absolute overflow-hidden rounded-lg border-2 border-[var(--cor-uml-border)] bg-[var(--cor-uml-card)] shadow-[0_18px_40px_rgba(15,23,42,0.08)]"
               style={{ left: node.x, top: node.y, width: node.w }}
             >
-              <div className={`border-b border-[var(--cor-border)] px-3 py-3 text-center text-sm font-black ${node.tone === "interface" ? "bg-[var(--cor-brand-soft)]" : node.tone === "data" ? "bg-amber-100 text-slate-950" : "bg-[var(--cor-uml-title)]"}`}>
+              <div className={`border-b border-[var(--cor-border)] px-3 py-3 text-center text-sm font-black ${node.tone === "interface" ? "bg-[var(--cor-brand-soft)]" : node.tone === "data" ? "bg-[var(--cor-brand-soft)] text-[var(--cor-text)]" : "bg-[var(--cor-uml-title)]"}`}>
                 {node.title}
                 {node.stereo && <small className="mt-1 block text-[10px] uppercase tracking-[0.08em] text-[var(--cor-muted)]">{node.stereo}</small>}
               </div>

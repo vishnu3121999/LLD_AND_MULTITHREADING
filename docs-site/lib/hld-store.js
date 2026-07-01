@@ -4,6 +4,7 @@ import path from "node:path";
 
 const HLD_DATA_DIR = path.join(process.cwd(), "content", "hld", "problems");
 const VALID_ID = /^[a-z0-9][a-z0-9-]*$/;
+const IMAGE_EXTENSIONS = new Set([".apng", ".avif", ".gif", ".jpeg", ".jpg", ".png", ".svg", ".webp"]);
 const TEXT_PROBLEM_META = {
   camelcamelcamel: {
     title: "Design CamelCamelCamel",
@@ -22,20 +23,28 @@ let writeQueue = Promise.resolve();
 export async function listHldProblems() {
   await ensureHldDataDir();
   const entries = await readdir(HLD_DATA_DIR, { withFileTypes: true }).catch(() => []);
-  const problems = [];
+  const problems = new Map();
 
   for (const entry of entries) {
-    if (!entry.isFile()) continue;
-    const ext = path.extname(entry.name);
-    if (ext !== ".json" && ext !== ".txt") continue;
+    let id = "";
+    let problem = null;
 
-    const id = entry.name.slice(0, -ext.length);
-    const problem = ext === ".json"
-      ? await readHldProblemFile(id)
-      : await readTextHldProblemFile(id);
+    if (entry.isDirectory()) {
+      id = entry.name;
+      problem = await readDirectoryHldProblem(id);
+    } else if (entry.isFile()) {
+      const ext = path.extname(entry.name);
+      if (ext !== ".json" && ext !== ".txt") continue;
+
+      id = entry.name.slice(0, -ext.length);
+      problem = ext === ".json"
+        ? await readHldProblemFile(id)
+        : await readTextHldProblemFile(id);
+    }
+
     if (!problem) continue;
 
-    problems.push({
+    problems.set(problem.id || id, {
       id: problem.id || id,
       title: problem.title || "Untitled",
       summary: problem.summary || "",
@@ -43,16 +52,17 @@ export async function listHldProblems() {
       source: problem.source || "json",
       updated_at: problem.updated_at || "",
       created_at: problem.created_at || "",
-      sectionCount: countSections(problem.sections)
+      sectionCount: countSections(problem.sections),
+      imageCount: Array.isArray(problem.images) ? problem.images.length : 0
     });
   }
 
-  return problems.sort((a, b) => (b.updated_at || "").localeCompare(a.updated_at || ""));
+  return Array.from(problems.values()).sort((a, b) => (b.updated_at || "").localeCompare(a.updated_at || ""));
 }
 
 export async function getHldProblem(id) {
   if (!isValidId(id)) return null;
-  return (await readHldProblemFile(id)) || readTextHldProblemFile(id);
+  return (await readDirectoryHldProblem(id)) || (await readHldProblemFile(id)) || readTextHldProblemFile(id);
 }
 
 export async function createHldProblem(payload) {
@@ -180,27 +190,104 @@ function countSections(sections = []) {
   }, 0);
 }
 
-async function readHldProblemFile(id) {
+async function collectProblemImages(id, assetDir) {
+  try {
+    const entries = await readdir(assetDir, { withFileTypes: true });
+    const images = entries
+      .filter((entry) => entry.isFile() && IMAGE_EXTENSIONS.has(path.extname(entry.name).toLowerCase()))
+      .map((entry) => {
+        const ext = path.extname(entry.name);
+        const basename = entry.name.slice(0, -ext.length);
+        return {
+          fileName: entry.name,
+          src: `/api/hld/assets/${id}/${encodeURIComponent(entry.name)}`,
+          alt: titleFromId(basename),
+          sectionSlug: sectionSlugForImage(basename)
+        };
+      });
+
+    return images.sort((a, b) => a.fileName.localeCompare(b.fileName, undefined, { numeric: true }));
+  } catch {
+    return [];
+  }
+}
+
+function attachImagesToSections(sections = [], images = []) {
+  if (!Array.isArray(sections) || !images.length) return sections;
+
+  return sections.map((section) => {
+    const sectionSlug = slugify(section.title);
+    const sectionImages = images.filter((image) => image.sectionSlug === sectionSlug);
+    const next = { ...section };
+
+    if (sectionImages.length > 0) {
+      next.images = [...(Array.isArray(section.images) ? section.images : []), ...sectionImages];
+    }
+
+    if (section.type === "deepdive" && Array.isArray(section.items)) {
+      next.items = attachImagesToSections(section.items, images);
+    }
+
+    return next;
+  });
+}
+
+function sectionSlugForImage(value) {
+  const slug = slugify(value);
+  if (/^(hld|high-level-design|architecture|system-design|diagram)(-|\d|$)/.test(slug) || slug === "hld") {
+    return "high-level-design";
+  }
+
+  if (/^(deep-dive|deepdive|deep)(-|\d|$)/.test(slug)) {
+    return "deep-dives";
+  }
+
+  if (/^(api|api-design)(-|\d|$)/.test(slug)) {
+    return "api-design";
+  }
+
+  if (/^(nfr|non-functional|non-functional-requirements)(-|\d|$)/.test(slug)) {
+    return "non-functional-requirements";
+  }
+
+  if (/^(fr|functional|functional-requirements)(-|\d|$)/.test(slug)) {
+    return "functional-requirements";
+  }
+
+  if (/^(entities|core-entities|data-model)(-|\d|$)/.test(slug)) {
+    return "core-entities";
+  }
+
+  return slug;
+}
+
+async function readHldProblemFile(id, target = problemPath(id), assetDir = path.join(HLD_DATA_DIR, id)) {
   if (!isValidId(id)) return null;
 
   try {
-    const raw = await readFile(problemPath(id), "utf8");
+    const raw = await readFile(target, "utf8");
     const parsed = JSON.parse(raw);
-    return parsed && typeof parsed === "object" ? parsed : null;
+    if (!parsed || typeof parsed !== "object") return null;
+    const images = await collectProblemImages(id, assetDir);
+    return {
+      ...parsed,
+      images,
+      sections: attachImagesToSections(parsed.sections || [], images)
+    };
   } catch {
     return null;
   }
 }
 
-async function readTextHldProblemFile(id) {
+async function readTextHldProblemFile(id, target = path.join(HLD_DATA_DIR, `${id}.txt`), assetDir = path.join(HLD_DATA_DIR, id)) {
   if (!isValidId(id)) return null;
 
   try {
-    const target = path.join(HLD_DATA_DIR, `${id}.txt`);
     const [raw, fileStat] = await Promise.all([
       readFile(target, "utf8"),
       stat(target)
     ]);
+    const images = await collectProblemImages(id, assetDir);
     const meta = TEXT_PROBLEM_META[id] || {
       title: titleFromId(id),
       summary: "Solved high-level design problem.",
@@ -215,8 +302,40 @@ async function readTextHldProblemFile(id) {
       source: "text",
       created_at: fileStat.birthtime.toISOString(),
       updated_at: fileStat.mtime.toISOString(),
-      sections: parseTextProblemSections(repairCommonMojibake(raw))
+      images,
+      sections: attachImagesToSections(
+        parseTextProblemSections(repairCommonMojibake(raw)),
+        images
+      )
     };
+  } catch {
+    return null;
+  }
+}
+
+async function readDirectoryHldProblem(id) {
+  if (!isValidId(id)) return null;
+
+  try {
+    const dir = path.join(HLD_DATA_DIR, id);
+    const entries = await readdir(dir, { withFileTypes: true });
+    const files = entries.filter((entry) => entry.isFile()).map((entry) => entry.name);
+    const jsonFile = files.includes(`${id}.json`)
+      ? `${id}.json`
+      : files.find((file) => path.extname(file) === ".json");
+    const textFile = files.includes(`${id}.txt`)
+      ? `${id}.txt`
+      : files.find((file) => path.extname(file) === ".txt");
+
+    if (jsonFile) {
+      return readHldProblemFile(id, path.join(dir, jsonFile), dir);
+    }
+
+    if (textFile) {
+      return readTextHldProblemFile(id, path.join(dir, textFile), dir);
+    }
+
+    return null;
   } catch {
     return null;
   }

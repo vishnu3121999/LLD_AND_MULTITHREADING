@@ -41,7 +41,7 @@ export function NewsletterForm() {
         <Mail size={16} aria-hidden="true" />
         {loading ? "Sending" : "Join"}
       </Button>
-      {status && <p className="text-sm text-slate-600 sm:basis-full">{status}</p>}
+      {status && <p className="text-sm text-[var(--site-muted)] sm:basis-full">{status}</p>}
     </form>
   );
 }

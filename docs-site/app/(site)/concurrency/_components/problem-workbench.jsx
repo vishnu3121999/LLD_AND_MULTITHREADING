@@ -21,7 +21,7 @@ import {
 const MonacoEditor = dynamic(() => import("@monaco-editor/react"), {
   ssr: false,
   loading: () => (
-    <div className="grid h-full min-h-[420px] place-items-center bg-[#fbfdff] text-sm text-[var(--cor-muted)]">
+    <div className="grid h-full min-h-[420px] place-items-center bg-[var(--cor-surface)] text-sm text-[var(--cor-muted)]">
       Loading editor...
     </div>
   )
@@ -165,6 +165,11 @@ function getLanguage(languageId) {
 
 function getTheme(themeId) {
   return themeOptions.find((theme) => theme.id === themeId) || themeOptions[0];
+}
+
+function getDefaultEditorThemeId() {
+  if (typeof document === "undefined") return "lldCourseLight";
+  return document.documentElement.dataset.siteTheme === "midnight" ? "vs-dark" : "lldCourseLight";
 }
 
 function getStarterCode(problem, languageId) {
@@ -373,7 +378,8 @@ export function ProblemWorkbench({ lesson }) {
 
   useEffect(() => {
     const storedLanguage = getLanguage(localStorage.getItem(languageStorageKey));
-    const storedTheme = getTheme(localStorage.getItem(themeStorageKey));
+    const storedThemeId = localStorage.getItem(themeStorageKey) || getDefaultEditorThemeId();
+    const storedTheme = getTheme(storedThemeId);
     const nextStorageKey = getCodeStorageKey(lesson.slug, storedLanguage.id);
     const savedCode = localStorage.getItem(nextStorageKey);
 
@@ -389,6 +395,16 @@ export function ProblemWorkbench({ lesson }) {
     }
     setLoadedSavedCode(true);
   }, [lesson.slug, problem]);
+
+  useEffect(() => {
+    function handleSiteThemeChange() {
+      if (localStorage.getItem(themeStorageKey)) return;
+      setEditorTheme(getDefaultEditorThemeId());
+    }
+
+    window.addEventListener("lld-site-theme-change", handleSiteThemeChange);
+    return () => window.removeEventListener("lld-site-theme-change", handleSiteThemeChange);
+  }, []);
 
   useEffect(() => {
     if (!loadedSavedCode) return undefined;
@@ -461,7 +477,7 @@ export function ProblemWorkbench({ lesson }) {
                 Submit Contract
               </div>
               <p className="mt-2 text-sm leading-6 text-[var(--cor-muted)]">
-                Keep the public class name as <code className="rounded bg-white px-1.5 py-0.5 font-mono text-xs text-[var(--cor-heading)]">{problem.exportName}</code>. The runner creates instances from that class and validates the API in the browser.
+                Keep the public class name as <code className="rounded bg-[var(--cor-surface)] px-1.5 py-0.5 font-mono text-xs text-[var(--cor-heading)]">{problem.exportName}</code>. The runner creates instances from that class and validates the API in the browser.
               </p>
             </div>
 
@@ -469,7 +485,7 @@ export function ProblemWorkbench({ lesson }) {
               <h2 className="text-xl font-semibold tracking-normal text-[var(--cor-heading)]">Interview notes</h2>
               <div className="mt-3 grid gap-3">
                 {lesson.sections.map(([title, body]) => (
-                  <div key={title} className="rounded-lg border border-[var(--cor-border)] bg-white p-4">
+                  <div key={title} className="rounded-lg border border-[var(--cor-border)] bg-[var(--cor-surface)] p-4">
                     <h3 className="text-sm font-semibold text-[var(--cor-heading)]">{title}</h3>
                     <p className="mt-2 text-sm leading-6 text-[var(--cor-muted)]">{body}</p>
                   </div>
@@ -509,7 +525,7 @@ export function ProblemWorkbench({ lesson }) {
                 id={`${lesson.slug}-language`}
                 value={currentLanguage.id}
                 onChange={(event) => handleLanguageChange(event.target.value)}
-                className="h-9 rounded-md border border-[var(--cor-border)] bg-white px-3 text-sm font-semibold text-[var(--cor-heading)] outline-none transition hover:border-[var(--cor-brand)] focus:border-[var(--cor-brand)]"
+                className="h-9 rounded-md border border-[var(--cor-border)] bg-[var(--cor-surface)] px-3 text-sm font-semibold text-[var(--cor-heading)] outline-none transition hover:border-[var(--cor-brand)] focus:border-[var(--cor-brand)]"
               >
                 {languageOptions.map((language) => (
                   <option key={language.id} value={language.id}>
@@ -525,7 +541,7 @@ export function ProblemWorkbench({ lesson }) {
                 id={`${lesson.slug}-theme`}
                 value={currentTheme.id}
                 onChange={(event) => handleThemeChange(event.target.value)}
-                className="h-9 rounded-md border border-[var(--cor-border)] bg-white px-3 text-sm font-semibold text-[var(--cor-heading)] outline-none transition hover:border-[var(--cor-brand)] focus:border-[var(--cor-brand)]"
+                className="h-9 rounded-md border border-[var(--cor-border)] bg-[var(--cor-surface)] px-3 text-sm font-semibold text-[var(--cor-heading)] outline-none transition hover:border-[var(--cor-brand)] focus:border-[var(--cor-brand)]"
               >
                 {themeOptions.map((theme) => (
                   <option key={theme.id} value={theme.id}>
@@ -538,7 +554,7 @@ export function ProblemWorkbench({ lesson }) {
               <button
                 type="button"
                 onClick={saveCode}
-                className="grid h-9 w-9 place-items-center rounded-md border border-[var(--cor-border)] bg-white text-[var(--cor-heading)] transition hover:border-[var(--cor-brand)] hover:text-[var(--cor-brand)]"
+                className="grid h-9 w-9 place-items-center rounded-md border border-[var(--cor-border)] bg-[var(--cor-surface)] text-[var(--cor-heading)] transition hover:border-[var(--cor-brand)] hover:text-[var(--cor-brand)]"
                 aria-label="Save code"
                 title="Save"
               >
@@ -547,7 +563,7 @@ export function ProblemWorkbench({ lesson }) {
               <button
                 type="button"
                 onClick={formatCode}
-                className="grid h-9 w-9 place-items-center rounded-md border border-[var(--cor-border)] bg-white text-[var(--cor-heading)] transition hover:border-[var(--cor-brand)] hover:text-[var(--cor-brand)]"
+                className="grid h-9 w-9 place-items-center rounded-md border border-[var(--cor-border)] bg-[var(--cor-surface)] text-[var(--cor-heading)] transition hover:border-[var(--cor-brand)] hover:text-[var(--cor-brand)]"
                 aria-label="Format code"
                 title="Format"
               >
@@ -556,7 +572,7 @@ export function ProblemWorkbench({ lesson }) {
               <button
                 type="button"
                 onClick={resetCode}
-                className="grid h-9 w-9 place-items-center rounded-md border border-[var(--cor-border)] bg-white text-[var(--cor-heading)] transition hover:border-[var(--cor-brand)] hover:text-[var(--cor-brand)]"
+                className="grid h-9 w-9 place-items-center rounded-md border border-[var(--cor-border)] bg-[var(--cor-surface)] text-[var(--cor-heading)] transition hover:border-[var(--cor-brand)] hover:text-[var(--cor-brand)]"
                 aria-label="Reset code"
                 title="Reset"
               >
@@ -586,8 +602,8 @@ export function ProblemWorkbench({ lesson }) {
                     onClick={() => setActiveTab(tab.id)}
                     className={`inline-flex h-8 items-center gap-2 rounded-md px-3 text-sm font-medium transition ${
                       isActive
-                        ? "bg-white text-[var(--cor-heading)] shadow-sm"
-                        : "text-[var(--cor-muted)] hover:bg-white hover:text-[var(--cor-heading)]"
+                        ? "bg-[var(--cor-surface)] text-[var(--cor-heading)] shadow-sm"
+                        : "text-[var(--cor-muted)] hover:bg-[var(--cor-surface)] hover:text-[var(--cor-heading)]"
                     }`}
                   >
                     <Icon size={15} aria-hidden="true" />
@@ -610,7 +626,7 @@ export function ProblemWorkbench({ lesson }) {
                 className={`grid h-8 w-8 place-items-center rounded-md border transition ${
                   wordWrap
                     ? "border-[var(--cor-brand)] bg-[var(--cor-brand-soft)] text-[var(--cor-brand)]"
-                    : "border-[var(--cor-border)] bg-white text-[var(--cor-muted)] hover:border-[var(--cor-brand)]"
+                    : "border-[var(--cor-border)] bg-[var(--cor-surface)] text-[var(--cor-muted)] hover:border-[var(--cor-brand)]"
                 }`}
                 aria-label="Toggle word wrap"
                 title="Toggle word wrap"
@@ -620,7 +636,7 @@ export function ProblemWorkbench({ lesson }) {
               <button
                 type="button"
                 onClick={() => setEditorFullScreen((current) => !current)}
-                className="grid h-8 w-8 place-items-center rounded-md border border-[var(--cor-border)] bg-white text-[var(--cor-muted)] transition hover:border-[var(--cor-brand)] hover:text-[var(--cor-brand)]"
+                className="grid h-8 w-8 place-items-center rounded-md border border-[var(--cor-border)] bg-[var(--cor-surface)] text-[var(--cor-muted)] transition hover:border-[var(--cor-brand)] hover:text-[var(--cor-brand)]"
                 aria-label={editorFullScreen ? "Exit full screen editor" : "Open full screen editor"}
                 title={editorFullScreen ? "Exit full screen" : "Full screen"}
               >
@@ -663,7 +679,7 @@ export function ProblemWorkbench({ lesson }) {
           )}
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--cor-border)] bg-white px-4 py-2 text-xs text-[var(--cor-muted)]">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--cor-border)] bg-[var(--cor-surface)] px-4 py-2 text-xs text-[var(--cor-muted)]">
           <span>{saveState}</span>
           <span>Ctrl/Cmd+Enter run | Ctrl/Cmd+S save | Ctrl/Cmd+Shift+F format</span>
         </div>
@@ -733,7 +749,7 @@ function TestsPanel({ problem, results, runError, passedCount, onRun, running })
     : problem.tests.map((test) => ({ ...test, status: "idle" }));
 
   return (
-    <div id="tests" className="h-full overflow-y-auto bg-white p-5">
+    <div id="tests" className="h-full overflow-y-auto bg-[var(--cor-surface)] p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="text-lg font-semibold text-[var(--cor-heading)]">Test results</h3>

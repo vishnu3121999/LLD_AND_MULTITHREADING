@@ -88,7 +88,7 @@ function ProblemCard({ problem }) {
   return (
     <Link
       href={`/hld/${problem.id}`}
-      className="group flex min-h-56 flex-col rounded-lg border border-[var(--hld-border)] bg-white p-5 transition hover:border-[var(--hld-brand)] hover:shadow-[0_16px_34px_rgba(15,23,42,0.08)]"
+      className="group flex min-h-56 flex-col rounded-lg border border-[var(--hld-border)] bg-[var(--hld-surface)] p-5 transition hover:border-[var(--hld-brand)] hover:shadow-[var(--site-shadow)]"
     >
       <div className="flex flex-wrap gap-2">
         {(problem.tags || []).map((tag) => (

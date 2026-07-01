@@ -20,8 +20,8 @@ export default function PricingPage() {
     <main className="site-container py-10">
       <div className="mb-8 max-w-3xl">
         <Badge variant="amber">Stripe checkout</Badge>
-        <h1 className="mt-4 text-4xl font-semibold tracking-normal text-slate-950">Payment Gateway Integration</h1>
-        <p className="mt-3 text-lg leading-8 text-slate-600">
+        <h1 className="mt-4 text-4xl font-semibold tracking-normal text-[var(--site-heading)]">Payment Gateway Integration</h1>
+        <p className="mt-3 text-lg leading-8 text-[var(--site-muted)]">
           The checkout route uses Stripe when keys are configured and falls back to a demo redirect during local development.
         </p>
       </div>
@@ -31,19 +31,19 @@ export default function PricingPage() {
           <CardHeader>
             <Badge variant="blue" className="w-fit">Premium</Badge>
             <CardTitle className="text-3xl">$9</CardTitle>
-            <p className="text-sm leading-6 text-slate-600">One-time access for the current premium set.</p>
+            <p className="text-sm leading-6 text-[var(--site-muted)]">One-time access for the current premium set.</p>
           </CardHeader>
           <CardContent className="space-y-5">
             <ul className="space-y-3">
               {features.map((feature) => (
-                <li key={feature} className="flex items-center gap-2 text-sm text-slate-700">
+                <li key={feature} className="flex items-center gap-2 text-sm text-[var(--site-text)]">
                   <Check size={16} className="text-teal-700" aria-hidden="true" />
                   {feature}
                 </li>
               ))}
             </ul>
             <PricingAction />
-            <p className="text-xs leading-5 text-slate-500">Set STRIPE_SECRET_KEY and STRIPE_PRICE_ID to enable live checkout.</p>
+            <p className="text-xs leading-5 text-[var(--site-muted)]">Set STRIPE_SECRET_KEY and STRIPE_PRICE_ID to enable live checkout.</p>
           </CardContent>
         </Card>
       </div>

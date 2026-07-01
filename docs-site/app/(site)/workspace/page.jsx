@@ -6,7 +6,7 @@ export const metadata = {
 
 export default function WorkspacePage() {
   return (
-    <main className="workspace-route border-t border-slate-200 bg-slate-50">
+    <main className="workspace-route border-t border-[var(--site-border)] bg-[var(--site-bg)]">
       <DocsWorkspace />
     </main>
   );
