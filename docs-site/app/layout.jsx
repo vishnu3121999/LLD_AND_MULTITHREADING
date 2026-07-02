@@ -19,8 +19,12 @@ export const metadata = {
   title: "LLD Playbook",
   description: "Template-based low-level design interview preparation with Java visualizations.",
   icons: {
-    icon: "/logo.png",
-    apple: "/logo.png"
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.png", type: "image/png", sizes: "256x256" }
+    ],
+    shortcut: "/favicon.ico",
+    apple: [{ url: "/apple-icon.png", type: "image/png", sizes: "180x180" }]
   }
 };
 
