@@ -28,25 +28,20 @@ No single point of failure (fault tolerance).
 CAP Theorem:
   Url conversion & access (FR-1 & FR-2):
     availability > consistency
-    <mark>1-5 sec</mark> inconsistency allowed
+    `1-5 sec` inconsistency allowed
   Analytics record & view (FR-3 & FR-4):
     availability > consistency :
-      Minor delay <mark>(1–5 sec)</mark> in analytics updates is acceptable.
+      Minor delay `(1–5 sec)` in analytics updates is acceptable.
 Throughput & Latencies:
   Url creation (FR-1):
-    Write TPS = <mark>1M/day = 10/s</mark>
+    Write TPS = `1M/day = 10/s`
     Write Latency = never mind
   Url access (FR-2):
-    Read QPS = <mark>100M/day = 1k/s</mark>
-    Read Latency = <mark>100ms</mark>
+    Read QPS = `100M/day = 1k/s`
+    Read Latency = `100ms`
 Handle Celebrity/Hot keys
 Handle traffic spikes in cost effective way (optional, only if time at end)
 
-## Core Entities
-
-- Article
-- User
-- Publisher
 
 ## API Design
 
@@ -63,52 +58,52 @@ STATUS : 200,OK
 RESPONSE BODY:
 User
 ```
-
-Returns a page of articles for a region.
-
-Notes:
-
-1. Cursor-based pagination is preferred over offset-based pagination at scale.
-2. Region can be inferred from the user's IP using an IP-to-region database, or it can be passed explicitly by the client.
-
 ```http
-GET /article/{id}
+GET /feed?cursor={cursor}&limit={limit}&region={region}
+
+REQUEST BODY:
+{
+  "name" : "vishnu",
+  "phone : "91338"
+}
+
+STATUS : 200,OK
+RESPONSE BODY:
+User
 ```
 
-Returns:
-
-```http
-302 Found
-Location: https://publisher.example/article-path
-```
-
-This endpoint is optional. The browser could directly navigate to the publisher URL from the article object. A redirect endpoint is useful if we want click analytics before sending the user to the publisher.
 
 ## High-Level Design
 
-Publisher ingestion can happen through three sources:
-
-1. Webhooks, when a publisher supports push-based updates.
-2. RSS polling, when a publisher exposes feeds.
-3. Web scraping, when neither webhook nor RSS is available.
-
-Preference order:
-
-```text
-Webhook > RSS > web scrape
+FR-1:
+```sql
+SELECT user_id, username, email
+FROM users
+WHERE is_active = true
+ORDER BY created_at DESC;
 ```
+EXPLANATION:
+Depending on your platform or flavor of SQL, you can sometimes use specific identifiers for specialized syntax.
 
-`rssUpdateFreq` can be configured manually by admins or adjusted by the data collection service based on real-time publisher behavior.
+FR-2:
+```sql
+SELECT user_id, username, email
+FROM users
+WHERE is_active = true
+ORDER BY created_at DESC;
+```
+EXPLANATION:
+Depending on your platform or flavor of SQL, you can sometimes use specific identifiers for specialized syntax.
 
-Publisher tiers:
-
-| Tier | Update frequency | Worker behavior |
-|---|---|---|
-| High frequency | Less than 15 minutes | Poll/scrape frequently |
-| Medium frequency | Less than 1 hour | Poll/scrape hourly |
-| Low frequency | More than 1 hour | Poll/scrape less often |
-
-The data collection service can run separate worker pools for publisher tiers. New article events are written to the article store and used to update feed caches.
+FR-3:
+```sql
+SELECT user_id, username, email
+FROM users
+WHERE is_active = true
+ORDER BY created_at DESC;
+```
+EXPLANATION:
+Depending on your platform or flavor of SQL, you can sometimes use specific identifiers for specialized syntax.
 
 ## Deep Dives
 

@@ -7,7 +7,6 @@ import {
   ArrowLeft,
   Ban,
   Code2,
-  Database,
   Edit3,
   FileText,
   ListChecks,
@@ -56,27 +55,21 @@ const sectionBlueprints = {
     hint: "Cover fault tolerance, CAP choices, scale, throughput, latency, hot keys, and spikes.",
     icon: ShieldCheck
   },
-  "core-entities": {
-    number: "3",
-    label: "Data Model",
-    hint: "Start with the core entities; evolve the detailed model during the HLD and deep dives.",
-    icon: Database
-  },
   "api-design": {
-    number: "4",
+    number: "3",
     label: "Interface",
     hint: "Pick the protocol, then show concrete request and response contracts.",
     icon: Code2
   },
   "high-level-design": {
-    number: "5",
+    number: "4",
     label: "Architecture",
     hint: "Show components, data stores, queues, caches, and the main request flows.",
     icon: Network
   },
   "deep-dives": {
-    number: "6",
-    label: "Tradeoffs",
+    number: "5",
+    label: "Optimizations & Tradeoffs",
     hint: "Quantify bottlenecks, compare options, and close failure-mode gaps.",
     icon: SearchCheck
   }
@@ -85,10 +78,9 @@ const sectionBlueprints = {
 const answerFlow = [
   ["1", "Functional requirements"],
   ["2", "Non-functional requirements"],
-  ["3", "Core entities"],
-  ["4", "API design"],
-  ["5", "High-level design"],
-  ["6", "Deep dives"]
+  ["3", "API design"],
+  ["4", "High-level design"],
+  ["5", "Deep dives"]
 ];
 
 const sectionTemplates = {
@@ -147,20 +139,6 @@ const sectionTemplates = {
           "For each functional requirement, estimate throughput and latency.",
           "Mention hot keys or celebrity users when applicable.",
           "Add traffic spikes only if time allows or the problem clearly needs it."
-        ]
-      }
-    ]
-  },
-  "core-entities": {
-    title: "Core Entities Template",
-    summary: "Keep this lightweight. The detailed data model can evolve during the HLD and deep dives.",
-    groups: [
-      {
-        title: "How to present it",
-        items: [
-          "Tell the interviewer you will start with a simple entity list.",
-          "Use the list only to align on vocabulary.",
-          "Document the data model more thoroughly once the architecture becomes clearer."
         ]
       }
     ]
@@ -505,7 +483,7 @@ function SolutionSection({ node, mermaidReady, index, outOfScopeNode, templateCo
             <TemplatePanel template={template} />
           )}
 
-          {Array.isArray(node.images) && node.images.length > 0 && (
+          {node.slug !== "high-level-design" && Array.isArray(node.images) && node.images.length > 0 && (
             <SectionImages images={node.images} />
           )}
 
@@ -625,8 +603,8 @@ function SectionBody({ node, mermaidReady }) {
     return <ApiDesignBlock body={stripEmptyBulletOnlyLines(node.body)} />;
   }
 
-  if (node.slug === "core-entities") {
-    return <CoreEntitiesBlock body={node.body} />;
+  if (node.slug === "high-level-design") {
+    return <HighLevelDesignBlock body={stripEmptyBulletOnlyLines(node.body)} images={node.images} />;
   }
 
   return <MarkdownBlock body={stripEmptyBulletOnlyLines(node.body)} />;
@@ -654,26 +632,6 @@ function SectionImages({ images }) {
         </figure>
       ))}
     </div>
-  );
-}
-
-function CoreEntitiesBlock({ body }) {
-  const items = extractPlainItems(body);
-  if (items.length < 2 || items.length > 12) {
-    return <MarkdownBlock body={stripEmptyBulletOnlyLines(body)} />;
-  }
-
-  return (
-    <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-      {items.map((item) => (
-        <li
-          key={item}
-          className="flex min-h-10 items-center rounded-md border border-[var(--hld-border)] bg-[var(--hld-surface-2)] px-3 text-sm font-semibold text-[var(--hld-heading)]"
-        >
-          {item}
-        </li>
-      ))}
-    </ul>
   );
 }
 
@@ -723,6 +681,138 @@ function NfrDetailList({ items, depth = 0 }) {
 function InlineMarkdownText({ value, className }) {
   const html = useMemo(() => marked.parseInline(String(value || "")), [value]);
   return <div className={className} dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
+function HighLevelDesignBlock({ body, images = [] }) {
+  const parsed = useMemo(() => parseHighLevelDesign(body), [body]);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    setActiveIndex((current) => Math.min(current, Math.max(parsed.flows.length - 1, 0)));
+  }, [parsed.flows.length]);
+
+  if (parsed.flows.length === 0) {
+    return <MarkdownBlock body={body} />;
+  }
+
+  const hasTabs = true;
+  const activeFlow = parsed.flows[activeIndex] || parsed.flows[0];
+
+  return (
+    <div className="hld-flow-tabs">
+      {parsed.intro && <MarkdownBlock body={parsed.intro} />}
+      <div className="hld-flow-tablist" role="tablist" aria-label="High-level design flows">
+        {parsed.flows.map((flow, index) => {
+          const isActive = index === activeIndex;
+          return (
+            <button
+              key={`${flow.id}-${index}`}
+              type="button"
+              id={`hld-flow-tab-${index}`}
+              role="tab"
+              aria-selected={isActive}
+              aria-controls={`hld-flow-panel-${index}`}
+              className={`hld-flow-tab ${isActive ? "hld-flow-tab-active" : ""}`}
+              onClick={() => setActiveIndex(index)}
+              >
+                <span>{flow.id}</span>
+              </button>
+          );
+        })}
+      </div>
+      <div
+        id={`hld-flow-panel-${activeIndex}`}
+        role="tabpanel"
+        aria-labelledby={`hld-flow-tab-${activeIndex}`}
+        className="hld-flow-panel"
+      >
+        <HldFlowItem key={`${activeFlow.id}-${activeIndex}`} flow={activeFlow} index={activeIndex} images={images} showHeading={!hasTabs} />
+      </div>
+    </div>
+  );
+}
+
+function HldFlowItem({ flow, index, images, showHeading = true }) {
+  return (
+    <section className="hld-flow-item">
+      {showHeading && (
+        <div className="hld-flow-heading">
+          <span className="hld-flow-index">{index + 1}.</span>
+          <span className="hld-flow-id">{flow.id}</span>
+        </div>
+      )}
+
+      <HldFlowImage flowId={flow.id} images={images} />
+
+      {flow.sql && <HldSqlBlock code={flow.sql} />}
+
+      {flow.explanation && (
+        <div className="hld-flow-explanation">
+          <MarkdownBlock body={flow.explanation} />
+        </div>
+      )}
+    </section>
+  );
+}
+
+function HldFlowImage({ flowId, images = [] }) {
+  const matching = images.filter((image) => image.hldFlow === flowId);
+  const light = matching.find((image) => image.theme === "light");
+  const dark = matching.find((image) => image.theme === "dark");
+  const fallback = matching.find((image) => !image.theme) || matching[0];
+
+  if (!light && !dark && !fallback) return null;
+
+  return (
+    <figure className="hld-flow-image-frame">
+      {light && (
+        <img
+          src={light.src}
+          alt={light.alt || `${flowId} architecture`}
+          loading="lazy"
+          className={`hld-flow-image ${dark ? "hld-flow-image-light" : ""}`}
+        />
+      )}
+      {dark && (
+        <img
+          src={dark.src}
+          alt={dark.alt || `${flowId} architecture`}
+          loading="lazy"
+          className={`hld-flow-image ${light ? "hld-flow-image-dark" : ""}`}
+        />
+      )}
+      {!light && !dark && fallback && (
+        <img
+          src={fallback.src}
+          alt={fallback.alt || `${flowId} architecture`}
+          loading="lazy"
+          className="hld-flow-image"
+        />
+      )}
+    </figure>
+  );
+}
+
+function HldSqlBlock({ code }) {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!ref.current) return;
+    try {
+      hljs.highlightElement(ref.current);
+    } catch {
+      // Highlighting should never block rendering the solution.
+    }
+  }, [code]);
+
+  return (
+    <figure className="hld-flow-sql">
+      <figcaption>SQL</figcaption>
+      <pre>
+        <code ref={ref} className="language-sql">{code}</code>
+      </pre>
+    </figure>
+  );
 }
 
 function ApiDesignBlock({ body }) {
@@ -793,11 +883,6 @@ function ApiBodyBlock({ title, block }) {
     <figure className="hld-api-body-block">
       <figcaption className="hld-api-body-caption">
         <span>{title}</span>
-        {block.lang && (
-          <span className="hld-api-code-lang">
-            {block.lang}
-          </span>
-        )}
       </figcaption>
       <pre>
         <code>{block.code}</code>
@@ -866,7 +951,7 @@ function prepareSolution(sections) {
   const used = new Map();
   const nodes = sections.map((section, index) => buildNode(section, 0, [index], used));
   const outOfScopeNode = nodes.find((node) => node.slug === "out-of-scope") || null;
-  const visibleSections = nodes.filter((node) => node.slug !== "out-of-scope");
+  const visibleSections = nodes.filter((node) => node.slug !== "out-of-scope" && node.slug !== "core-entities");
 
   return { visibleSections, outOfScopeNode };
 }
@@ -916,18 +1001,6 @@ function stripEmptyBulletOnlyLines(body) {
     .trim();
 }
 
-function extractPlainItems(body) {
-  return stripEmptyBulletOnlyLines(body)
-    .split("\n")
-    .map((line) =>
-      line
-        .trim()
-        .replace(/^(?:[-*•○◦▪▫□◊§®]|\d+[.)]|[a-z][.)]|[ivxlcdm]+[.)])\s+/i, "")
-        .trim()
-    )
-    .filter(Boolean);
-}
-
 function parseNfrOutline(body) {
   const root = { children: [] };
   const stack = [{ indent: -1, node: root }];
@@ -958,6 +1031,92 @@ function parseNfrOutline(body) {
 
 function stripTrailingColon(value) {
   return String(value || "").trim().replace(/\s*:\s*$/, "");
+}
+
+function parseHighLevelDesign(body) {
+  const tokens = tokenizeMarkdownFences(body);
+  const intro = [];
+  const flows = [];
+  let currentFlow = null;
+  let mode = "notes";
+
+  function startFlow(id, firstLine = "") {
+    currentFlow = {
+      id: id.toUpperCase(),
+      notes: [],
+      sql: "",
+      explanation: []
+    };
+    flows.push(currentFlow);
+    mode = "notes";
+    if (firstLine.trim()) currentFlow.notes.push(firstLine.trim());
+  }
+
+  function appendText(value) {
+    const lines = String(value || "").replace(/\r\n/g, "\n").split("\n");
+
+    lines.forEach((line) => {
+      const trimmed = line.trim();
+      const flowMatch = trimmed.match(/^(FR-\d+)\s*:\s*(.*)$/i);
+      if (flowMatch) {
+        startFlow(flowMatch[1], flowMatch[2] || "");
+        return;
+      }
+
+      const explanationMatch = trimmed.match(/^EXPLANATION\s*:\s*(.*)$/i);
+      if (explanationMatch && currentFlow) {
+        mode = "explanation";
+        if (explanationMatch[1]) currentFlow.explanation.push(explanationMatch[1]);
+        return;
+      }
+
+      if (!currentFlow) {
+        intro.push(line);
+        return;
+      }
+
+      if (mode === "explanation") {
+        currentFlow.explanation.push(line);
+      } else {
+        currentFlow.notes.push(line);
+      }
+    });
+  }
+
+  tokens.forEach((token) => {
+    if (token.type === "text") {
+      appendText(token.value);
+      return;
+    }
+
+    if (currentFlow && String(token.lang || "").toLowerCase() === "sql" && !currentFlow.sql) {
+      currentFlow.sql = token.code.trim();
+      return;
+    }
+
+    const fenced = [
+      `\`\`\`${token.lang || ""}`,
+      token.code.trim(),
+      "```"
+    ].join("\n");
+
+    if (currentFlow && mode === "explanation") {
+      currentFlow.explanation.push(fenced);
+    } else if (currentFlow) {
+      currentFlow.notes.push(fenced);
+    } else {
+      intro.push(fenced);
+    }
+  });
+
+  return {
+    intro: intro.join("\n").trim(),
+    flows: flows.map((flow) => ({
+      ...flow,
+      notes: flow.notes.join("\n").trim(),
+      explanation: flow.explanation.join("\n").trim()
+    }))
+  };
 }
 
 function parseApiDesign(body) {

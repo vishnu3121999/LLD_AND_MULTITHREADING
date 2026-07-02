@@ -17,14 +17,30 @@ const IMAGE_TYPES = new Map([
 
 export async function GET(_request, { params }) {
   const { id, asset } = await params;
-  const ext = path.extname(asset || "").toLowerCase();
+  const relativeAsset = decodeURIComponent(asset || "");
+  const ext = path.extname(relativeAsset).toLowerCase();
+  const normalizedAsset = path.normalize(relativeAsset);
 
-  if (!VALID_ID.test(id || "") || path.basename(asset || "") !== asset || !IMAGE_TYPES.has(ext)) {
+  if (
+    !VALID_ID.test(id || "") ||
+    !relativeAsset ||
+    path.isAbsolute(normalizedAsset) ||
+    normalizedAsset.startsWith("..") ||
+    !IMAGE_TYPES.has(ext)
+  ) {
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
 
   try {
-    const filePath = path.join(HLD_DATA_DIR, id, asset);
+    const problemDir = path.join(HLD_DATA_DIR, id);
+    const filePath = path.join(problemDir, normalizedAsset);
+    const resolvedPath = path.resolve(filePath);
+    const relativePath = path.relative(path.resolve(problemDir), resolvedPath);
+
+    if (relativePath.startsWith("..") || path.isAbsolute(relativePath)) {
+      return NextResponse.json({ error: "not found" }, { status: 404 });
+    }
+
     const file = await readFile(filePath);
     return new Response(file, {
       headers: {

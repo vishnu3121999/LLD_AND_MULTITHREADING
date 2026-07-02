@@ -1353,6 +1353,138 @@
   color: inherit;
 }
 
+.hld-flow-tabs {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.hld-flow-tablist {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--hld-border);
+  padding-bottom: 0.5rem;
+}
+
+.hld-flow-tab {
+  display: inline-flex;
+  height: 2rem;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.35rem;
+  border: 1px solid transparent;
+  border-radius: 0.375rem;
+  background: transparent;
+  padding: 0 0.65rem;
+  color: var(--hld-muted);
+  font-size: 0.78rem;
+  font-weight: 650;
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+}
+
+.hld-flow-tab:hover {
+  border-color: var(--hld-border);
+  background: var(--hld-surface-2);
+  color: var(--hld-heading);
+}
+
+.hld-flow-tab-active {
+  border-color: color-mix(in srgb, var(--hld-brand) 28%, var(--hld-border));
+  background: var(--hld-brand-soft);
+  color: var(--hld-heading);
+}
+
+.hld-flow-panel {
+  min-width: 0;
+}
+
+.hld-flow-item {
+  display: grid;
+  gap: 1rem;
+}
+
+.hld-flow-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  color: var(--hld-heading);
+  font-size: 0.92rem;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.hld-flow-index {
+  flex: 0 0 1.25rem;
+  color: #818cf8;
+  font-weight: 400;
+  text-align: right;
+}
+
+.hld-flow-id {
+  color: var(--hld-heading);
+}
+
+.hld-flow-image-frame {
+  margin: 0;
+  overflow: auto;
+  border-radius: 0.5rem;
+}
+
+.hld-flow-image {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+}
+
+.hld-flow-image-dark {
+  display: none;
+}
+
+[data-site-theme="midnight"] .hld-flow-image-light {
+  display: none;
+}
+
+[data-site-theme="midnight"] .hld-flow-image-dark {
+  display: block;
+}
+
+.hld-flow-sql {
+  margin: 0;
+}
+
+.hld-flow-sql figcaption {
+  margin-bottom: 0.3rem;
+  color: var(--hld-muted);
+  font-size: 0.73rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.hld-flow-sql pre {
+  max-height: 18rem;
+  overflow: auto;
+  margin: 0;
+  border-left: 2px solid color-mix(in srgb, var(--hld-brand) 42%, var(--hld-border));
+  background: transparent;
+  padding: 0.3rem 0 0.3rem 0.75rem;
+  color: var(--hld-heading);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.78rem;
+  line-height: 1.65;
+}
+
+.hld-flow-sql pre code {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+.hld-flow-explanation {
+  margin-left: 0;
+}
+
 .hld-api-spec {
   display: grid;
   gap: 1rem;

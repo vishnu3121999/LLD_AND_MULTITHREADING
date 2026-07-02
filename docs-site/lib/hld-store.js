@@ -202,24 +202,61 @@ function countSections(sections = []) {
 
 async function collectProblemImages(id, assetDir) {
   try {
-    const entries = await readdir(assetDir, { withFileTypes: true });
-    const images = entries
-      .filter((entry) => entry.isFile() && IMAGE_EXTENSIONS.has(path.extname(entry.name).toLowerCase()))
-      .map((entry) => {
-        const ext = path.extname(entry.name);
-        const basename = entry.name.slice(0, -ext.length);
-        return {
-          fileName: entry.name,
-          src: `/api/hld/assets/${id}/${encodeURIComponent(entry.name)}`,
-          alt: titleFromId(basename),
-          sectionSlug: sectionSlugForImage(basename)
-        };
-      });
+    const files = await collectImageFiles(assetDir);
+    const images = files.map((file) => {
+      const ext = path.extname(file.relativePath);
+      const basename = path.basename(file.relativePath, ext);
+      const directory = file.directory.replace(/\\/g, "/");
+      const hldFlow = parseHldFlowImage(basename);
+
+      return {
+        fileName: file.relativePath,
+        src: `/api/hld/assets/${id}/${encodeURIComponent(file.relativePath)}`,
+        alt: titleFromId(basename.replace(/-(?:light|dark)$/i, "")),
+        sectionSlug: (hldFlow || directory === "hld") ? "high-level-design" : sectionSlugForImage(basename),
+        hldFlow,
+        theme: parseImageTheme(basename)
+      };
+    });
 
     return images.sort((a, b) => a.fileName.localeCompare(b.fileName, undefined, { numeric: true }));
   } catch {
     return [];
   }
+}
+
+async function collectImageFiles(rootDir, currentDir = rootDir) {
+  const entries = await readdir(currentDir, { withFileTypes: true });
+  const files = [];
+
+  for (const entry of entries) {
+    const target = path.join(currentDir, entry.name);
+
+    if (entry.isDirectory()) {
+      files.push(...await collectImageFiles(rootDir, target));
+      continue;
+    }
+
+    if (!entry.isFile() || !IMAGE_EXTENSIONS.has(path.extname(entry.name).toLowerCase())) continue;
+
+    const relativePath = path.relative(rootDir, target).replace(/\\/g, "/");
+    files.push({
+      relativePath,
+      directory: path.dirname(relativePath) === "." ? "" : path.dirname(relativePath)
+    });
+  }
+
+  return files;
+}
+
+function parseHldFlowImage(value) {
+  const match = String(value || "").match(/^(FR-\d+)(?:-(?:light|dark))?$/i);
+  return match ? match[1].toUpperCase() : "";
+}
+
+function parseImageTheme(value) {
+  const match = String(value || "").match(/-(light|dark)$/i);
+  return match ? match[1].toLowerCase() : "";
 }
 
 function attachImagesToSections(sections = [], images = []) {
@@ -334,6 +371,11 @@ async function readMarkdownHldProblemFile(id, target = path.join(HLD_DATA_DIR, `
     const images = await collectProblemImages(id, assetDir);
     const parsed = parseMarkdownProblem(raw, id);
 
+    const sections = parsed.sections.map((section) => ({
+      ...section,
+      body: rewriteMarkdownAssetRefs(section.body, id)
+    }));
+
     return {
       id: isValidId(parsed.id) ? parsed.id : id,
       title: parsed.title || titleFromId(id),
@@ -343,10 +385,7 @@ async function readMarkdownHldProblemFile(id, target = path.join(HLD_DATA_DIR, `
       created_at: parsed.created_at || fileStat.birthtime.toISOString(),
       updated_at: parsed.updated_at || fileStat.mtime.toISOString(),
       images,
-      sections: parsed.sections.map((section) => ({
-        ...section,
-        body: rewriteMarkdownAssetRefs(section.body, id)
-      }))
+      sections: attachImagesToSections(sections, images)
     };
   } catch {
     return null;
