@@ -17,16 +17,16 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--site-border)] bg-[var(--site-surface)] backdrop-blur">
-      <div className="site-container flex min-h-12 items-center justify-between gap-3">
+      <div className="flex min-h-12 w-full items-center justify-between gap-3 px-3 py-1 sm:px-4 lg:px-6">
         <Link
           href="/"
-          className="flex h-11 w-20 shrink-0 items-center justify-center rounded-md border border-[var(--site-border)] bg-[var(--site-surface-2)] px-1.5 shadow-[var(--site-shadow)] transition hover:border-[var(--site-brand)] hover:bg-[var(--site-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--site-brand)]"
+          className="flex h-11 shrink-0 items-center rounded-md p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--site-brand)]"
           aria-label="01 Interview home"
         >
           <img
-            src="/logo.png"
+            src="/logo.svg"
             alt="01 Interview"
-            className="h-10 w-auto object-contain"
+            className="h-9 w-auto max-w-[128px] object-contain sm:h-10 sm:max-w-[150px]"
           />
           <span className="sr-only">LLD Playbook</span>
         </Link>
@@ -52,7 +52,9 @@ export function SiteHeader() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <ThemeToggle />
+            <div className="hidden sm:block">
+              <ThemeToggle />
+            </div>
             <Button asChild variant="outline" size="sm" className="hidden h-8 px-2.5 text-[13px] sm:inline-flex">
               <Link href="/search">
                 <Search size={16} aria-hidden="true" />

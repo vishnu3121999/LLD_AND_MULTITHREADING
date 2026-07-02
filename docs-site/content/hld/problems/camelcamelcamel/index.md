@@ -27,10 +27,10 @@ No single point of failure (fault tolerance).
 CAP Theorem:
    Url conversion & access (FR-1 & FR-2):
       availability > consistency
-         1-5 sec inconsistency allowed
+      1-5 sec inconsistency allowed
    Analytics record & view (FR-3 & FR-4):
       availability > consistency :
-         Minor delay (1–5 sec) in analytics updates is acceptable.
+      Minor delay (1–5 sec) in analytics updates is acceptable.
 Throughput & Latencies:
    Url creation (FR-1):
       Write TPS = 1M/day = 10/s

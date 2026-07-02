@@ -39,6 +39,25 @@ Search and newsletter still have local/demo fallbacks when their provider keys a
 - `/roadmaps` and `/cheatsheets` are MDX pages.
 - Java examples live under `content/java-modules/<module>/src/<page>`.
 
+### Highlighting Text
+
+The renderer does not automatically highlight tokens such as `FR-*`, `NF-*`, numbers, latencies, or units. Content appears exactly as authored unless explicit markdown or HTML styling is used.
+
+Use `<mark>...</mark>` when a specific word, phrase, or value should be highlighted:
+
+```md
+Read latency should stay under <mark>100ms</mark>.
+This depends on <mark>FR-2</mark>.
+```
+
+This also works inside structured HLD sections such as Non-Functional Requirements.
+
+Use backticks for identifiers, code-like values, routes, keys, and formulas:
+
+```md
+Use `GET /products/{id}` and store counters in `product_stats`.
+```
+
 ## Workspace Layout Storage
 
 Workspace code-block positions, block sizes, block zoom, page zoom, constructor visibility, and folded methods are saved per signed-in Supabase user in:

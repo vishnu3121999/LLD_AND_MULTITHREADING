@@ -28,17 +28,17 @@ No single point of failure (fault tolerance).
 CAP Theorem:
   Url conversion & access (FR-1 & FR-2):
     availability > consistency
-      1-5 sec inconsistency allowed
+    <mark>1-5 sec</mark> inconsistency allowed
   Analytics record & view (FR-3 & FR-4):
     availability > consistency :
-      Minor delay (1–5 sec) in analytics updates is acceptable.
+      Minor delay <mark>(1–5 sec)</mark> in analytics updates is acceptable.
 Throughput & Latencies:
   Url creation (FR-1):
-    Write TPS = 1M/day = 10/s
+    Write TPS = <mark>1M/day = 10/s</mark>
     Write Latency = never mind
   Url access (FR-2):
-    Read QPS = 100M/day = 1k/s
-    Read Latency = 100ms
+    Read QPS = <mark>100M/day = 1k/s</mark>
+    Read Latency = <mark>100ms</mark>
 Handle Celebrity/Hot keys
 Handle traffic spikes in cost effective way (optional, only if time at end)
 
@@ -52,6 +52,16 @@ Handle traffic spikes in cost effective way (optional, only if time at end)
 
 ```http
 GET /feed?cursor={cursor}&limit={limit}&region={region}
+
+REQUEST BODY:
+{
+  "name" : "vishnu",
+  "phone : "91338"
+}
+
+STATUS : 200,OK
+RESPONSE BODY:
+User
 ```
 
 Returns a page of articles for a region.

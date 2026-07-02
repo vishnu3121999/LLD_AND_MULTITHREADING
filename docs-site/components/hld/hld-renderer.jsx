@@ -546,29 +546,23 @@ function SolutionSection({ node, mermaidReady, index, outOfScopeNode, templateCo
 
 function TemplatePanel({ template }) {
   return (
-    <div className="mt-4 rounded-lg border border-[var(--hld-border)] bg-[var(--hld-surface-2)] p-4">
-      <div className="flex items-start gap-3">
-        <div className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-[var(--hld-brand-soft)] text-[var(--hld-brand)]">
-          <FileText size={15} aria-hidden="true" />
-        </div>
-        <div className="min-w-0">
-          <div className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--hld-brand)]">
-            Template
-          </div>
-          <h3 className="mt-1 text-sm font-semibold tracking-normal text-[var(--hld-heading)]">
-            {template.title}
-          </h3>
-          <p className="mt-1 text-sm leading-6 text-[var(--hld-muted)]">
-            {template.summary}
-          </p>
-        </div>
+    <div className="mt-4 border-l-2 border-[var(--hld-brand)] pl-4">
+      <div className="flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--hld-brand)]">
+        <FileText size={14} aria-hidden="true" />
+        Template
       </div>
+      <h3 className="mt-2 text-sm font-semibold tracking-normal text-[var(--hld-heading)]">
+        {template.title}
+      </h3>
+      <p className="mt-1 max-w-4xl text-sm leading-6 text-[var(--hld-muted)]">
+        {template.summary}
+      </p>
 
-      <div className="mt-4 grid gap-3 lg:grid-cols-2">
+      <div className="mt-3 grid gap-3 lg:grid-cols-2">
         {template.groups.map((group) => (
-          <div key={group.title} className="rounded-md border border-[var(--hld-border)] bg-[var(--hld-surface)] p-3">
+          <div key={group.title}>
             <div className="text-xs font-semibold text-[var(--hld-heading)]">{group.title}</div>
-            <ul className="mt-2 list-disc space-y-1.5 pl-4 text-xs leading-5 text-[var(--hld-muted)]">
+            <ul className="mt-1.5 list-disc space-y-1 pl-4 text-xs leading-5 text-[var(--hld-muted)]">
               {group.items.map((item) => (
                 <li key={item}>{item}</li>
               ))}
@@ -688,45 +682,47 @@ function NonFunctionalRequirementsBlock({ body }) {
   if (outline.length === 0) return <MarkdownBlock body={body} />;
 
   return (
-    <div className="space-y-3">
-      {outline.map((item, index) => (
-        <NfrOutlineItem key={`${item.text}-${index}`} item={item} />
-      ))}
+    <div className="hld-course-prose hld-nfr-prose">
+      <ol className="hld-nfr-list">
+        {outline.map((item, index) => (
+          <NfrOutlineItem key={`${item.text}-${index}`} index={index} item={item} />
+        ))}
+      </ol>
     </div>
   );
 }
 
-function NfrOutlineItem({ item }) {
-  const hasChildren = item.children.length > 0;
-
+function NfrOutlineItem({ item, index }) {
   return (
-    <section className="border-t border-[var(--hld-border)] pt-3 first:border-t-0 first:pt-0">
-      <h3 className="text-sm font-semibold leading-6 tracking-normal text-[var(--hld-heading)]">
-        {stripTrailingColon(item.text)}
-      </h3>
-      {hasChildren && <NfrSummaryList items={item.children} />}
-    </section>
+    <li className="hld-nfr-item">
+      <span className="hld-nfr-index">{index + 1}.</span>
+      <div className="min-w-0">
+        <InlineMarkdownText className="hld-nfr-text" value={item.text} />
+        {item.children.length > 0 && <NfrDetailList items={item.children} />}
+      </div>
+    </li>
   );
 }
 
-function NfrSummaryList({ items, depth = 0 }) {
+function NfrDetailList({ items, depth = 0 }) {
   return (
-    <ul className={depth === 0 ? "mt-2 space-y-1.5 text-sm leading-6 text-[var(--hld-muted)]" : "mt-1 space-y-1 pl-4 text-sm leading-6 text-[var(--hld-muted)]"}>
+    <ul className="hld-nfr-details">
       {items.map((item, index) => (
-        <li key={`${item.text}-${index}`}>
-          <div className="flex gap-2">
-            <span className="shrink-0 text-[var(--hld-brand)]">-</span>
-            <span className={depth === 0 ? "font-medium text-[var(--hld-heading)]" : undefined}>
-              {stripTrailingColon(item.text)}
-            </span>
+        <li key={`${item.text}-${index}`} className="hld-nfr-detail" style={{ marginLeft: `${Math.min(depth, 1) * 0.45}rem` }}>
+          <span className="hld-nfr-bullet" aria-hidden="true">{"\u2022"}</span>
+          <div className="min-w-0">
+            <InlineMarkdownText className="hld-nfr-detail-text" value={item.text} />
+            {item.children.length > 0 && <NfrDetailList items={item.children} depth={depth + 1} />}
           </div>
-          {item.children.length > 0 && (
-            <NfrSummaryList items={item.children} depth={depth + 1} />
-          )}
         </li>
       ))}
     </ul>
   );
+}
+
+function InlineMarkdownText({ value, className }) {
+  const html = useMemo(() => marked.parseInline(String(value || "")), [value]);
+  return <div className={className} dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
 function ApiDesignBlock({ body }) {
@@ -737,76 +733,81 @@ function ApiDesignBlock({ body }) {
   }
 
   return (
-    <div className="space-y-4">
-      {parsed.intro && (
-        <div className="rounded-lg border border-[var(--hld-border)] bg-[var(--hld-surface-2)] p-4">
-          <MarkdownBlock body={parsed.intro} />
-        </div>
-      )}
-
-      <div className="grid gap-3">
+    <div className="hld-api-spec">
+      <div className="hld-api-endpoints">
         {parsed.endpoints.map((endpoint, index) => (
-          <ApiEndpointCard key={`${endpoint.method}-${endpoint.path}-${index}`} endpoint={endpoint} />
+          <ApiEndpointCard key={`${endpoint.method}-${endpoint.path}-${index}`} number={index + 1} endpoint={endpoint} />
         ))}
       </div>
     </div>
   );
 }
 
-function ApiEndpointCard({ endpoint }) {
+function ApiEndpointCard({ endpoint, number }) {
+  const hasContract = endpoint.requestBody || endpoint.responseBody || endpoint.extraBlocks.length > 0;
+  const status = endpoint.status ? formatInlineApiStatus(endpoint.status.code) : "";
+
   return (
-    <div className="overflow-hidden rounded-lg border border-[var(--hld-border)] bg-[var(--hld-surface)]">
-      <div className="flex flex-col gap-3 border-b border-[var(--hld-border)] bg-[var(--hld-surface-2)] px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex min-w-0 items-start gap-3">
-          <span className="rounded-md border border-[var(--hld-border)] bg-[var(--hld-brand-soft)] px-2.5 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.08em] text-[var(--hld-brand)]">
-            {endpoint.method}
-          </span>
-          <code className="min-w-0 break-all rounded-md border border-[var(--hld-border)] bg-[var(--hld-surface)] px-2.5 py-1 font-mono text-[13px] font-semibold text-[var(--hld-heading)]">
-            {endpoint.path}
-          </code>
-        </div>
+    <section className="hld-api-endpoint">
+      <div className="hld-api-request-line">
+        <span className="hld-api-index">{number}.</span>
+        <span className="hld-api-method">
+          {endpoint.method}
+        </span>
+        <code className="hld-api-path">
+          {endpoint.path}
+        </code>
         {endpoint.returns && (
-          <span className="self-start rounded-full border border-[var(--hld-border)] bg-[var(--hld-surface)] px-3 py-1 text-xs font-semibold text-[var(--hld-muted)]">
-            returns {endpoint.returns}
+          <span className="hld-api-return">returns {endpoint.returns}</span>
+        )}
+        {status && (
+          <span className="hld-api-status-inline">
+            <span>Status</span>
+            <code>{status}</code>
           </span>
         )}
       </div>
 
-      <div className="space-y-4 p-4">
-        {endpoint.notes.length > 0 && (
-          <div className="rounded-md border border-[var(--hld-border)] bg-[var(--hld-surface-2)] px-3 py-2">
-            <MarkdownBlock body={endpoint.notes.join("\n\n")} />
-          </div>
-        )}
+      {hasContract && (
+        <div className={`hld-api-contract-grid ${endpoint.requestBody ? "" : "hld-api-contract-grid-single"}`}>
+          {endpoint.requestBody && (
+            <ApiBodyBlock title="Request body" block={endpoint.requestBody} />
+          )}
 
-        {endpoint.codeBlocks.length > 0 && (
-          <div className="grid gap-3 lg:grid-cols-2">
-            {endpoint.codeBlocks.map((block, index) => (
-              <ApiCodeBlock key={`${block.title}-${index}`} block={block} />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+          {(endpoint.responseBody || endpoint.extraBlocks.length > 0) && (
+            <div className="hld-api-response-stack">
+              {endpoint.responseBody && <ApiBodyBlock title="Response body" block={endpoint.responseBody} />}
+              {endpoint.extraBlocks.map((block, index) => (
+                <ApiBodyBlock key={`${block.role}-${index}`} title={block.role === "requestBody" ? "Request body" : "Response body"} block={block} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </section>
   );
 }
 
-function ApiCodeBlock({ block }) {
+function ApiBodyBlock({ title, block }) {
   return (
-    <div className="overflow-hidden rounded-md border border-[var(--hld-border)] bg-[var(--hld-surface)]">
-      <div className="flex items-center justify-between gap-3 border-b border-[var(--hld-border)] bg-[var(--hld-surface-2)] px-3 py-2">
-        <span className="text-xs font-semibold text-[var(--hld-heading)]">{block.title}</span>
+    <figure className="hld-api-body-block">
+      <figcaption className="hld-api-body-caption">
+        <span>{title}</span>
         {block.lang && (
-          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-[var(--hld-muted)]">
+          <span className="hld-api-code-lang">
             {block.lang}
           </span>
         )}
-      </div>
-      <pre className="max-h-72 overflow-auto bg-[var(--hld-surface)] p-3 font-mono text-[13px] leading-6 text-[var(--hld-heading)]">
+      </figcaption>
+      <pre>
         <code>{block.code}</code>
       </pre>
-    </div>
+    </figure>
   );
+}
+
+function formatInlineApiStatus(value) {
+  return String(value || "").replace(/\s*\n\s*/g, " ").trim();
 }
 
 function MarkdownBlock({ body }) {
@@ -968,33 +969,39 @@ function parseApiDesign(body) {
 
   tokens.forEach((token) => {
     if (token.type === "text") {
+      const structured = parseStructuredApiText(token.value);
+      if (structured.endpoints.length > 0) {
+        if (!currentEndpoint && pendingText.trim()) intro.push(pendingText.trim());
+        structured.endpoints.forEach((endpoint) => {
+          endpoints.push(endpoint);
+          currentEndpoint = endpoint;
+        });
+        pendingText = "";
+        return;
+      }
+
       pendingText = joinMarkdownText(pendingText, token.value);
       return;
     }
 
     const signature = parseEndpointSignature(token.code);
     if (signature) {
-      if (currentEndpoint && pendingText.trim()) {
-        currentEndpoint.notes.push(pendingText.trim());
-      } else if (!currentEndpoint && pendingText.trim()) {
+      if (!currentEndpoint && pendingText.trim()) {
         intro.push(pendingText.trim());
       }
 
       currentEndpoint = {
-        ...signature,
-        notes: [],
-        codeBlocks: []
+        ...createApiEndpoint(signature)
       };
       endpoints.push(currentEndpoint);
+      applyStructuredApiText(currentEndpoint, getEndpointRemainder(token.code));
       pendingText = "";
       return;
     }
 
     if (currentEndpoint) {
-      const title = inferApiCodeTitle(pendingText, token.lang, token.code);
-      if (pendingText.trim() && !isApiCodeLeadOnly(pendingText)) currentEndpoint.notes.push(pendingText.trim());
-      currentEndpoint.codeBlocks.push({
-        title,
+      const role = inferApiBlockRole(currentEndpoint, pendingText, token.lang, token.code);
+      assignApiBlock(currentEndpoint, role, {
         lang: token.lang || "text",
         code: token.code.trim()
       });
@@ -1014,8 +1021,7 @@ function parseApiDesign(body) {
   });
 
   if (pendingText.trim()) {
-    if (currentEndpoint) currentEndpoint.notes.push(pendingText.trim());
-    else intro.push(pendingText.trim());
+    if (!currentEndpoint) intro.push(pendingText.trim());
   }
 
   return {
@@ -1061,7 +1067,11 @@ function tokenizeMarkdownFences(body) {
 
 function parseEndpointSignature(code) {
   const firstLine = String(code || "").split("\n").map((line) => line.trim()).find(Boolean) || "";
-  const match = firstLine.match(/^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s+(.+?)(?:\s*->\s*(.+))?$/i);
+  return parseEndpointSignatureLine(firstLine);
+}
+
+function parseEndpointSignatureLine(line) {
+  const match = String(line || "").trim().match(/^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)\s+(.+?)(?:\s*->\s*(.+))?$/i);
   if (!match) return null;
 
   return {
@@ -1071,27 +1081,166 @@ function parseEndpointSignature(code) {
   };
 }
 
-function inferApiCodeTitle(leadText, lang, code) {
-  const text = String(leadText || "").toLowerCase();
-  const firstLine = String(code || "").trim().split("\n")[0] || "";
-
-  if (/\b(response|returns?|status|location)\b/.test(text) || /^\d{3}\b/.test(firstLine)) {
-    return "Response";
-  }
-
-  if (/\b(request|payload|body|post|put|patch)\b/.test(text)) {
-    return "Request";
-  }
-
-  if (String(lang || "").toLowerCase() === "json") {
-    return "Payload";
-  }
-
-  return "Example";
+function createApiEndpoint(signature) {
+  return {
+    ...signature,
+    requestBody: null,
+    status: null,
+    responseBody: null,
+    extraBlocks: []
+  };
 }
 
-function isApiCodeLeadOnly(value) {
-  return /^(request|payload|body|response|returns?)\s*:?\s*$/i.test(String(value || "").trim());
+function getEndpointRemainder(code) {
+  const lines = String(code || "").replace(/\r\n/g, "\n").split("\n");
+  const firstEndpointIndex = lines.findIndex((line) => parseEndpointSignatureLine(line.trim()));
+  return firstEndpointIndex >= 0 ? lines.slice(firstEndpointIndex + 1).join("\n") : "";
+}
+
+function parseStructuredApiText(value) {
+  const endpoints = [];
+  let currentEndpoint = null;
+
+  applyStructuredApiText(
+    {
+      get current() {
+        return currentEndpoint;
+      },
+      set current(endpoint) {
+        currentEndpoint = endpoint;
+        endpoints.push(endpoint);
+      }
+    },
+    value
+  );
+
+  return { endpoints };
+}
+
+function applyStructuredApiText(target, value) {
+  const lines = String(value || "").replace(/\r\n/g, "\n").split("\n");
+  let block = null;
+
+  function getCurrentEndpoint() {
+    return target.current === undefined ? target : target.current;
+  }
+
+  function setCurrentEndpoint(endpoint) {
+    if (target.current === undefined) return;
+    target.current = endpoint;
+  }
+
+  function flushBlock() {
+    const endpoint = getCurrentEndpoint();
+    if (!endpoint || !block) return;
+
+    const code = block.lines.join("\n").trim();
+    if (code) {
+      assignApiBlock(endpoint, block.role, {
+        lang: inferStructuredApiLang(block.role, code),
+        code: block.role === "status" ? normalizeStatusText(code) : code
+      });
+    }
+
+    block = null;
+  }
+
+  lines.forEach((line) => {
+    const trimmed = line.trim();
+    const signature = parseEndpointSignatureLine(trimmed);
+
+    if (signature) {
+      flushBlock();
+      setCurrentEndpoint(createApiEndpoint(signature));
+      return;
+    }
+
+    const endpoint = getCurrentEndpoint();
+    if (!endpoint) return;
+
+    const label = parseApiFieldLabel(trimmed);
+    if (label) {
+      flushBlock();
+      block = { role: label.role, lines: label.inline ? [label.inline] : [] };
+      return;
+    }
+
+    if (block) {
+      block.lines.push(line);
+    }
+  });
+
+  flushBlock();
+}
+
+function parseApiFieldLabel(line) {
+  const match = String(line || "").match(/^(REQUEST\s+BODY|RESPONSE\s+BODY|STATUS)\s*:\s*(.*)$/i);
+  if (!match) return null;
+
+  const label = match[1].replace(/\s+/g, " ").toLowerCase();
+  const role = label === "request body" ? "requestBody" : label === "response body" ? "responseBody" : "status";
+
+  return {
+    role,
+    inline: (match[2] || "").trim()
+  };
+}
+
+function inferStructuredApiLang(role, code) {
+  if (role === "status") return "http";
+  const trimmed = String(code || "").trim();
+  if (/^[\[{]/.test(trimmed)) return "json";
+  return "text";
+}
+
+function normalizeStatusText(value) {
+  return String(value || "")
+    .trim()
+    .replace(/^(\d{3})\s*,\s*/, "$1 ")
+    .replace(/^(\d{3})\s+,\s*/, "$1 ");
+}
+
+function inferApiBlockRole(endpoint, leadText, lang, code) {
+  const text = String(leadText || "").toLowerCase();
+  const firstLine = String(code || "").trim().split("\n")[0] || "";
+  const language = String(lang || "").toLowerCase();
+
+  if (/\b(status|location)\b/.test(text) || /^\d{3}\b/.test(firstLine) || /^http\/\d/i.test(firstLine)) {
+    return "status";
+  }
+
+  if (/\b(response\s+body|response|returns?)\b/.test(text)) {
+    return "responseBody";
+  }
+
+  if (/\b(request\s+body|request|payload|post|put|patch)\b/.test(text)) {
+    return "requestBody";
+  }
+
+  if (language === "json" && /^(POST|PUT|PATCH)$/i.test(endpoint.method)) {
+    return "requestBody";
+  }
+
+  return "responseBody";
+}
+
+function assignApiBlock(endpoint, role, block) {
+  if (role === "requestBody" && !endpoint.requestBody) {
+    endpoint.requestBody = block;
+    return;
+  }
+
+  if (role === "status" && !endpoint.status) {
+    endpoint.status = block;
+    return;
+  }
+
+  if (role === "responseBody" && !endpoint.responseBody) {
+    endpoint.responseBody = block;
+    return;
+  }
+
+  endpoint.extraBlocks.push({ ...block, role });
 }
 
 function joinMarkdownText(current, next) {
