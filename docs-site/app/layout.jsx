@@ -1,6 +1,7 @@
 import "./globals.css";
 import "../src/styles.css";
 import { Providers } from "./providers";
+import { Analytics } from "@vercel/analytics/next";
 
 const themeInitScript = `
 try {
@@ -34,6 +35,7 @@ export default function RootLayout({ children }) {
       <body>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <Providers>{children}</Providers>
+        <Analytics />
       </body>
     </html>
   );
