@@ -1,5 +1,6 @@
 import "./globals.css";
 import "../src/styles.css";
+import Script from "next/script";
 import { Providers } from "./providers";
 import { Analytics } from "@vercel/analytics/next";
 
@@ -33,7 +34,11 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <Script
+          id="site-theme-init"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: themeInitScript }}
+        />
         <Providers>{children}</Providers>
         <Analytics />
       </body>

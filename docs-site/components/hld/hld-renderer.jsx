@@ -6,6 +6,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   Ban,
+  ChevronLeft,
+  ChevronRight,
   Code2,
   Edit3,
   FileText,
@@ -483,7 +485,7 @@ function SolutionSection({ node, mermaidReady, index, outOfScopeNode, templateCo
             <TemplatePanel template={template} />
           )}
 
-          {node.slug !== "high-level-design" && Array.isArray(node.images) && node.images.length > 0 && (
+          {node.slug !== "high-level-design" && node.slug !== "deep-dives" && Array.isArray(node.images) && node.images.length > 0 && (
             <SectionImages images={node.images} />
           )}
 
@@ -607,6 +609,10 @@ function SectionBody({ node, mermaidReady }) {
     return <HighLevelDesignBlock body={stripEmptyBulletOnlyLines(node.body)} images={node.images} />;
   }
 
+  if (node.slug === "deep-dives") {
+    return <DeepDivesBlock body={stripEmptyBulletOnlyLines(node.body)} images={node.images} />;
+  }
+
   return <MarkdownBlock body={stripEmptyBulletOnlyLines(node.body)} />;
 }
 
@@ -683,6 +689,237 @@ function InlineMarkdownText({ value, className }) {
   return <div className={className} dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
+function OverflowTabList({ className, ariaLabel, children }) {
+  const ref = useRef(null);
+  const [scrollState, setScrollState] = useState({
+    canScrollLeft: false,
+    canScrollRight: false,
+    hasOverflow: false
+  });
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return undefined;
+
+    function updateScrollState() {
+      const maxScrollLeft = Math.max(0, element.scrollWidth - element.clientWidth);
+      setScrollState({
+        canScrollLeft: element.scrollLeft > 2,
+        canScrollRight: element.scrollLeft < maxScrollLeft - 2,
+        hasOverflow: maxScrollLeft > 2
+      });
+    }
+
+    updateScrollState();
+    element.addEventListener("scroll", updateScrollState, { passive: true });
+    window.addEventListener("resize", updateScrollState);
+
+    return () => {
+      element.removeEventListener("scroll", updateScrollState);
+      window.removeEventListener("resize", updateScrollState);
+    };
+  }, [children]);
+
+  function scrollTabs(direction) {
+    const element = ref.current;
+    if (!element) return;
+
+    element.scrollBy({
+      left: direction * Math.max(180, Math.floor(element.clientWidth * 0.75)),
+      behavior: "smooth"
+    });
+  }
+
+  return (
+    <div className="hld-tab-strip" data-overflow={scrollState.hasOverflow ? "true" : "false"}>
+      <button
+        type="button"
+        className="hld-tab-scroll"
+        onClick={() => scrollTabs(-1)}
+        disabled={!scrollState.canScrollLeft}
+        aria-label="Scroll tabs left"
+      >
+        <ChevronLeft size={15} aria-hidden="true" />
+      </button>
+
+      <div ref={ref} className={className} role="tablist" aria-label={ariaLabel}>
+        {children}
+      </div>
+
+      <button
+        type="button"
+        className="hld-tab-scroll"
+        onClick={() => scrollTabs(1)}
+        disabled={!scrollState.canScrollRight}
+        aria-label="Scroll tabs right"
+      >
+        <ChevronRight size={15} aria-hidden="true" />
+      </button>
+    </div>
+  );
+}
+
+function DeepDivesBlock({ body, images = [] }) {
+  const parsed = useMemo(() => parseDeepDives(body), [body]);
+
+  if (parsed.sections.length === 0) {
+    return <MarkdownBlock body={body} />;
+  }
+
+  return (
+    <div className="hld-deep-dives">
+      {parsed.intro && (
+        <div className="hld-deep-intro">
+          <MarkdownBlock body={parsed.intro} />
+        </div>
+      )}
+
+      <div className="hld-deep-topic-list">
+        {parsed.sections.map((topic, index) => (
+          <DeepDiveTopic key={`${topic.slug}-${index}`} topic={topic} images={images} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DeepDiveTopic({ topic, images }) {
+  if (topic.approaches.length === 0) {
+    return (
+      <section className="hld-deep-topic">
+        <h3 className="hld-deep-topic-title">{topic.title}</h3>
+        {topic.context && <MarkdownBlock body={topic.context} />}
+      </section>
+    );
+  }
+
+  return <DeepDiveApproachTabs topic={topic} images={images} />;
+}
+
+function DeepDiveApproachTabs({ topic, images }) {
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    setActiveIndex((current) => Math.min(current, Math.max(topic.approaches.length - 1, 0)));
+  }, [topic.approaches.length]);
+
+  const activeApproach = topic.approaches[activeIndex] || topic.approaches[0];
+  const panelId = `hld-deep-panel-${topic.slug}-${activeIndex}`;
+
+  return (
+    <section className="hld-deep-topic">
+      <h3 className="hld-deep-topic-title">{topic.title}</h3>
+      {topic.context && (
+        <div className="hld-deep-context">
+          <MarkdownBlock body={topic.context} />
+        </div>
+      )}
+
+      <OverflowTabList className="hld-deep-tablist" ariaLabel={`${topic.title} approaches`}>
+        {topic.approaches.map((approach, index) => {
+          const isActive = index === activeIndex;
+          return (
+            <button
+              key={`${approach.slug}-${index}`}
+              type="button"
+              id={`hld-deep-tab-${topic.slug}-${index}`}
+              role="tab"
+              aria-selected={isActive}
+              aria-controls={`hld-deep-panel-${topic.slug}-${index}`}
+              className={`hld-deep-tab ${isActive ? "hld-deep-tab-active" : ""}`}
+              onClick={() => setActiveIndex(index)}
+            >
+              <span>{approach.title}</span>
+            </button>
+          );
+        })}
+      </OverflowTabList>
+
+      <div
+        id={panelId}
+        role="tabpanel"
+        aria-labelledby={`hld-deep-tab-${topic.slug}-${activeIndex}`}
+        className="hld-deep-panel"
+      >
+        <DeepDiveImage imageRef={activeApproach.imageRef} topic={topic} approach={activeApproach} images={images} />
+        <DeepDiveApproachBody approach={activeApproach} />
+      </div>
+    </section>
+  );
+}
+
+function DeepDiveApproachBody({ approach }) {
+  const hasExplanation = Boolean(approach.explanation);
+  const hasCode = approach.codeBlocks.length > 0;
+
+  if (!hasExplanation && !hasCode) return null;
+
+  if (!hasCode) {
+    return <MarkdownBlock body={approach.explanation} />;
+  }
+
+  return (
+    <div className="hld-deep-detail-grid">
+      <div className="hld-deep-explanation">
+        {hasExplanation && <MarkdownBlock body={approach.explanation} />}
+      </div>
+      <div className="hld-deep-code-column">
+        {approach.codeBlocks.map((block, index) => (
+          <HldSqlBlock
+            key={`${block.lang || "code"}-${index}`}
+            code={block.code}
+            lang={block.lang || "text"}
+            title={String(block.lang || "").toLowerCase() === "sql" ? "SQL" : "Code"}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function DeepDiveImage({ imageRef, topic, approach, images = [] }) {
+  const refs = [
+    normalizeDeepDiveImageRef(imageRef),
+    normalizeDeepDiveImageRef(`${topic.slug}/${approach.slug}`),
+    normalizeDeepDiveImageRef(approach.slug)
+  ].filter(Boolean);
+  const matching = images.filter((image) => refs.includes(normalizeDeepDiveImageRef(image.deepDiveImage)));
+  const light = matching.find((image) => image.theme === "light");
+  const dark = matching.find((image) => image.theme === "dark");
+  const fallback = matching.find((image) => !image.theme) || matching[0];
+
+  if (!light && !dark && !fallback) return null;
+
+  return (
+    <figure className="hld-deep-image-frame">
+      {light && (
+        <img
+          src={light.src}
+          alt={light.alt || `${approach.title} diagram`}
+          loading="lazy"
+          className={`hld-deep-image ${dark ? "hld-deep-image-light" : ""}`}
+        />
+      )}
+      {dark && (
+        <img
+          src={dark.src}
+          alt={dark.alt || `${approach.title} diagram`}
+          loading="lazy"
+          className={`hld-deep-image ${light ? "hld-deep-image-dark" : ""}`}
+        />
+      )}
+      {!light && !dark && fallback && (
+        <img
+          src={fallback.src}
+          alt={fallback.alt || `${approach.title} diagram`}
+          loading="lazy"
+          className="hld-deep-image"
+        />
+      )}
+    </figure>
+  );
+}
+
 function HighLevelDesignBlock({ body, images = [] }) {
   const parsed = useMemo(() => parseHighLevelDesign(body), [body]);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -701,7 +938,7 @@ function HighLevelDesignBlock({ body, images = [] }) {
   return (
     <div className="hld-flow-tabs">
       {parsed.intro && <MarkdownBlock body={parsed.intro} />}
-      <div className="hld-flow-tablist" role="tablist" aria-label="High-level design flows">
+      <OverflowTabList className="hld-flow-tablist" ariaLabel="High-level design flows">
         {parsed.flows.map((flow, index) => {
           const isActive = index === activeIndex;
           return (
@@ -716,10 +953,10 @@ function HighLevelDesignBlock({ body, images = [] }) {
               onClick={() => setActiveIndex(index)}
               >
                 <span>{flow.id}</span>
-              </button>
+            </button>
           );
         })}
-      </div>
+      </OverflowTabList>
       <div
         id={`hld-flow-panel-${activeIndex}`}
         role="tabpanel"
@@ -744,11 +981,14 @@ function HldFlowItem({ flow, index, images, showHeading = true }) {
 
       <HldFlowImage flowId={flow.id} images={images} />
 
-      {flow.sql && <HldSqlBlock code={flow.sql} />}
-
-      {flow.explanation && (
-        <div className="hld-flow-explanation">
-          <MarkdownBlock body={flow.explanation} />
+      {(flow.explanation || flow.sql) && (
+        <div className="hld-flow-detail-grid">
+          <div className="hld-flow-explanation">
+            {flow.explanation && <MarkdownBlock body={flow.explanation} />}
+          </div>
+          <div className="hld-flow-sql-column">
+            {flow.sql && <HldSqlBlock code={flow.sql} />}
+          </div>
         </div>
       )}
     </section>
@@ -793,7 +1033,7 @@ function HldFlowImage({ flowId, images = [] }) {
   );
 }
 
-function HldSqlBlock({ code }) {
+function HldSqlBlock({ code, lang = "sql", title = "SQL" }) {
   const ref = useRef(null);
 
   useEffect(() => {
@@ -807,9 +1047,9 @@ function HldSqlBlock({ code }) {
 
   return (
     <figure className="hld-flow-sql">
-      <figcaption>SQL</figcaption>
+      <figcaption>{title}</figcaption>
       <pre>
-        <code ref={ref} className="language-sql">{code}</code>
+        <code ref={ref} className={`language-${lang || "text"}`}>{code}</code>
       </pre>
     </figure>
   );
@@ -834,7 +1074,19 @@ function ApiDesignBlock({ body }) {
 }
 
 function ApiEndpointCard({ endpoint, number }) {
-  const hasContract = endpoint.requestBody || endpoint.responseBody || endpoint.extraBlocks.length > 0;
+  const extraContractBlocks = endpoint.extraBlocks.filter((block) => block.role !== "status");
+  const requestBlocks = [
+    endpoint.requestBody,
+    ...extraContractBlocks.filter((block) => block.role === "requestBody")
+  ].filter(Boolean);
+  const responseBlocks = [
+    endpoint.responseHeader ? { ...endpoint.responseHeader, role: "responseHeader" } : null,
+    endpoint.responseBody ? { ...endpoint.responseBody, role: "responseBody" } : null,
+    ...extraContractBlocks.filter((block) => block.role !== "requestBody")
+  ].filter(Boolean);
+  const hasRequestInfo = requestBlocks.length > 0;
+  const hasResponseInfo = responseBlocks.length > 0;
+  const hasContract = hasRequestInfo || hasResponseInfo;
   const status = endpoint.status ? formatInlineApiStatus(endpoint.status.code) : "";
 
   return (
@@ -859,23 +1111,28 @@ function ApiEndpointCard({ endpoint, number }) {
       </div>
 
       {hasContract && (
-        <div className={`hld-api-contract-grid ${endpoint.requestBody ? "" : "hld-api-contract-grid-single"}`}>
-          {endpoint.requestBody && (
-            <ApiBodyBlock title="Request body" block={endpoint.requestBody} />
-          )}
+        <div className="hld-api-contract-grid">
+          <div className={`hld-api-contract-slot ${hasRequestInfo ? "" : "hld-api-contract-slot-empty"}`}>
+            {requestBlocks.map((block, index) => (
+              <ApiBodyBlock key={`${block.role || "requestBody"}-${index}`} title={getApiBlockTitle(block.role || "requestBody")} block={block} />
+            ))}
+          </div>
 
-          {(endpoint.responseBody || endpoint.extraBlocks.length > 0) && (
-            <div className="hld-api-response-stack">
-              {endpoint.responseBody && <ApiBodyBlock title="Response body" block={endpoint.responseBody} />}
-              {endpoint.extraBlocks.map((block, index) => (
-                <ApiBodyBlock key={`${block.role}-${index}`} title={block.role === "requestBody" ? "Request body" : "Response body"} block={block} />
-              ))}
-            </div>
-          )}
+          <div className={`hld-api-contract-slot hld-api-response-stack ${hasResponseInfo ? "" : "hld-api-contract-slot-empty"}`}>
+            {responseBlocks.map((block, index) => (
+              <ApiBodyBlock key={`${block.role || "responseBody"}-${index}`} title={getApiBlockTitle(block.role || "responseBody")} block={block} />
+            ))}
+          </div>
         </div>
       )}
     </section>
   );
+}
+
+function getApiBlockTitle(role) {
+  if (role === "requestBody") return "Request body";
+  if (role === "responseHeader") return "Response header";
+  return "Response body";
 }
 
 function ApiBodyBlock({ title, block }) {
@@ -1031,6 +1288,179 @@ function parseNfrOutline(body) {
 
 function stripTrailingColon(value) {
   return String(value || "").trim().replace(/\s*:\s*$/, "");
+}
+
+function parseDeepDives(body) {
+  const lines = String(body || "").replace(/\r\n/g, "\n").split("\n");
+  const introLines = [];
+  const sections = [];
+  let currentTopic = null;
+  let currentApproach = null;
+  let inFence = false;
+
+  function appendLine(line) {
+    if (currentApproach) {
+      currentApproach.lines.push(line);
+      return;
+    }
+
+    if (currentTopic) {
+      currentTopic.contextLines.push(line);
+      return;
+    }
+
+    introLines.push(line);
+  }
+
+  lines.forEach((line) => {
+    const fenceLine = /^```/.test(line.trim());
+
+    if (!inFence) {
+      const topicMatch = line.match(/^###(?!#)\s+(.+)$/);
+      if (topicMatch) {
+        const title = stripTrailingColon(topicMatch[1]);
+        currentTopic = {
+          title,
+          slug: slugify(title) || `topic-${sections.length + 1}`,
+          contextLines: [],
+          approaches: []
+        };
+        currentApproach = null;
+        sections.push(currentTopic);
+        return;
+      }
+
+      const approachMatch = line.match(/^####\s+(.+)$/);
+      if (approachMatch && currentTopic) {
+        const title = stripTrailingColon(approachMatch[1]);
+        currentApproach = {
+          title,
+          slug: slugify(title) || `approach-${currentTopic.approaches.length + 1}`,
+          lines: []
+        };
+        currentTopic.approaches.push(currentApproach);
+        return;
+      }
+    }
+
+    appendLine(line);
+    if (fenceLine) inFence = !inFence;
+  });
+
+  return {
+    intro: introLines.join("\n").trim(),
+    sections: sections
+      .map((section) => ({
+        title: section.title,
+        slug: section.slug,
+        context: section.contextLines.join("\n").trim(),
+        approaches: section.approaches
+          .map((approach) => {
+            const parsedApproach = parseDeepDiveApproach(approach.lines.join("\n"));
+            return {
+              title: approach.title,
+              slug: approach.slug,
+              imageRef: parsedApproach.imageRef,
+              explanation: parsedApproach.explanation,
+              codeBlocks: parsedApproach.codeBlocks
+            };
+          })
+          .filter((approach) => approach.imageRef || approach.explanation || approach.codeBlocks.length > 0)
+      }))
+      .filter((section) => section.context || section.approaches.length > 0)
+  };
+}
+
+function parseDeepDiveApproach(body) {
+  let imageRef = "";
+  let mode = "notes";
+  const notesLines = [];
+  const explanationLines = [];
+  const codeBlocks = [];
+
+  tokenizeMarkdownFences(body).forEach((token) => {
+    if (token.type === "code") {
+      const code = token.code.trim();
+      if (code) {
+        codeBlocks.push({
+          lang: token.lang || "text",
+          code
+        });
+      }
+      return;
+    }
+
+    String(token.value || "").replace(/\r\n/g, "\n").split("\n").forEach((line) => {
+      const trimmed = line.trim();
+      const imageMatch = trimmed.match(/^IMAGE\s*:\s*(.+)$/i);
+      if (imageMatch && !imageRef) {
+        imageRef = normalizeDeepDiveImageRef(imageMatch[1]);
+        return;
+      }
+
+      const explanationMatch = trimmed.match(/^EXPLANATION\s*:\s*(.*)$/i);
+      if (explanationMatch) {
+        mode = "explanation";
+        if (explanationMatch[1]) explanationLines.push(explanationMatch[1]);
+        return;
+      }
+
+      if (mode === "explanation") {
+        explanationLines.push(line);
+      } else {
+        notesLines.push(line);
+      }
+    });
+  });
+
+  const explanationSource = explanationLines.length > 0
+    ? [...notesLines.filter((line) => line.trim()), ...explanationLines]
+    : notesLines;
+
+  return {
+    imageRef,
+    explanation: normalizeDeepDiveExplanation(explanationSource.join("\n")),
+    codeBlocks
+  };
+}
+
+function normalizeDeepDiveExplanation(value) {
+  return String(value || "")
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map(normalizeDeepDiveExplanationLine)
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function normalizeDeepDiveExplanationLine(line) {
+  const stripped = String(line || "").replace(/\t/g, "  ").trim();
+  if (!stripped) return "";
+
+  const numbered = stripped.match(/^(\d+)\)\s*(.+)$/);
+  if (numbered) return `${numbered[1]}. ${numbered[2].trim()}`;
+
+  const lettered = stripped.match(/^([a-z])\)\s*:?\s*(.+)$/i);
+  if (lettered) return `- ${lettered[2].trim()}`;
+
+  const roman = stripped.match(/^([ivxlcdm]+)\)\s*:?\s*(.+)$/i);
+  if (roman) return `- ${roman[2].trim()}`;
+
+  return stripped;
+}
+
+function normalizeDeepDiveImageRef(value) {
+  const segments = String(value || "")
+    .replace(/\\/g, "/")
+    .replace(/\.(?:apng|avif|gif|jpe?g|png|svg|webp)$/i, "")
+    .split("/")
+    .map((segment) => segment.replace(/-(?:light|dark)$/i, ""))
+    .filter((segment) => segment && segment !== "deepdives" && segment !== "deep-dives")
+    .map((segment) => slugify(segment))
+    .filter(Boolean);
+
+  return segments.join("/");
 }
 
 function parseHighLevelDesign(body) {
@@ -1245,6 +1675,7 @@ function createApiEndpoint(signature) {
     ...signature,
     requestBody: null,
     status: null,
+    responseHeader: null,
     responseBody: null,
     extraBlocks: []
   };
@@ -1333,11 +1764,17 @@ function applyStructuredApiText(target, value) {
 }
 
 function parseApiFieldLabel(line) {
-  const match = String(line || "").match(/^(REQUEST\s+BODY|RESPONSE\s+BODY|STATUS)\s*:\s*(.*)$/i);
+  const match = String(line || "").match(/^(REQUEST\s+BODY|RESPONSE\s+HEADERS?|RESPONSE\s+BODY|STATUS)\s*:\s*(.*)$/i);
   if (!match) return null;
 
   const label = match[1].replace(/\s+/g, " ").toLowerCase();
-  const role = label === "request body" ? "requestBody" : label === "response body" ? "responseBody" : "status";
+  const role = label === "request body"
+    ? "requestBody"
+    : label === "response body"
+      ? "responseBody"
+      : label === "response header" || label === "response headers"
+        ? "responseHeader"
+        : "status";
 
   return {
     role,
@@ -1347,6 +1784,7 @@ function parseApiFieldLabel(line) {
 
 function inferStructuredApiLang(role, code) {
   if (role === "status") return "http";
+  if (role === "responseHeader") return "http";
   const trimmed = String(code || "").trim();
   if (/^[\[{]/.test(trimmed)) return "json";
   return "text";
@@ -1363,6 +1801,10 @@ function inferApiBlockRole(endpoint, leadText, lang, code) {
   const text = String(leadText || "").toLowerCase();
   const firstLine = String(code || "").trim().split("\n")[0] || "";
   const language = String(lang || "").toLowerCase();
+
+  if (/\bresponse\s+headers?\b|\bheaders?\b/.test(text)) {
+    return "responseHeader";
+  }
 
   if (/\b(status|location)\b/.test(text) || /^\d{3}\b/.test(firstLine) || /^http\/\d/i.test(firstLine)) {
     return "status";
@@ -1391,6 +1833,11 @@ function assignApiBlock(endpoint, role, block) {
 
   if (role === "status" && !endpoint.status) {
     endpoint.status = block;
+    return;
+  }
+
+  if (role === "responseHeader" && !endpoint.responseHeader) {
+    endpoint.responseHeader = block;
     return;
   }
 

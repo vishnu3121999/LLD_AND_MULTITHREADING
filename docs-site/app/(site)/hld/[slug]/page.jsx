@@ -3,6 +3,7 @@ import { HldShell } from "../_components/hld-shell";
 import { HldProblemRenderer } from "../../../../components/hld/hld-renderer";
 import { buildHldNavGroups, buildHldPageNav } from "../../../../lib/hld-navigation";
 import { getHldProblem, listHldProblems } from "../../../../lib/hld-store";
+import { listHldTheoryDocs } from "../../../../lib/hld-theory-store";
 
 export const dynamic = "force-dynamic";
 
@@ -16,16 +17,17 @@ export async function generateMetadata({ params }) {
 
 export default async function HldProblemPage({ params }) {
   const { slug } = await params;
-  const [problem, problems] = await Promise.all([
+  const [problem, problems, theoryDocs] = await Promise.all([
     getHldProblem(slug),
-    listHldProblems()
+    listHldProblems(),
+    listHldTheoryDocs()
   ]);
   if (!problem) notFound();
 
   return (
     <HldShell
       activeSlug={problem.id}
-      groups={buildHldNavGroups(problems)}
+      groups={buildHldNavGroups(problems, theoryDocs)}
       pageNav={buildHldPageNav(problem)}
     >
       <HldProblemRenderer problem={problem} />

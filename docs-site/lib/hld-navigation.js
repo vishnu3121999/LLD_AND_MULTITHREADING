@@ -1,5 +1,5 @@
-export function buildHldNavGroups(problems = []) {
-  return [
+export function buildHldNavGroups(problems = [], theoryDocs = []) {
+  const groups = [
     {
       id: "problem-library",
       number: "Library",
@@ -13,6 +13,24 @@ export function buildHldNavGroups(problems = []) {
       }))
     }
   ];
+
+  if (theoryDocs.length > 0) {
+    groups.push({
+      id: "theory",
+      number: "Theory",
+      title: "Theory",
+      description: "Core HLD theory notes.",
+      items: theoryDocs.map((doc) => ({
+        slug: `theory:${doc.id}`,
+        href: `/hld/theory/${doc.id}`,
+        title: doc.title,
+        summary: doc.summary || "",
+        sectionCount: doc.sectionCount || 0
+      }))
+    });
+  }
+
+  return groups;
 }
 
 export function buildHldPageNav(problem) {
@@ -27,6 +45,22 @@ export function buildHldPageNav(problem) {
   return [
     { href: "#overview", label: "Overview" },
     ...sectionItems
+  ];
+}
+
+export function buildHldTheoryPageNav(doc) {
+  if (!doc) return [];
+
+  const headingItems = (doc.headings || [])
+    .filter((heading) => heading.level <= 2)
+    .map((heading) => ({
+      href: `#${heading.id}`,
+      label: heading.title || "Untitled"
+    }));
+
+  return [
+    { href: "#overview", label: "Overview" },
+    ...headingItems
   ];
 }
 

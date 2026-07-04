@@ -1,11 +1,11 @@
 ---
-title: URL Shortner
-slug: urlshortner
-summary: Regional news feed aggregation with low-latency infinite scroll, publisher ingestion, and feed caching.
+title: URL Shortener
+slug: url-shortner
+summary: Generate short URLs, redirect users to original URLs, and track click analytics.
 tags:
-  - Feed
-  - Aggregation
-  - Caching
+  - URL Shortener
+  - Redirection
+  - Analytics
 difficulty: Hard
 ---
 
@@ -30,8 +30,8 @@ CAP Theorem:
     availability > consistency
     `1-5 sec` inconsistency allowed
   Analytics record & view (FR-3 & FR-4):
-    availability > consistency :
-      Minor delay `(1–5 sec)` in analytics updates is acceptable.
+    availability > consistency
+    Minor delay `(1–5 sec)` in analytics updates is acceptable.
 Throughput & Latencies:
   Url creation (FR-1):
     Write TPS = `1M/day = 10/s`
@@ -41,69 +41,232 @@ Throughput & Latencies:
     Read Latency = `100ms`
 Handle Celebrity/Hot keys
 Handle traffic spikes in cost effective way (optional, only if time at end)
-
+Uniqueness
 
 ## API Design
 
 ```http
-GET /feed?cursor={cursor}&limit={limit}&region={region}
+POST /api/v1/urls
 
 REQUEST BODY:
 {
-  "name" : "vishnu",
-  "phone : "91338"
+  "longUrl": "https://example.com/some/long/url",
+  "customAlias": "my-link",
+  "expiresAt": "2026-12-31T23:59:59Z"
 }
 
-STATUS : 200,OK
+STATUS : 201 CREATED
 RESPONSE BODY:
-User
+{
+  "shortUrl": "https://short.ly/my-link",
+  "shortCode": "my-link"
+}
 ```
+
 ```http
-GET /feed?cursor={cursor}&limit={limit}&region={region}
+GET /{shortCode}
 
-REQUEST BODY:
-{
-  "name" : "vishnu",
-  "phone : "91338"
-}
+STATUS : 302 FOUND
+RESPONSE HEADER:
+Location: https://example.com/some/very/long/url
 
-STATUS : 200,OK
+```
+
+```http
+GET /api/v1/urls/{shortCode}/analytics
+
+STATUS : 200 OK
 RESPONSE BODY:
-User
+{
+  "shortCode": "my-link",
+  "totalClicks": 15230,
+  "locationDistribution": [
+    {
+      "country": "IN",
+      "clicks": 10000
+    },
+    {
+      "country": "US",
+      "clicks": 5230
+    }
+  ],
+  "deviceDistribution": [
+    {
+      "device": "MOBILE",
+      "clicks": 9000
+    },
+    {
+      "device": "DESKTOP",
+      "clicks": 6230
+    }
+  ],
+  "referrerDistribution": [
+    {
+      "referrer": "google.com",
+      "clicks": 7000
+    },
+    {
+      "referrer": "instagram.com",
+      "clicks": 8230
+    }
+  ]
+}
 ```
 
 
 ## High-Level Design
 
 FR-1:
+Table:
+- urls
+  - id
+  - shortCode
+  - longUrl
+  - createdAt
+  - expiresAt
+
 ```sql
-SELECT user_id, username, email
-FROM users
-WHERE is_active = true
-ORDER BY created_at DESC;
+INSERT INTO urls (
+    short_code,
+    long_url,
+    expires_at
+)
+VALUES (
+    'my-link',
+    'https://example.com/some/long/url',
+    '2026-12-31T23:59:59Z'
+);
 ```
+
 EXPLANATION:
-Depending on your platform or flavor of SQL, you can sometimes use specific identifiers for specialized syntax.
+URL Service receives the long URL from the user.
+
+If custom alias is provided, use it as the short code.
+
+If custom alias is not provided, generate a random short code.
+
+Short code can be generated using Base62 characters.
+
+Base62 contains:
+
+```text
+a-z, A-Z, 0-9
+```
+
+The `shortCode` should be unique.
+
+Postgres unique constraint on `shortCode` helps avoid duplicates.
+
+If generated short code already exists, generate another short code and retry.
 
 FR-2:
+Table:
+- urls
+  - id
+  - shortCode
+  - longUrl
+  - createdAt
+  - expiresAt
+
 ```sql
-SELECT user_id, username, email
-FROM users
-WHERE is_active = true
-ORDER BY created_at DESC;
+SELECT id, short_code, long_url, expires_at
+FROM urls
+WHERE short_code = 'my-link';
 ```
+
 EXPLANATION:
-Depending on your platform or flavor of SQL, you can sometimes use specific identifiers for specialized syntax.
+Redirect Service receives the short code.
+
+First, it checks whether the short code exists.
+
+If the short code does not exist, return `404 NOT FOUND`.
+
+If the short URL is expired, return `410 GONE`.
+
+If the short URL is valid, return `302 FOUND` with the original long URL in the `Location` header.
+
+Redis can be used to cache `shortCode -> longUrl` mapping so that most redirect requests do not hit Postgres.
 
 FR-3:
+Table:
+- clickEvents
+  - id
+  - shortUrlId
+  - clickedAt
+  - country
+  - device
+  - referrer
+
 ```sql
-SELECT user_id, username, email
-FROM users
-WHERE is_active = true
-ORDER BY created_at DESC;
+INSERT INTO click_events (
+    short_url_id,
+    clicked_at,
+    country,
+    device,
+    referrer
+)
+VALUES (
+    1,
+    NOW(),
+    'IN',
+    'MOBILE',
+    'google.com'
+);
 ```
+
 EXPLANATION:
-Depending on your platform or flavor of SQL, you can sometimes use specific identifiers for specialized syntax.
+For every successful redirect, the system should record one click event.
+
+The click event contains timestamp, location, device and referrer.
+
+Analytics recording should not block the redirect.
+
+So Redirect Service can push the click event to a queue.
+
+Analytics Worker consumes the event from the queue and stores it in Postgres.
+
+This keeps redirect latency low.
+
+FR-4:
+Table:
+- clickEvents
+  - id
+  - shortUrlId
+  - clickedAt
+  - country
+  - device
+  - referrer
+
+```sql
+SELECT COUNT(*) AS total_clicks
+FROM click_events
+WHERE short_url_id = 1;
+
+SELECT country, COUNT(*) AS clicks
+FROM click_events
+WHERE short_url_id = 1
+GROUP BY country;
+
+SELECT device, COUNT(*) AS clicks
+FROM click_events
+WHERE short_url_id = 1
+GROUP BY device;
+
+SELECT referrer, COUNT(*) AS clicks
+FROM click_events
+WHERE short_url_id = 1
+GROUP BY referrer;
+```
+
+EXPLANATION:
+Analytics Service reads data from `clickEvents`.
+
+It returns total clicks, geographic distribution, device distribution and referrer distribution.
+
+For basic HLD interview discussion, querying `clickEvents` is enough.
+
+If traffic becomes very high, we can optimize later using pre-aggregated analytics tables in the deep dive section.
+
 
 ## Deep Dives
 

@@ -3,6 +3,7 @@ import { ArrowRight, Database, Layers3, Network } from "lucide-react";
 import { HldShell } from "./_components/hld-shell";
 import { buildHldNavGroups } from "../../../lib/hld-navigation";
 import { listHldProblems } from "../../../lib/hld-store";
+import { listHldTheoryDocs } from "../../../lib/hld-theory-store";
 
 export const dynamic = "force-dynamic";
 
@@ -11,9 +12,12 @@ export const metadata = {
 };
 
 export default async function HldLibraryPage() {
-  const problems = await listHldProblems();
+  const [problems, theoryDocs] = await Promise.all([
+    listHldProblems(),
+    listHldTheoryDocs()
+  ]);
   const solvedProblems = problems.filter((problem) => problem.source === "markdown" || problem.source === "text");
-  const groups = buildHldNavGroups(problems);
+  const groups = buildHldNavGroups(problems, theoryDocs);
   const pageNav = [
     { href: "#library-overview", label: "Overview" },
     { href: "#problems", label: "Problems" }

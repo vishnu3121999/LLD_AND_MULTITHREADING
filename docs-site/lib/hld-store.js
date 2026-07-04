@@ -200,7 +200,7 @@ function countSections(sections = []) {
   }, 0);
 }
 
-async function collectProblemImages(id, assetDir) {
+async function collectProblemImages(id, assetDir, assetId = id) {
   try {
     const files = await collectImageFiles(assetDir);
     const images = files.map((file) => {
@@ -208,13 +208,15 @@ async function collectProblemImages(id, assetDir) {
       const basename = path.basename(file.relativePath, ext);
       const directory = file.directory.replace(/\\/g, "/");
       const hldFlow = parseHldFlowImage(basename);
+      const deepDiveImage = parseDeepDiveImage(file.relativePath, directory, basename);
 
       return {
         fileName: file.relativePath,
-        src: `/api/hld/assets/${id}/${encodeURIComponent(file.relativePath)}`,
+        src: `/api/hld/assets/${encodeURIComponent(assetId)}/${encodeURIComponent(file.relativePath)}`,
         alt: titleFromId(basename.replace(/-(?:light|dark)$/i, "")),
-        sectionSlug: (hldFlow || directory === "hld") ? "high-level-design" : sectionSlugForImage(basename),
+        sectionSlug: deepDiveImage ? "deep-dives" : (hldFlow || directory === "hld") ? "high-level-design" : sectionSlugForImage(basename),
         hldFlow,
+        deepDiveImage,
         theme: parseImageTheme(basename)
       };
     });
@@ -257,6 +259,20 @@ function parseHldFlowImage(value) {
 function parseImageTheme(value) {
   const match = String(value || "").match(/-(light|dark)$/i);
   return match ? match[1].toLowerCase() : "";
+}
+
+function parseDeepDiveImage(relativePath, directory, basename) {
+  const normalizedDirectory = String(directory || "").replace(/\\/g, "/");
+  const segments = normalizedDirectory.split("/").filter(Boolean);
+  const root = segments[0] || "";
+
+  if (root !== "deepdives" && root !== "deep-dives") return "";
+
+  const imageName = basename.replace(/-(?:light|dark)$/i, "");
+  return [...segments.slice(1), imageName]
+    .map((segment) => slugify(segment))
+    .filter(Boolean)
+    .join("/");
 }
 
 function attachImagesToSections(sections = [], images = []) {
@@ -308,14 +324,14 @@ function sectionSlugForImage(value) {
   return slug;
 }
 
-async function readHldProblemFile(id, target = problemPath(id), assetDir = path.join(HLD_DATA_DIR, id)) {
+async function readHldProblemFile(id, target = problemPath(id), assetDir = path.join(HLD_DATA_DIR, id), assetId = id) {
   if (!isValidId(id)) return null;
 
   try {
     const raw = await readFile(target, "utf8");
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== "object") return null;
-    const images = await collectProblemImages(id, assetDir);
+    const images = await collectProblemImages(id, assetDir, assetId);
     return {
       ...parsed,
       images,
@@ -326,7 +342,7 @@ async function readHldProblemFile(id, target = problemPath(id), assetDir = path.
   }
 }
 
-async function readTextHldProblemFile(id, target = path.join(HLD_DATA_DIR, `${id}.txt`), assetDir = path.join(HLD_DATA_DIR, id)) {
+async function readTextHldProblemFile(id, target = path.join(HLD_DATA_DIR, `${id}.txt`), assetDir = path.join(HLD_DATA_DIR, id), assetId = id) {
   if (!isValidId(id)) return null;
 
   try {
@@ -334,7 +350,7 @@ async function readTextHldProblemFile(id, target = path.join(HLD_DATA_DIR, `${id
       readFile(target, "utf8"),
       stat(target)
     ]);
-    const images = await collectProblemImages(id, assetDir);
+    const images = await collectProblemImages(id, assetDir, assetId);
     const meta = TEXT_PROBLEM_META[id] || {
       title: titleFromId(id),
       summary: "Solved high-level design problem.",
@@ -360,7 +376,13 @@ async function readTextHldProblemFile(id, target = path.join(HLD_DATA_DIR, `${id
   }
 }
 
-async function readMarkdownHldProblemFile(id, target = path.join(HLD_DATA_DIR, `${id}.md`), assetDir = path.join(HLD_DATA_DIR, id)) {
+async function readMarkdownHldProblemFile(
+  id,
+  target = path.join(HLD_DATA_DIR, `${id}.md`),
+  assetDir = path.join(HLD_DATA_DIR, id),
+  assetId = id,
+  options = {}
+) {
   if (!isValidId(id)) return null;
 
   try {
@@ -368,16 +390,19 @@ async function readMarkdownHldProblemFile(id, target = path.join(HLD_DATA_DIR, `
       readFile(target, "utf8"),
       stat(target)
     ]);
-    const images = await collectProblemImages(id, assetDir);
+    const images = await collectProblemImages(id, assetDir, assetId);
     const parsed = parseMarkdownProblem(raw, id);
+    if (options.requireMatchingSlug && parsed.slug !== id) return null;
+
+    const problemId = isValidId(parsed.id) ? parsed.id : id;
 
     const sections = parsed.sections.map((section) => ({
       ...section,
-      body: rewriteMarkdownAssetRefs(section.body, id)
+      body: rewriteMarkdownAssetRefs(section.body, assetId)
     }));
 
     return {
-      id: isValidId(parsed.id) ? parsed.id : id,
+      id: problemId,
       title: parsed.title || titleFromId(id),
       summary: parsed.summary || "Solved high-level design problem.",
       tags: parsed.tags,
@@ -434,21 +459,27 @@ async function readDirectoryHldProblem(id) {
       : files.find((file) => path.extname(file) === ".txt");
 
     if (jsonFile) {
-      return readHldProblemFile(id, path.join(dir, jsonFile), dir);
+      return readHldProblemFile(id, path.join(dir, jsonFile), dir, id);
     }
 
     if (markdownFile) {
-      return readMarkdownHldProblemFile(id, path.join(dir, markdownFile), dir);
+      return readDirectoryMarkdownHldProblemFile(id, path.join(dir, markdownFile), dir, id);
     }
 
     if (textFile) {
-      return readTextHldProblemFile(id, path.join(dir, textFile), dir);
+      return readTextHldProblemFile(id, path.join(dir, textFile), dir, id);
     }
 
     return null;
   } catch {
     return null;
   }
+}
+
+async function readDirectoryMarkdownHldProblemFile(id, target, assetDir, assetId) {
+  const problem = await readMarkdownHldProblemFile(id, target, assetDir, assetId, { requireMatchingSlug: true });
+  if (!problem) return null;
+  return problem.id === id ? problem : null;
 }
 
 async function writeHldProblemFile(problem) {
@@ -525,11 +556,13 @@ function parseTextProblemSections(raw) {
 
 function parseMarkdownProblem(raw, id) {
   const { data, content } = parseFrontmatter(raw);
+  const slug = stringValue(data.slug);
   const title = stringValue(data.title) || titleFromId(id);
   const body = stripMatchingTitleHeading(content, title);
 
   return {
-    id: stringValue(data.slug) || id,
+    id: slug || id,
+    slug,
     title,
     summary: stringValue(data.summary),
     tags: normalizeTags(data.tags),
@@ -540,7 +573,7 @@ function parseMarkdownProblem(raw, id) {
 }
 
 function parseFrontmatter(raw) {
-  const content = String(raw || "").replace(/\r\n/g, "\n");
+  const content = String(raw || "").replace(/\r\n/g, "\n").replace(/^(?:[ \t]*\n)+/, "");
   if (!content.startsWith("---\n")) return { data: {}, content };
 
   const end = content.indexOf("\n---", 4);
@@ -633,7 +666,6 @@ function parseMarkdownSections(markdown) {
 
   if (current) sections.push(current);
 
-  const intro = introLines.join("\n").trim();
   const parsedSections = sections
     .map((section) => ({
       type: "markdown",
@@ -641,13 +673,6 @@ function parseMarkdownSections(markdown) {
       body: section.bodyLines.join("\n").trim()
     }))
     .filter((section) => section.title || section.body);
-
-  if (intro) {
-    return [
-      { type: "markdown", title: "Problem Brief", body: intro },
-      ...parsedSections
-    ];
-  }
 
   return parsedSections;
 }

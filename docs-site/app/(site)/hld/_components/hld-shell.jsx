@@ -392,7 +392,7 @@ function HldNavItem({ activeSlug, completedSet, item, onToggleComplete }) {
         )}
       </button>
       <Link
-        href={`/hld/${item.slug}`}
+        href={item.href || `/hld/${item.slug}`}
         className={`min-w-0 flex-1 rounded-r-md py-2 pl-1 pr-2 text-[13px] leading-5 transition ${
           isActive ? "font-medium" : "font-normal"
         }`}
