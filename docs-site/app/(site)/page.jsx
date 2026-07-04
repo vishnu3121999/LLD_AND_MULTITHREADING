@@ -2,15 +2,9 @@ import Link from "next/link";
 import {
   ArrowRight,
   BookOpenCheck,
-  Boxes,
   Code2,
-  FileCode2,
-  GitBranch,
   LockKeyhole,
-  Network,
-  PenLine,
-  Route,
-  Workflow
+  Network
 } from "lucide-react";
 
 const dashboardTheme = {
@@ -29,44 +23,12 @@ const dashboardTheme = {
 
 const lldSections = [
   {
-    title: "Template",
-    href: "/lld-template",
-    eyebrow: "Framework",
-    description: "Reusable interview flow for requirements, entities, APIs, patterns, failures, and concurrency.",
-    icon: BookOpenCheck,
-    meta: "LLD"
-  },
-  {
     title: "Concurrency",
     href: "/concurrency",
     eyebrow: "Correctness",
     description: "Theory and solved examples for races, locks, atomic updates, idempotency, and transactions.",
     icon: LockKeyhole,
     meta: "Theory"
-  },
-  {
-    title: "Solved Problems",
-    href: "/problems",
-    eyebrow: "Examples",
-    description: "Parking Lot, TicTacToe, Vending Machine, BookMyShow, Splitwise, and more structured solutions.",
-    icon: Boxes,
-    meta: "Library"
-  },
-  {
-    title: "Patterns",
-    href: "/patterns",
-    eyebrow: "Design moves",
-    description: "Strategy, Factory, State, Observer, Command, locking, and when each pattern earns its place.",
-    icon: GitBranch,
-    meta: "Catalog"
-  },
-  {
-    title: "Chain of Responsibility",
-    href: "/patterns/chain-of-responsibility",
-    eyebrow: "Lesson",
-    description: "A full pattern lesson with naive design, refactor path, UML, code, and interview phrasing.",
-    icon: Route,
-    meta: "Pattern"
   },
   {
     title: "Java Workspace",
@@ -86,30 +48,6 @@ const hldSections = [
     description: "System design problems written as interview docs with diagrams, trade-offs, and deep dives.",
     icon: Network,
     meta: "HLD"
-  },
-  {
-    title: "CamelCamelCamel",
-    href: "/hld/camelcamelcamel",
-    eyebrow: "Deep dive",
-    description: "Price history, crawling, notifications, indexing, CDC, throughput, and architecture evolution.",
-    icon: Workflow,
-    meta: "Case"
-  },
-  {
-    title: "Markdown and Diagrams",
-    href: "/hld/markdown-guide",
-    eyebrow: "Authoring",
-    description: "Tables, callouts, code blocks, images, Mermaid diagrams, and HLD document formatting.",
-    icon: FileCode2,
-    meta: "Guide"
-  },
-  {
-    title: "HLD Authoring",
-    href: "/hld/new",
-    eyebrow: "Editor",
-    description: "Create structured HLD lessons with markdown sections, diagrams, nested deep dives, and previews.",
-    icon: PenLine,
-    meta: "Tool"
   }
 ];
 
@@ -127,7 +65,7 @@ export default function HomePage() {
                 LLD and HLD sections in one place.
               </h1>
               <p className="mt-2 max-w-3xl text-base leading-7 text-[var(--cor-muted)]">
-                Start directly from the section grid below: templates, concurrency, solved systems, patterns, workspace, diagrams, and case studies.
+                Start directly from the section grid below: concurrency, Java workspace, and system design problem library.
               </p>
             </div>
 
@@ -162,14 +100,14 @@ export default function HomePage() {
           <AcademyPanel
             id="lld-academy"
             title="LLD Academy"
-            subtitle="Templates, concurrency, solved problems, patterns, and Java workspace."
+            subtitle="Concurrency lessons and Java workspace."
             sections={lldSections}
             tone="lld"
           />
           <AcademyPanel
             id="hld-academy"
             title="HLD Academy"
-            subtitle="System design docs, diagrams, case studies, and deep dives."
+            subtitle="System design problem library and deep dives."
             sections={hldSections}
             tone="hld"
           />
