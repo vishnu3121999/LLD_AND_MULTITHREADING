@@ -2,24 +2,24 @@ import { notFound } from "next/navigation";
 import { HldShell } from "../../_components/hld-shell";
 import { HldTheoryRenderer } from "../../../../../components/hld/hld-theory-renderer";
 import { buildHldNavGroups, buildHldTheoryPageNav } from "../../../../../lib/hld-navigation";
-import { listHldReusedSubproblemDocs } from "../../../../../lib/hld-reused-subproblems-store";
+import { getHldReusedSubproblemDoc, listHldReusedSubproblemDocs } from "../../../../../lib/hld-reused-subproblems-store";
 import { listHldProblems } from "../../../../../lib/hld-store";
-import { getHldTheoryDoc, listHldTheoryDocs } from "../../../../../lib/hld-theory-store";
+import { listHldTheoryDocs } from "../../../../../lib/hld-theory-store";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const doc = await getHldTheoryDoc(slug);
+  const doc = await getHldReusedSubproblemDoc(slug);
   return {
-    title: doc ? `${doc.title} | HLD Theory` : "HLD Theory | 01 Interview"
+    title: doc ? `${doc.title} | HLD Reused Subproblems` : "HLD Reused Subproblem | 01 Interview"
   };
 }
 
-export default async function HldTheoryPage({ params }) {
+export default async function HldReusedSubproblemPage({ params }) {
   const { slug } = await params;
   const [doc, problems, theoryDocs, reusedSubproblemDocs] = await Promise.all([
-    getHldTheoryDoc(slug),
+    getHldReusedSubproblemDoc(slug),
     listHldProblems(),
     listHldTheoryDocs(),
     listHldReusedSubproblemDocs()
@@ -29,11 +29,11 @@ export default async function HldTheoryPage({ params }) {
 
   return (
     <HldShell
-      activeSlug={`theory:${doc.id}`}
+      activeSlug={`reused-subproblems:${doc.id}`}
       groups={buildHldNavGroups(problems, theoryDocs, reusedSubproblemDocs)}
       pageNav={buildHldTheoryPageNav(doc)}
     >
-      <HldTheoryRenderer doc={doc} />
+      <HldTheoryRenderer doc={doc} label="Reused Subproblem" />
     </HldShell>
   );
 }

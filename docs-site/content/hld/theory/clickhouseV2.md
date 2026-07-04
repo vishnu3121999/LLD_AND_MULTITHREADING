@@ -1,3 +1,10 @@
+---
+title: ClickHouseV2
+slug: clickhouseV2
+summary: Track item activity and return top K items globally or by category for a given time window.
+difficulty: Hard
+---
+
 # ClickHouse Interview Guide
 
 ## 1. What Is ClickHouse & Why It Exists

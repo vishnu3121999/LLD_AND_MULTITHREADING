@@ -22,7 +22,7 @@ const hldTheme = {
   "--hld-code-bg": "var(--site-code-bg)"
 };
 
-export function HldTheoryRenderer({ doc }) {
+export function HldTheoryRenderer({ doc, label = "Theory" }) {
   return (
     <article style={hldTheme} className="min-w-0 space-y-4 text-[var(--hld-text)]">
       <header
@@ -34,7 +34,7 @@ export function HldTheoryRenderer({ doc }) {
             <div className="min-w-0">
               <div className="flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--hld-brand)]">
                 <BookOpenText size={14} aria-hidden="true" />
-                Theory
+                {label}
               </div>
               <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-normal text-[var(--hld-heading)]">
                 {doc.title}
@@ -64,7 +64,13 @@ export function HldTheoryRenderer({ doc }) {
       </header>
 
       <section className="rounded-lg border border-[var(--hld-border)] bg-[var(--hld-surface)] p-5 shadow-[0_8px_28px_rgba(15,23,42,0.04)] sm:p-6">
-        <TheoryMarkdown body={doc.body} />
+        {doc.body ? (
+          <TheoryMarkdown body={doc.body} />
+        ) : (
+          <div className="rounded-lg border border-dashed border-[var(--hld-border)] bg-[var(--hld-surface-2)] p-8 text-center text-sm font-medium text-[var(--hld-muted)]">
+            No content added yet.
+          </div>
+        )}
       </section>
     </article>
   );

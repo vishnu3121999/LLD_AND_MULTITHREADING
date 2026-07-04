@@ -1,9 +1,9 @@
 import Link from "next/link";
 import {
   ArrowRight,
-  BookOpenCheck,
   Code2,
   LockKeyhole,
+  MessageSquareText,
   Network
 } from "lucide-react";
 
@@ -51,6 +51,23 @@ const hldSections = [
   }
 ];
 
+const behavioralSections = [
+  {
+    title: "Behavioral Interviews",
+    href: "/behavioral",
+    eyebrow: "STAR stories",
+    description: "Build reusable STAR stories, map them to common behavioral questions, and prepare focused answers.",
+    icon: MessageSquareText,
+    meta: "Behavioral"
+  }
+];
+
+const mainSections = [
+  ...lldSections,
+  ...hldSections,
+  ...behavioralSections
+];
+
 export default function HomePage() {
   return (
     <main style={dashboardTheme} className="min-h-[calc(100vh-4rem)] bg-[var(--cor-bg)] text-[var(--cor-text)]">
@@ -62,80 +79,24 @@ export default function HomePage() {
                 Design interview academy
               </div>
               <h1 className="mt-2 max-w-3xl text-3xl font-black tracking-normal sm:text-4xl">
-                LLD and HLD sections in one place.
+                LLD, HLD, and behavioral interviews in one place.
               </h1>
               <p className="mt-2 max-w-3xl text-base leading-7 text-[var(--cor-muted)]">
-                Start directly from the section grid below: concurrency, Java workspace, and system design problem library.
+                Start directly from the section grid below.
               </p>
-            </div>
-
-            <div className="flex flex-wrap gap-2 lg:justify-end">
-              <a
-                href="#lld-academy"
-                className="inline-flex h-10 items-center gap-2 rounded-md border border-[var(--cor-border)] bg-[var(--cor-surface-2)] px-3 text-sm font-black text-[var(--cor-text)] transition hover:border-[var(--cor-brand)] hover:bg-[var(--cor-surface)]"
-              >
-                <BookOpenCheck size={16} aria-hidden="true" />
-                LLD
-                <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--cor-muted)]">
-                  {lldSections.length} sections
-                </span>
-              </a>
-              <a
-                href="#hld-academy"
-                className="inline-flex h-10 items-center gap-2 rounded-md border border-[var(--cor-border)] bg-[var(--cor-surface-2)] px-3 text-sm font-black text-[var(--cor-text)] transition hover:border-[var(--cor-brand)] hover:bg-[var(--cor-surface)]"
-              >
-                <Network size={16} aria-hidden="true" />
-                HLD
-                <span className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-[var(--cor-muted)]">
-                  {hldSections.length} sections
-                </span>
-              </a>
             </div>
           </div>
         </div>
       </section>
 
       <section className="site-container py-4 lg:py-5">
-        <div className="grid gap-5 xl:grid-cols-2">
-          <AcademyPanel
-            id="lld-academy"
-            title="LLD Academy"
-            subtitle="Concurrency lessons and Java workspace."
-            sections={lldSections}
-            tone="lld"
-          />
-          <AcademyPanel
-            id="hld-academy"
-            title="HLD Academy"
-            subtitle="System design problem library and deep dives."
-            sections={hldSections}
-            tone="hld"
-          />
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {mainSections.map((section) => (
+            <SectionCard key={section.href} section={section} />
+          ))}
         </div>
       </section>
     </main>
-  );
-}
-
-function AcademyPanel({ id, title, subtitle, sections, tone }) {
-  return (
-    <section id={id} className="scroll-mt-20 rounded-lg border border-[var(--cor-border)] bg-[linear-gradient(135deg,var(--cor-brand-soft),var(--cor-surface)_42%,var(--cor-surface-2))] p-4 shadow-[var(--site-shadow)] sm:p-5">
-      <div className="mb-4 flex flex-wrap items-end justify-between gap-3 border-b border-[var(--cor-border)] pb-4">
-        <div>
-          <h2 className="text-2xl font-black tracking-normal">{title}</h2>
-          <p className="mt-1 text-sm leading-6 text-[var(--cor-muted)]">{subtitle}</p>
-        </div>
-        <span className="rounded-full border border-[var(--cor-border)] bg-[var(--cor-surface)] px-3 py-1 font-mono text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--cor-muted)]">
-          {sections.length} sections
-        </span>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        {sections.map((section) => (
-          <SectionCard key={section.href} section={section} />
-        ))}
-      </div>
-    </section>
   );
 }
 

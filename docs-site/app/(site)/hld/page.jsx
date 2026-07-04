@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Database, Layers3, Network } from "lucide-react";
 import { HldShell } from "./_components/hld-shell";
 import { buildHldNavGroups } from "../../../lib/hld-navigation";
+import { listHldReusedSubproblemDocs } from "../../../lib/hld-reused-subproblems-store";
 import { listHldProblems } from "../../../lib/hld-store";
 import { listHldTheoryDocs } from "../../../lib/hld-theory-store";
 
@@ -12,12 +13,13 @@ export const metadata = {
 };
 
 export default async function HldLibraryPage() {
-  const [problems, theoryDocs] = await Promise.all([
+  const [problems, theoryDocs, reusedSubproblemDocs] = await Promise.all([
     listHldProblems(),
-    listHldTheoryDocs()
+    listHldTheoryDocs(),
+    listHldReusedSubproblemDocs()
   ]);
   const solvedProblems = problems.filter((problem) => problem.source === "markdown" || problem.source === "text");
-  const groups = buildHldNavGroups(problems, theoryDocs);
+  const groups = buildHldNavGroups(problems, theoryDocs, reusedSubproblemDocs);
   const pageNav = [
     { href: "#library-overview", label: "Overview" },
     { href: "#problems", label: "Problems" }

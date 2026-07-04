@@ -28,7 +28,7 @@ const shellTheme = {
   "--hld-code-bg": "var(--site-code-bg)"
 };
 
-const completionStorageKey = "hld-completed-problems";
+const hldCompletionsApi = "/api/hld/completions";
 const openGroupsStorageKey = "hld-open-groups";
 const railCollapsedStorageKey = "hld-rail-collapsed";
 
@@ -50,23 +50,20 @@ function getDefaultOpenGroups(groups, activeSlug) {
   return activeGroupId ? [activeGroupId] : getAllGroupIds(groups);
 }
 
-export function HldShell({ activeSlug, groups, pageNav = [], children }) {
+export function HldShell({ activeSlug, groups, pageNav = [], rightPanel = null, children }) {
   const allGroupIds = useMemo(() => getAllGroupIds(groups), [groups]);
   const allItemSlugs = useMemo(() => getAllItemSlugs(groups), [groups]);
   const itemSlugSet = useMemo(() => new Set(allItemSlugs), [allItemSlugs]);
   const [completedItems, setCompletedItems] = useState([]);
+  const [completionError, setCompletionError] = useState("");
+  const [savingCompletionSlug, setSavingCompletionSlug] = useState("");
   const [openGroups, setOpenGroups] = useState(() => getDefaultOpenGroups(groups, activeSlug));
   const [railCollapsed, setRailCollapsed] = useState(false);
 
   useEffect(() => {
     try {
-      const savedCompleted = JSON.parse(localStorage.getItem(completionStorageKey) || "[]");
       const savedOpenGroups = JSON.parse(localStorage.getItem(openGroupsStorageKey) || "null");
       const savedRailCollapsed = localStorage.getItem(railCollapsedStorageKey);
-
-      if (Array.isArray(savedCompleted)) {
-        setCompletedItems(savedCompleted.filter((slug) => itemSlugSet.has(slug)));
-      }
 
       if (Array.isArray(savedOpenGroups)) {
         const validOpenGroups = savedOpenGroups.filter((groupId) => allGroupIds.includes(groupId));
@@ -79,10 +76,29 @@ export function HldShell({ activeSlug, groups, pageNav = [], children }) {
         setRailCollapsed(savedRailCollapsed === "true");
       }
     } catch {
-      setCompletedItems([]);
       setOpenGroups(getDefaultOpenGroups(groups, activeSlug));
     }
-  }, [activeSlug, allGroupIds, groups, itemSlugSet]);
+  }, [activeSlug, allGroupIds, groups]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    loadHldCompletions()
+      .then((completed) => {
+        if (cancelled) return;
+        setCompletedItems(completed.filter((slug) => itemSlugSet.has(slug)));
+        setCompletionError("");
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setCompletedItems([]);
+        setCompletionError(error.message || "Unable to load HLD progress.");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [itemSlugSet]);
 
   useEffect(() => {
     if (!activeSlug) return;
@@ -103,21 +119,22 @@ export function HldShell({ activeSlug, groups, pageNav = [], children }) {
   const itemCount = allItemSlugs.length;
   const progress = itemCount === 0 ? 0 : Math.round((completedCount / itemCount) * 100);
 
-  function toggleComplete(slug = activeSlug) {
+  async function toggleComplete(slug = activeSlug) {
     if (!slug || !itemSlugSet.has(slug)) return;
+    if (savingCompletionSlug) return;
 
-    setCompletedItems((current) => {
-      const currentSet = new Set(current);
-      if (currentSet.has(slug)) {
-        currentSet.delete(slug);
-      } else {
-        currentSet.add(slug);
-      }
+    const nextCompleted = !completedSet.has(slug);
+    setSavingCompletionSlug(slug);
+    setCompletionError("");
 
-      const next = allItemSlugs.filter((itemSlug) => currentSet.has(itemSlug));
-      localStorage.setItem(completionStorageKey, JSON.stringify(next));
-      return next;
-    });
+    try {
+      const completed = await saveHldCompletion(slug, nextCompleted);
+      setCompletedItems(completed.filter((itemSlug) => itemSlugSet.has(itemSlug)));
+    } catch (error) {
+      setCompletionError(error.message || "Unable to save HLD progress.");
+    } finally {
+      setSavingCompletionSlug("");
+    }
   }
 
   function toggleGroup(groupId) {
@@ -140,7 +157,7 @@ export function HldShell({ activeSlug, groups, pageNav = [], children }) {
     });
   }
 
-  const hasPageNav = pageNav.length > 0;
+  const hasPageNav = pageNav.length > 0 || Boolean(rightPanel);
   const gridClass = railCollapsed
     ? hasPageNav
       ? "xl:grid-cols-[64px_minmax(0,1fr)_52px]"
@@ -161,6 +178,7 @@ export function HldShell({ activeSlug, groups, pageNav = [], children }) {
             collapsed={railCollapsed}
             completedCount={completedCount}
             completedSet={completedSet}
+            completionError={completionError}
             groups={groups}
             itemCount={itemCount}
             onToggleComplete={toggleComplete}
@@ -168,6 +186,7 @@ export function HldShell({ activeSlug, groups, pageNav = [], children }) {
             onToggleRail={toggleRail}
             openGroups={openGroups}
             progress={progress}
+            savingCompletionSlug={savingCompletionSlug}
             showRailToggle
           />
         </aside>
@@ -182,6 +201,7 @@ export function HldShell({ activeSlug, groups, pageNav = [], children }) {
               collapsed={false}
               completedCount={completedCount}
               completedSet={completedSet}
+              completionError={completionError}
               groups={groups}
               itemCount={itemCount}
               onToggleComplete={toggleComplete}
@@ -189,16 +209,21 @@ export function HldShell({ activeSlug, groups, pageNav = [], children }) {
               onToggleRail={toggleRail}
               openGroups={openGroups}
               progress={progress}
+              savingCompletionSlug={savingCompletionSlug}
               showRailToggle={false}
             />
           </div>
         </details>
 
+        {rightPanel && (
+          <MobileRightPanel panel={rightPanel} />
+        )}
+
         <div className="min-w-0">{children}</div>
 
         {hasPageNav && (
           <aside className="hidden xl:sticky xl:top-16 xl:block xl:h-fit">
-            <PageNav items={pageNav} />
+            <PageNav items={pageNav} panel={rightPanel} />
           </aside>
         )}
       </div>
@@ -211,6 +236,7 @@ function HldCourseNav({
   collapsed,
   completedCount,
   completedSet,
+  completionError,
   groups,
   itemCount,
   onToggleComplete,
@@ -218,6 +244,7 @@ function HldCourseNav({
   onToggleRail,
   openGroups,
   progress,
+  savingCompletionSlug,
   showRailToggle
 }) {
   if (collapsed) {
@@ -301,6 +328,11 @@ function HldCourseNav({
             style={{ width: `${progress}%` }}
           />
         </div>
+        {completionError && (
+          <div className="mt-2 text-xs font-medium leading-5 text-[var(--hld-danger)]">
+            {completionError}
+          </div>
+        )}
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto p-3">
@@ -349,6 +381,7 @@ function HldCourseNav({
                         completedSet={completedSet}
                         item={item}
                         onToggleComplete={onToggleComplete}
+                        saving={savingCompletionSlug === item.slug}
                       />
                     ))}
                   </div>
@@ -362,7 +395,7 @@ function HldCourseNav({
   );
 }
 
-function HldNavItem({ activeSlug, completedSet, item, onToggleComplete }) {
+function HldNavItem({ activeSlug, completedSet, item, onToggleComplete, saving }) {
   const isActive = activeSlug === item.slug;
   const isComplete = completedSet.has(item.slug);
 
@@ -377,11 +410,12 @@ function HldNavItem({ activeSlug, completedSet, item, onToggleComplete }) {
       <button
         type="button"
         onClick={() => onToggleComplete(item.slug)}
+        disabled={saving}
         className={`ml-1 mt-1.5 grid h-6 w-6 flex-none place-items-center rounded-md transition ${
           isComplete
             ? "text-[var(--hld-good)] hover:bg-[rgba(15,118,110,0.08)]"
             : "text-[var(--hld-muted)] hover:bg-[var(--hld-surface-2)] hover:text-[var(--hld-brand)]"
-        }`}
+        } disabled:cursor-not-allowed disabled:opacity-60`}
         aria-label={isComplete ? `Mark ${item.title} incomplete` : `Mark ${item.title} complete`}
         title={isComplete ? "Mark incomplete" : "Mark complete"}
       >
@@ -397,43 +431,175 @@ function HldNavItem({ activeSlug, completedSet, item, onToggleComplete }) {
           isActive ? "font-medium" : "font-normal"
         }`}
       >
-        {item.title}
+        <span className="flex min-w-0 items-center justify-between gap-2">
+          <span className="min-w-0 truncate">{item.title}</span>
+          {typeof item.usedInCount === "number" && (
+            <span className="shrink-0 rounded-full border border-[var(--hld-border)] bg-[var(--hld-surface-2)] px-2 py-0.5 font-mono text-[10px] font-bold leading-none text-[var(--hld-brand)]">
+              {item.usedInCount} used
+            </span>
+          )}
+        </span>
       </Link>
     </div>
   );
 }
 
-function PageNav({ items }) {
-  if (!items.length) return null;
+function PageNav({ items, panel }) {
+  if (!items.length && !panel) return null;
 
   return (
     <nav aria-label="Page navigation" className="group relative flex justify-end">
       <button
         type="button"
-        aria-label="Show page navigation"
-        className="grid h-11 w-11 place-items-center rounded-lg border border-[var(--hld-border)] bg-[var(--hld-surface)] text-[var(--hld-muted)] shadow-[0_8px_28px_rgba(15,23,42,0.04)] transition hover:border-[var(--hld-brand)] hover:text-[var(--hld-brand)]"
+        aria-label={panel ? `${panel.eyebrow}: ${panel.value} ${panel.valueLabel}` : "Show page navigation"}
+        className={`relative grid place-items-center rounded-lg border border-[var(--hld-border)] bg-[var(--hld-surface)] text-[var(--hld-muted)] shadow-[0_8px_28px_rgba(15,23,42,0.04)] transition hover:border-[var(--hld-brand)] hover:text-[var(--hld-brand)] ${
+          panel ? "min-h-16 w-12 px-1.5 py-2" : "h-11 w-11"
+        }`}
       >
-        <ListTree size={18} aria-hidden="true" />
+        {panel ? (
+          <span className="grid gap-1 text-center">
+            <span className="font-mono text-xl font-bold leading-none text-[var(--hld-heading)]">
+              {panel.value}
+            </span>
+            <span className="text-[9px] font-bold uppercase leading-none tracking-[0.12em] text-[var(--hld-brand)]">
+              Used
+            </span>
+          </span>
+        ) : (
+          <ListTree size={18} aria-hidden="true" />
+        )}
       </button>
       <div className="pointer-events-none absolute right-0 top-0 z-30 w-64 rounded-lg border border-[var(--hld-border)] bg-[var(--hld-surface)] p-3 opacity-0 shadow-[0_18px_45px_rgba(15,23,42,0.14)] transition group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100">
-        <div className="border-b border-[var(--hld-border)] px-1 pb-3">
-          <div className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--hld-brand)]">
-            Page Nav
+        {panel && (
+          <div className="rounded-lg border border-[var(--hld-border)] bg-[var(--hld-surface-2)] p-3">
+            <div className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--hld-brand)]">
+              {panel.eyebrow}
+            </div>
+            <div className="mt-2 flex items-end gap-2">
+              <span className="font-mono text-3xl font-bold leading-none text-[var(--hld-heading)]">
+                {panel.value}
+              </span>
+              <span className="pb-1 text-xs font-semibold text-[var(--hld-muted)]">
+                {panel.valueLabel}
+              </span>
+            </div>
+            <div className="mt-2 text-sm font-semibold text-[var(--hld-heading)]">
+              {panel.title}
+            </div>
+            {panel.description && (
+              <p className="mt-1 text-xs leading-5 text-[var(--hld-muted)]">{panel.description}</p>
+            )}
+            {panel.items?.length > 0 ? (
+              <div className="mt-3 grid gap-1">
+                {panel.items.map((item) => (
+                  <a
+                    key={`${item.href}-${item.label}`}
+                    href={item.href}
+                    className="rounded-md border border-transparent px-2 py-1.5 text-xs font-medium leading-5 text-[var(--hld-muted)] transition hover:border-[var(--hld-border)] hover:bg-[var(--hld-surface)] hover:text-[var(--hld-heading)]"
+                  >
+                    {item.label}
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-3 rounded-md border border-dashed border-[var(--hld-border)] bg-[var(--hld-surface)] px-3 py-2 text-xs leading-5 text-[var(--hld-muted)]">
+                {panel.emptyText}
+              </div>
+            )}
           </div>
-          <div className="mt-1 text-sm font-semibold text-[var(--hld-heading)]">On this page</div>
+        )}
+        {items.length > 0 && (
+          <>
+            <div className={`${panel ? "mt-3" : ""} border-b border-[var(--hld-border)] px-1 pb-3`}>
+              <div className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--hld-brand)]">
+                Page Nav
+              </div>
+              <div className="mt-1 text-sm font-semibold text-[var(--hld-heading)]">On this page</div>
+            </div>
+            <div className="mt-2 grid max-h-[70vh] gap-1 overflow-y-auto">
+              {items.map((item) => (
+                <a
+                  key={`${item.href}-${item.label}`}
+                  href={item.href}
+                  className="rounded-md px-2 py-2 text-xs font-medium leading-5 text-[var(--hld-muted)] transition hover:bg-[var(--hld-surface-2)] hover:text-[var(--hld-heading)]"
+                >
+                  {item.label}
+                </a>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </nav>
+  );
+}
+
+function MobileRightPanel({ panel }) {
+  return (
+    <section className="rounded-lg border border-[var(--hld-border)] bg-[var(--hld-surface)] p-4 shadow-[0_8px_28px_rgba(15,23,42,0.04)] xl:hidden">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <div className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--hld-brand)]">
+            {panel.eyebrow}
+          </div>
+          <div className="mt-1 text-sm font-semibold text-[var(--hld-heading)]">{panel.title}</div>
         </div>
-        <div className="mt-2 grid max-h-[70vh] gap-1 overflow-y-auto">
-          {items.map((item) => (
+        <div className="rounded-md border border-[var(--hld-border)] bg-[var(--hld-surface-2)] px-3 py-2 text-right">
+          <div className="font-mono text-2xl font-bold leading-none text-[var(--hld-heading)]">{panel.value}</div>
+          <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--hld-muted)]">
+            {panel.valueLabel}
+          </div>
+        </div>
+      </div>
+      {panel.items?.length > 0 ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {panel.items.map((item) => (
             <a
               key={`${item.href}-${item.label}`}
               href={item.href}
-              className="rounded-md px-2 py-2 text-xs font-medium leading-5 text-[var(--hld-muted)] transition hover:bg-[var(--hld-surface-2)] hover:text-[var(--hld-heading)]"
+              className="rounded-md border border-[var(--hld-border)] bg-[var(--hld-surface-2)] px-3 py-1.5 text-xs font-semibold text-[var(--hld-muted)] transition hover:border-[var(--hld-brand)] hover:text-[var(--hld-heading)]"
             >
               {item.label}
             </a>
           ))}
         </div>
-      </div>
-    </nav>
+      ) : (
+        <p className="mt-3 text-xs leading-5 text-[var(--hld-muted)]">{panel.emptyText}</p>
+      )}
+    </section>
   );
+}
+
+async function loadHldCompletions() {
+  const payload = await hldFetchJson(hldCompletionsApi);
+  return Array.isArray(payload.completed) ? payload.completed.map((slug) => String(slug)) : [];
+}
+
+async function saveHldCompletion(slug, completed) {
+  const payload = await hldFetchJson(hldCompletionsApi, {
+    method: "PUT",
+    body: JSON.stringify({ slug, completed })
+  });
+  return Array.isArray(payload.completed) ? payload.completed.map((itemSlug) => String(itemSlug)) : [];
+}
+
+async function hldFetchJson(url, options = {}) {
+  const response = await fetch(url, {
+    cache: "no-store",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {})
+    }
+  });
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error("Sign in to save and load HLD progress.");
+    }
+    throw new Error(payload.error || "Unable to access HLD progress.");
+  }
+
+  return payload;
 }

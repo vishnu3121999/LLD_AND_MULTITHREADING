@@ -1,4 +1,5 @@
-export function buildHldNavGroups(problems = [], theoryDocs = []) {
+export function buildHldNavGroups(problems = [], theoryDocs = [], reusedSubproblemDocs = []) {
+  const problemIds = new Set(problems.map((problem) => problem.id));
   const groups = [
     {
       id: "problem-library",
@@ -23,6 +24,23 @@ export function buildHldNavGroups(problems = [], theoryDocs = []) {
       items: theoryDocs.map((doc) => ({
         slug: `theory:${doc.id}`,
         href: `/hld/theory/${doc.id}`,
+        title: doc.title,
+        summary: doc.summary || "",
+        usedInCount: countUsedInProblems(doc.usedIn, problemIds),
+        sectionCount: doc.sectionCount || 0
+      }))
+    });
+  }
+
+  if (reusedSubproblemDocs.length > 0) {
+    groups.push({
+      id: "reused-subproblems",
+      number: "Reusable",
+      title: "Reused Subproblems",
+      description: "Common HLD building blocks reused across system design problems.",
+      items: reusedSubproblemDocs.map((doc) => ({
+        slug: `reused-subproblems:${doc.id}`,
+        href: `/hld/reused-subproblems/${doc.id}`,
         title: doc.title,
         summary: doc.summary || "",
         sectionCount: doc.sectionCount || 0
@@ -78,4 +96,29 @@ function slugify(value) {
     .trim()
     .replace(/[\s_-]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+function countUsedInProblems(usedIn = [], problemIds) {
+  if (!Array.isArray(usedIn) || !problemIds?.size) return 0;
+  const matched = new Set();
+
+  for (const value of usedIn) {
+    for (const slug of usedInSlugCandidates(value)) {
+      if (problemIds.has(slug)) matched.add(slug);
+    }
+  }
+
+  return matched.size;
+}
+
+function usedInSlugCandidates(value) {
+  const compact = slugify(value);
+  const kebab = String(value || "")
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1-$2")
+    .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  return Array.from(new Set([compact, kebab].filter(Boolean)));
 }

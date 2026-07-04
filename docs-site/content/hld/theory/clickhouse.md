@@ -1,5 +1,10 @@
-Below are **interview notes for ClickHouse**. Focus on these topics; this is enough for most HLD, backend, analytics, data infra, and database interviews.
-
+---
+title: ClickHouse
+slug: clickhouse
+summary: Track item activity and return top K items globally or by category for a given time window.
+difficulty: Hard
+usedIn: [topksystem,googleads]
+---
 ---
 
 # 1. What is ClickHouse?

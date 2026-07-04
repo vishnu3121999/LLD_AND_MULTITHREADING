@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { HldShell } from "../_components/hld-shell";
 import { HldProblemRenderer } from "../../../../components/hld/hld-renderer";
 import { buildHldNavGroups, buildHldPageNav } from "../../../../lib/hld-navigation";
+import { listHldReusedSubproblemDocs } from "../../../../lib/hld-reused-subproblems-store";
 import { getHldProblem, listHldProblems } from "../../../../lib/hld-store";
 import { listHldTheoryDocs } from "../../../../lib/hld-theory-store";
 
@@ -17,17 +18,18 @@ export async function generateMetadata({ params }) {
 
 export default async function HldProblemPage({ params }) {
   const { slug } = await params;
-  const [problem, problems, theoryDocs] = await Promise.all([
+  const [problem, problems, theoryDocs, reusedSubproblemDocs] = await Promise.all([
     getHldProblem(slug),
     listHldProblems(),
-    listHldTheoryDocs()
+    listHldTheoryDocs(),
+    listHldReusedSubproblemDocs()
   ]);
   if (!problem) notFound();
 
   return (
     <HldShell
       activeSlug={problem.id}
-      groups={buildHldNavGroups(problems, theoryDocs)}
+      groups={buildHldNavGroups(problems, theoryDocs, reusedSubproblemDocs)}
       pageNav={buildHldPageNav(problem)}
     >
       <HldProblemRenderer problem={problem} />
