@@ -84,18 +84,18 @@ RESPONSE BODY:
 
 ## High-Level Design
 
-FR-1:
-Table:
-- Items
-  - id
-  - title
-    ...
-
-- Events
-  - id
-  - itemId
-  - eventTime
-
+::TABBED::
+::TAB::
+TITLE: FR-1
+IMAGE: images/FR-1.png
+::SIDEBYSIDE::
+::LEFT::
+EXPLANATION:
+Event Service receives activity events for items.
+gh, we can optimize later using stream processing and Redis sorted sets in the deep dive section.
+::END-LEFT::
+::RIGHT::
+SQL:
 ```sql
 SELECT itemId, COUNT(*) AS cnt
 FROM Events
@@ -104,19 +104,21 @@ GROUP BY itemId
 ORDER BY cnt DESC
 LIMIT k;
 ```
+::END-RIGHT::
+::END-SIDEBYSIDE::
+::END-TAB::
 
-EXPLANATION:
-Event Service receives activity events for items.
-gh, we can optimize later using stream processing and Redis sorted sets in the deep dive section.
-
+::END-TABBED::
 
 
 
 ## Deep Dives:
 
 ### READ LATENCY:
-#### CURRENT APPROACH:
-IMAGE: current
+::TABBED::
+::TAB::
+TITLE: Current Approach
+IMAGE: images/current.png
 EXPLANATION:
 		1) Tables Size:
 			a) Event Table:
@@ -124,34 +126,57 @@ EXPLANATION:
 				ii) size: 100Bytes/row * 2*10^14 = 20 PB
         2) Target < 100ms:
             Time to scan 20PB of data with 1GB/s SSD speed = 20 *10^6 s
-
-#### Indexing:
+::END-TAB::
+::TAB::
+TITLE: Indexing
 EXPLANATION:
 on eventTime: TODO
-
-#### Pagination:
+::END-TAB::
+::TAB::
+TITLE: Pagination
 EXPLANATION:
 Not applicable to this problem
-
-#### Bucketing + Indexing:
-IMAGE: bucketing
+::END-TAB::
+::TAB::
+TITLE: Bucketing + Indexing
+IMAGE: images/bucketing.png
+::SIDEBYSIDE::
+::LEFT::
 EXPLANATION:
-				ii) rows: 
-					a) total 10B videos on yt
-					b) 90% views on top 1% videos => 90% of 50 B on 100M => 100M rows for 90%
-					c) remaining 10% views on top 10% videos => 10% of 50B  on 1B => 1B rows
-					d) You can simplify it by saying 90% of videos get <1000s views so those can be ignored & we just focus on top 10% of videos = 1B videos
-					e) So, if window
-						i) : last hour  -  rows = 1B
-						ii) :last year - 24*365 * 1B = 9Trillion
-				iii) size =
-					a) : last hour = 100 * 1B = 100 GB
-					b) : last year = 100 * 9T = 900 TB
-				iv) Time 
-					a) : last hour = 100s 
-					b) : last year = hours - days
-						i) Have multiple tables to solve this ( helps )
+* rows:
 
+	* total 10B videos on YT
+	* 90% views on top 1% videos
+
+		* 90% of 50B on 100M
+		* 100M rows for 90%
+	* remaining 10% views on top 10% videos
+
+		* 10% of 50B on 1B
+		* 1B rows
+	* You can simplify it by saying 90% of videos get `<1000s` views so those can be ignored & we just focus on top 10% of videos = 1B videos
+	* So, if window:
+
+		* last hour: rows = 1B
+		* last year: `24 * 365 * 1B = 9 Trillion`
+
+* size:
+
+	* last hour: `100 * 1B = 100 GB`
+	* last year: `100 * 9T = 900 TB`
+
+* time:
+	* last hour: 100s
+	* last year: hours - days
+
+		* Have multiple tables to solve this
+
+			* helps
+
+::END-LEFT::
+::RIGHT::
+
+SQL:
 ```sql
 SELECT
 	itemId,
@@ -163,23 +188,42 @@ ORDER BY total_count DESC
 	LIMIT 10;
 ```
 
-#### Materialized Views/ Denormalization:
+::END-RIGHT::
+::END-TAB::
+::TAB::
+TITLE: Materialized Views/ Denormalization
 EXPLANATION:
 NA
-
-#### Caching:
-IMAGE: caching
+::END-TAB::
+::TAB::
+TITLE: Caching
+IMAGE: images/caching.png
 EXPLANATION:
 				i) Depends on inconsistency we agreed upon. If its less than 5min. Then we are good. Else not
 				ii) 
 				iii) cron runs every 2mins
-#### TSDB:
+::END-TAB::
+::TAB::
+TITLE: TSDB
 EXPLANATION:
 i) No - since high cardinality of itemId
-#### OLAP:
+::END-TAB::
+::TAB::
+TITLE: OLAP
 EXPLANATION:
+::END-TAB::
+::END-TABBED::
 
-
+::SEPERATOR::
 ### WRITE TPS:
+EXPLANATION:
+i) Depends on inconsistency we agreed upon. If its less than 5min. Then we are good. Else not
+ii)
+iii) cron runs every 2mins
 
+::SEPERATOR::
 ### READ TPS:
+EXPLANATION:
+i) Depends on inconsistency we agreed upon. If its less than 5min. Then we are good. Else not
+ii)
+iii) cron runs every 2mins

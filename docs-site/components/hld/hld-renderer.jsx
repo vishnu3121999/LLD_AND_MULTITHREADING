@@ -252,7 +252,10 @@ export function HldProblemRenderer({ problem, preview = false }) {
   const [mermaidReady, setMermaidReady] = useState(false);
   const [showAllTemplates, setShowAllTemplates] = useState(false);
   const [openTemplateIds, setOpenTemplateIds] = useState(() => new Set());
-  const solution = useMemo(() => prepareSolution(problem?.sections || []), [problem?.sections]);
+  const solution = useMemo(
+    () => prepareSolution(problem?.sections || [], problem?.images || []),
+    [problem?.sections, problem?.images]
+  );
 
   function toggleTemplate(nodeId) {
     setOpenTemplateIds((current) => {
@@ -605,15 +608,12 @@ function SectionBody({ node, mermaidReady }) {
     return <ApiDesignBlock body={stripEmptyBulletOnlyLines(node.body)} />;
   }
 
-  if (node.slug === "high-level-design") {
-    return <HighLevelDesignBlock body={stripEmptyBulletOnlyLines(node.body)} images={node.images} />;
-  }
-
-  if (node.slug === "deep-dives") {
-    return <DeepDivesBlock body={stripEmptyBulletOnlyLines(node.body)} images={node.images} />;
-  }
-
-  return <MarkdownBlock body={stripEmptyBulletOnlyLines(node.body)} />;
+  return (
+    <HldStructuredMarkdown
+      body={stripEmptyBulletOnlyLines(node.body)}
+      images={getNodeImages(node)}
+    />
+  );
 }
 
 function SectionImages({ images }) {
@@ -759,247 +759,138 @@ function OverflowTabList({ className, ariaLabel, children }) {
   );
 }
 
-function DeepDivesBlock({ body, images = [] }) {
-  const parsed = useMemo(() => parseDeepDives(body), [body]);
+function HldStructuredMarkdown({ body, images = [] }) {
+  const parsed = useMemo(() => parseHldStructuredBlocks(body), [body]);
 
-  if (parsed.sections.length === 0) {
+  if (!parsed.hasStructuredBlocks) {
     return <MarkdownBlock body={body} />;
   }
 
   return (
-    <div className="hld-deep-dives">
-      {parsed.intro && (
-        <div className="hld-deep-intro">
-          <MarkdownBlock body={parsed.intro} />
-        </div>
-      )}
-
-      <div className="hld-deep-topic-list">
-        {parsed.sections.map((topic, index) => (
-          <DeepDiveTopic key={`${topic.slug}-${index}`} topic={topic} images={images} />
-        ))}
-      </div>
+    <div className="grid gap-4">
+      {parsed.blocks.map((block, index) => (
+        <HldStructuredBlock
+          key={`${block.type}-${index}`}
+          block={block}
+          blockKey={`hld-block-${index}`}
+          images={images}
+        />
+      ))}
     </div>
   );
 }
 
-function DeepDiveTopic({ topic, images }) {
-  if (topic.approaches.length === 0) {
-    return (
-      <section className="hld-deep-topic">
-        <h3 className="hld-deep-topic-title">{topic.title}</h3>
-        {topic.context && <MarkdownBlock body={topic.context} />}
-      </section>
-    );
+function HldStructuredBlock({ block, blockKey, images }) {
+  if (block.type === "tabbed") {
+    return <HldTabbedBlock tabs={block.tabs} blockKey={blockKey} images={images} />;
   }
 
-  return <DeepDiveApproachTabs topic={topic} images={images} />;
+  if (block.type === "sideBySide") {
+    return <HldSideBySideBlock left={block.left} right={block.right} images={images} />;
+  }
+
+  if (block.type === "separator") {
+    return <div className="hld-content-separator" aria-hidden="true" />;
+  }
+
+  if (!String(block.body || "").trim()) return null;
+  return <MarkdownBlock body={block.body} />;
 }
 
-function DeepDiveApproachTabs({ topic, images }) {
+function HldTabbedBlock({ tabs, blockKey, images }) {
+  const visibleTabs = tabs.filter((tab) => hasTabContent(tab));
   const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
-    setActiveIndex((current) => Math.min(current, Math.max(topic.approaches.length - 1, 0)));
-  }, [topic.approaches.length]);
+    setActiveIndex((current) => Math.min(current, Math.max(visibleTabs.length - 1, 0)));
+  }, [visibleTabs.length]);
 
-  const activeApproach = topic.approaches[activeIndex] || topic.approaches[0];
-  const panelId = `hld-deep-panel-${topic.slug}-${activeIndex}`;
+  if (visibleTabs.length === 0) return null;
 
-  return (
-    <section className="hld-deep-topic">
-      <h3 className="hld-deep-topic-title">{topic.title}</h3>
-      {topic.context && (
-        <div className="hld-deep-context">
-          <MarkdownBlock body={topic.context} />
-        </div>
-      )}
-
-      <OverflowTabList className="hld-deep-tablist" ariaLabel={`${topic.title} approaches`}>
-        {topic.approaches.map((approach, index) => {
-          const isActive = index === activeIndex;
-          return (
-            <button
-              key={`${approach.slug}-${index}`}
-              type="button"
-              id={`hld-deep-tab-${topic.slug}-${index}`}
-              role="tab"
-              aria-selected={isActive}
-              aria-controls={`hld-deep-panel-${topic.slug}-${index}`}
-              className={`hld-deep-tab ${isActive ? "hld-deep-tab-active" : ""}`}
-              onClick={() => setActiveIndex(index)}
-            >
-              <span>{approach.title}</span>
-            </button>
-          );
-        })}
-      </OverflowTabList>
-
-      <div
-        id={panelId}
-        role="tabpanel"
-        aria-labelledby={`hld-deep-tab-${topic.slug}-${activeIndex}`}
-        className="hld-deep-panel"
-      >
-        <DeepDiveImage imageRef={activeApproach.imageRef} topic={topic} approach={activeApproach} images={images} />
-        <DeepDiveApproachBody approach={activeApproach} />
-      </div>
-    </section>
-  );
-}
-
-function DeepDiveApproachBody({ approach }) {
-  const hasExplanation = Boolean(approach.explanation);
-  const hasCode = approach.codeBlocks.length > 0;
-
-  if (!hasExplanation && !hasCode) return null;
-
-  if (!hasCode) {
-    return <MarkdownBlock body={approach.explanation} />;
-  }
-
-  return (
-    <div className="hld-deep-detail-grid">
-      <div className="hld-deep-explanation">
-        {hasExplanation && <MarkdownBlock body={approach.explanation} />}
-      </div>
-      <div className="hld-deep-code-column">
-        {approach.codeBlocks.map((block, index) => (
-          <HldSqlBlock
-            key={`${block.lang || "code"}-${index}`}
-            code={block.code}
-            lang={block.lang || "text"}
-            title={String(block.lang || "").toLowerCase() === "sql" ? "SQL" : "Code"}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function DeepDiveImage({ imageRef, topic, approach, images = [] }) {
-  const refs = [
-    normalizeDeepDiveImageRef(imageRef),
-    normalizeDeepDiveImageRef(`${topic.slug}/${approach.slug}`),
-    normalizeDeepDiveImageRef(approach.slug)
-  ].filter(Boolean);
-  const matching = images.filter((image) => refs.includes(normalizeDeepDiveImageRef(image.deepDiveImage)));
-  const light = matching.find((image) => image.theme === "light");
-  const dark = matching.find((image) => image.theme === "dark");
-  const fallback = matching.find((image) => !image.theme) || matching[0];
-
-  if (!light && !dark && !fallback) return null;
-
-  return (
-    <figure className="hld-deep-image-frame">
-      {light && (
-        <img
-          src={light.src}
-          alt={light.alt || `${approach.title} diagram`}
-          loading="lazy"
-          className={`hld-deep-image ${dark ? "hld-deep-image-light" : ""}`}
-        />
-      )}
-      {dark && (
-        <img
-          src={dark.src}
-          alt={dark.alt || `${approach.title} diagram`}
-          loading="lazy"
-          className={`hld-deep-image ${light ? "hld-deep-image-dark" : ""}`}
-        />
-      )}
-      {!light && !dark && fallback && (
-        <img
-          src={fallback.src}
-          alt={fallback.alt || `${approach.title} diagram`}
-          loading="lazy"
-          className="hld-deep-image"
-        />
-      )}
-    </figure>
-  );
-}
-
-function HighLevelDesignBlock({ body, images = [] }) {
-  const parsed = useMemo(() => parseHighLevelDesign(body), [body]);
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  useEffect(() => {
-    setActiveIndex((current) => Math.min(current, Math.max(parsed.flows.length - 1, 0)));
-  }, [parsed.flows.length]);
-
-  if (parsed.flows.length === 0) {
-    return <MarkdownBlock body={body} />;
-  }
-
-  const hasTabs = true;
-  const activeFlow = parsed.flows[activeIndex] || parsed.flows[0];
+  const activeTab = visibleTabs[activeIndex] || visibleTabs[0];
 
   return (
     <div className="hld-flow-tabs">
-      {parsed.intro && <MarkdownBlock body={parsed.intro} />}
-      <OverflowTabList className="hld-flow-tablist" ariaLabel="High-level design flows">
-        {parsed.flows.map((flow, index) => {
+      <OverflowTabList className="hld-flow-tablist" ariaLabel="Tabbed HLD content">
+        {visibleTabs.map((tab, index) => {
           const isActive = index === activeIndex;
           return (
             <button
-              key={`${flow.id}-${index}`}
+              key={`${tab.title}-${index}`}
               type="button"
-              id={`hld-flow-tab-${index}`}
+              id={`${blockKey}-tab-${index}`}
               role="tab"
               aria-selected={isActive}
-              aria-controls={`hld-flow-panel-${index}`}
+              aria-controls={`${blockKey}-panel-${index}`}
               className={`hld-flow-tab ${isActive ? "hld-flow-tab-active" : ""}`}
               onClick={() => setActiveIndex(index)}
-              >
-                <span>{flow.id}</span>
+            >
+              <span>{tab.title || `Tab ${index + 1}`}</span>
             </button>
           );
         })}
       </OverflowTabList>
       <div
-        id={`hld-flow-panel-${activeIndex}`}
+        id={`${blockKey}-panel-${activeIndex}`}
         role="tabpanel"
-        aria-labelledby={`hld-flow-tab-${activeIndex}`}
+        aria-labelledby={`${blockKey}-tab-${activeIndex}`}
         className="hld-flow-panel"
       >
-        <HldFlowItem key={`${activeFlow.id}-${activeIndex}`} flow={activeFlow} index={activeIndex} images={images} showHeading={!hasTabs} />
+        <HldTabContent tab={activeTab} images={images} />
       </div>
     </div>
   );
 }
 
-function HldFlowItem({ flow, index, images, showHeading = true }) {
+function HldTabContent({ tab, images }) {
+  const imageRefs = splitImageRefs(tab.fields.image);
+  const explanation = joinMarkdownBlocks(tab.fields.explanation, tab.body);
+  const sql = parseSqlField(tab.fields.sql);
+  const hasExplanation = Boolean(explanation);
+  const hasSql = Boolean(sql.code);
+
   return (
     <section className="hld-flow-item">
-      {showHeading && (
-        <div className="hld-flow-heading">
-          <span className="hld-flow-index">{index + 1}.</span>
-          <span className="hld-flow-id">{flow.id}</span>
-        </div>
-      )}
+      {imageRefs.map((imageRef, index) => (
+        <HldStructuredImage key={`${imageRef}-${index}`} imageRef={imageRef} images={images} />
+      ))}
 
-      <HldFlowImage flowId={flow.id} images={images} />
+      {hasExplanation ? (
+        <HldStructuredMarkdown body={explanation} images={images} />
+      ) : null}
 
-      {(flow.explanation || flow.sql) && (
-        <div className="hld-flow-detail-grid">
-          <div className="hld-flow-explanation">
-            {flow.explanation && <MarkdownBlock body={flow.explanation} />}
-          </div>
-          <div className="hld-flow-sql-column">
-            {flow.sql && <HldSqlBlock code={flow.sql} />}
-          </div>
-        </div>
-      )}
+      {hasSql ? (
+        <HldSqlBlock code={sql.code} lang={sql.lang} />
+      ) : null}
     </section>
   );
 }
 
-function HldFlowImage({ flowId, images = [] }) {
-  const matching = images.filter((image) => image.hldFlow === flowId);
-  const light = matching.find((image) => image.theme === "light");
-  const dark = matching.find((image) => image.theme === "dark");
-  const fallback = matching.find((image) => !image.theme) || matching[0];
+function HldSideBySideBlock({ left, right, images }) {
+  return (
+    <div className="hld-side-by-side grid min-w-0 gap-4 xl:grid-cols-2">
+      <div className="min-w-0">
+        {left ? <HldStructuredPane body={left} images={images} /> : null}
+      </div>
+      <div className="min-w-0">
+        {right ? <HldStructuredPane body={right} images={images} /> : null}
+      </div>
+    </div>
+  );
+}
+
+function HldStructuredPane({ body, images }) {
+  const pane = useMemo(() => parseLabeledPane(body), [body]);
+  if (pane?.type === "sql") return <HldSqlBlock code={pane.code} lang={pane.lang} />;
+  if (pane?.type === "markdown") return <HldStructuredMarkdown body={pane.body} images={images} />;
+  return <HldStructuredMarkdown body={body} images={images} />;
+}
+
+function HldStructuredImage({ imageRef, images = [] }) {
+  const imageSet = resolveStructuredImageSet(imageRef, images);
+  const light = imageSet.light;
+  const dark = imageSet.dark;
+  const fallback = imageSet.fallback;
 
   if (!light && !dark && !fallback) return null;
 
@@ -1008,7 +899,7 @@ function HldFlowImage({ flowId, images = [] }) {
       {light && (
         <img
           src={light.src}
-          alt={light.alt || `${flowId} architecture`}
+          alt={light.alt || titleFromImagePath(imageRef)}
           loading="lazy"
           className={`hld-flow-image ${dark ? "hld-flow-image-light" : ""}`}
         />
@@ -1016,7 +907,7 @@ function HldFlowImage({ flowId, images = [] }) {
       {dark && (
         <img
           src={dark.src}
-          alt={dark.alt || `${flowId} architecture`}
+          alt={dark.alt || titleFromImagePath(imageRef)}
           loading="lazy"
           className={`hld-flow-image ${light ? "hld-flow-image-dark" : ""}`}
         />
@@ -1024,7 +915,7 @@ function HldFlowImage({ flowId, images = [] }) {
       {!light && !dark && fallback && (
         <img
           src={fallback.src}
-          alt={fallback.alt || `${flowId} architecture`}
+          alt={fallback.alt || titleFromImagePath(imageRef)}
           loading="lazy"
           className="hld-flow-image"
         />
@@ -1034,22 +925,11 @@ function HldFlowImage({ flowId, images = [] }) {
 }
 
 function HldSqlBlock({ code, lang = "sql", title = "SQL" }) {
-  const ref = useRef(null);
-
-  useEffect(() => {
-    if (!ref.current) return;
-    try {
-      hljs.highlightElement(ref.current);
-    } catch {
-      // Highlighting should never block rendering the solution.
-    }
-  }, [code]);
-
   return (
     <figure className="hld-flow-sql">
       <figcaption>{title}</figcaption>
       <pre>
-        <code ref={ref} className={`language-${lang || "text"}`}>{code}</code>
+        <code>{code}</code>
       </pre>
     </figure>
   );
@@ -1204,16 +1084,16 @@ function MermaidBlock({ code, caption, ready }) {
   );
 }
 
-function prepareSolution(sections) {
+function prepareSolution(sections, problemImages = []) {
   const used = new Map();
-  const nodes = sections.map((section, index) => buildNode(section, 0, [index], used));
+  const nodes = sections.map((section, index) => buildNode(section, 0, [index], used, problemImages));
   const outOfScopeNode = nodes.find((node) => node.slug === "out-of-scope") || null;
   const visibleSections = nodes.filter((node) => node.slug !== "out-of-scope" && node.slug !== "core-entities");
 
   return { visibleSections, outOfScopeNode };
 }
 
-function buildNode(section, depth, indexPath, used) {
+function buildNode(section, depth, indexPath, used, problemImages = []) {
   const slug = slugify(section.title) || `section-${indexPath.join("-")}`;
   const id = makeId(section.title, `section-${indexPath.join("-")}`, used);
   const node = {
@@ -1225,11 +1105,12 @@ function buildNode(section, depth, indexPath, used) {
     body: section.body || "",
     caption: section.caption || "",
     images: Array.isArray(section.images) ? section.images : [],
+    problemImages: Array.isArray(problemImages) ? problemImages : [],
     children: []
   };
 
   if (node.type === "deepdive") {
-    node.children = (section.items || []).map((child, index) => buildNode(child, depth + 1, [...indexPath, index], used));
+    node.children = (section.items || []).map((child, index) => buildNode(child, depth + 1, [...indexPath, index], used, problemImages));
   }
 
   return node;
@@ -1248,6 +1129,20 @@ function isEmptyBody(body) {
 
 function hasImages(node) {
   return Array.isArray(node.images) && node.images.length > 0;
+}
+
+function getNodeImages(node) {
+  const images = [
+    ...(Array.isArray(node.problemImages) ? node.problemImages : []),
+    ...(Array.isArray(node.images) ? node.images : [])
+  ];
+  const seen = new Set();
+  return images.filter((image) => {
+    const key = image?.src || image?.fileName;
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 function stripEmptyBulletOnlyLines(body) {
@@ -1286,267 +1181,283 @@ function parseNfrOutline(body) {
   return root.children;
 }
 
-function stripTrailingColon(value) {
-  return String(value || "").trim().replace(/\s*:\s*$/, "");
-}
-
-function parseDeepDives(body) {
-  const lines = String(body || "").replace(/\r\n/g, "\n").split("\n");
-  const introLines = [];
-  const sections = [];
-  let currentTopic = null;
-  let currentApproach = null;
+function parseHldStructuredBlocks(body) {
+  const lines = splitLines(body);
+  const blocks = [];
+  const markdownLines = [];
+  let hasStructuredBlocks = false;
   let inFence = false;
 
-  function appendLine(line) {
-    if (currentApproach) {
-      currentApproach.lines.push(line);
-      return;
-    }
-
-    if (currentTopic) {
-      currentTopic.contextLines.push(line);
-      return;
-    }
-
-    introLines.push(line);
+  function flushMarkdown() {
+    const markdown = markdownLines.join("\n").trim();
+    if (markdown) blocks.push({ type: "markdown", body: markdown });
+    markdownLines.length = 0;
   }
+
+  for (let index = 0; index < lines.length;) {
+    const line = lines[index];
+    const marker = !inFence ? getStructuredMarker(line) : "";
+
+    if (marker === "TABBED") {
+      flushMarkdown();
+      const collected = collectUntilMarker(lines, index + 1, "END-TABBED");
+      const tabs = parseTabbedContent(collected.body);
+      if (tabs.length > 0) {
+        blocks.push({ type: "tabbed", tabs });
+        hasStructuredBlocks = true;
+      }
+      index = collected.nextIndex;
+      continue;
+    }
+
+    if (marker === "SIDEBYSIDE") {
+      flushMarkdown();
+      const collected = collectUntilMarker(lines, index + 1, "END-SIDEBYSIDE");
+      blocks.push({ type: "sideBySide", ...parseSideBySideContent(collected.body) });
+      hasStructuredBlocks = true;
+      index = collected.nextIndex;
+      continue;
+    }
+
+    if (marker === "SEPERATOR") {
+      flushMarkdown();
+      blocks.push({ type: "separator" });
+      hasStructuredBlocks = true;
+      index += 1;
+      continue;
+    }
+
+    markdownLines.push(line);
+    if (isFenceLine(line)) inFence = !inFence;
+    index += 1;
+  }
+
+  flushMarkdown();
+  return { blocks, hasStructuredBlocks };
+}
+
+function parseTabbedContent(body) {
+  const lines = splitLines(body);
+  const tabs = [];
+  let inFence = false;
+
+  for (let index = 0; index < lines.length;) {
+    const line = lines[index];
+    const marker = !inFence ? getStructuredMarker(line) : "";
+
+    if (marker === "TAB") {
+      const collected = collectUntilMarker(lines, index + 1, "END-TAB");
+      tabs.push(parseTabContent(collected.body));
+      index = collected.nextIndex;
+      continue;
+    }
+
+    if (isFenceLine(line)) inFence = !inFence;
+    index += 1;
+  }
+
+  return tabs;
+}
+
+function parseTabContent(body) {
+  const lines = splitLines(body);
+  const fields = {
+    title: "",
+    image: "",
+    explanation: "",
+    sql: ""
+  };
+  const fieldLines = {
+    title: [],
+    image: [],
+    explanation: [],
+    sql: []
+  };
+  const bodyLines = [];
+  let currentField = "";
+  let inFence = false;
+  let structuredDepth = 0;
 
   lines.forEach((line) => {
-    const fenceLine = /^```/.test(line.trim());
+    const marker = !inFence ? getStructuredMarker(line) : "";
+    if (marker) {
+      currentField = "";
+      bodyLines.push(line);
 
-    if (!inFence) {
-      const topicMatch = line.match(/^###(?!#)\s+(.+)$/);
-      if (topicMatch) {
-        const title = stripTrailingColon(topicMatch[1]);
-        currentTopic = {
-          title,
-          slug: slugify(title) || `topic-${sections.length + 1}`,
-          contextLines: [],
-          approaches: []
-        };
-        currentApproach = null;
-        sections.push(currentTopic);
-        return;
+      if (marker === "SIDEBYSIDE" || marker === "TABBED") {
+        structuredDepth += 1;
       }
 
-      const approachMatch = line.match(/^####\s+(.+)$/);
-      if (approachMatch && currentTopic) {
-        const title = stripTrailingColon(approachMatch[1]);
-        currentApproach = {
-          title,
-          slug: slugify(title) || `approach-${currentTopic.approaches.length + 1}`,
-          lines: []
-        };
-        currentTopic.approaches.push(currentApproach);
-        return;
+      if (marker === "END-SIDEBYSIDE" || marker === "END-TABBED") {
+        structuredDepth = Math.max(0, structuredDepth - 1);
       }
-    }
 
-    appendLine(line);
-    if (fenceLine) inFence = !inFence;
-  });
-
-  return {
-    intro: introLines.join("\n").trim(),
-    sections: sections
-      .map((section) => ({
-        title: section.title,
-        slug: section.slug,
-        context: section.contextLines.join("\n").trim(),
-        approaches: section.approaches
-          .map((approach) => {
-            const parsedApproach = parseDeepDiveApproach(approach.lines.join("\n"));
-            return {
-              title: approach.title,
-              slug: approach.slug,
-              imageRef: parsedApproach.imageRef,
-              explanation: parsedApproach.explanation,
-              codeBlocks: parsedApproach.codeBlocks
-            };
-          })
-          .filter((approach) => approach.imageRef || approach.explanation || approach.codeBlocks.length > 0)
-      }))
-      .filter((section) => section.context || section.approaches.length > 0)
-  };
-}
-
-function parseDeepDiveApproach(body) {
-  let imageRef = "";
-  let mode = "notes";
-  const notesLines = [];
-  const explanationLines = [];
-  const codeBlocks = [];
-
-  tokenizeMarkdownFences(body).forEach((token) => {
-    if (token.type === "code") {
-      const code = token.code.trim();
-      if (code) {
-        codeBlocks.push({
-          lang: token.lang || "text",
-          code
-        });
-      }
       return;
     }
 
-    String(token.value || "").replace(/\r\n/g, "\n").split("\n").forEach((line) => {
-      const trimmed = line.trim();
-      const imageMatch = trimmed.match(/^IMAGE\s*:\s*(.+)$/i);
-      if (imageMatch && !imageRef) {
-        imageRef = normalizeDeepDiveImageRef(imageMatch[1]);
-        return;
-      }
-
-      const explanationMatch = trimmed.match(/^EXPLANATION\s*:\s*(.*)$/i);
-      if (explanationMatch) {
-        mode = "explanation";
-        if (explanationMatch[1]) explanationLines.push(explanationMatch[1]);
-        return;
-      }
-
-      if (mode === "explanation") {
-        explanationLines.push(line);
-      } else {
-        notesLines.push(line);
-      }
-    });
-  });
-
-  const explanationSource = explanationLines.length > 0
-    ? [...notesLines.filter((line) => line.trim()), ...explanationLines]
-    : notesLines;
-
-  return {
-    imageRef,
-    explanation: normalizeDeepDiveExplanation(explanationSource.join("\n")),
-    codeBlocks
-  };
-}
-
-function normalizeDeepDiveExplanation(value) {
-  return String(value || "")
-    .replace(/\r\n/g, "\n")
-    .split("\n")
-    .map(normalizeDeepDiveExplanationLine)
-    .join("\n")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-}
-
-function normalizeDeepDiveExplanationLine(line) {
-  const stripped = String(line || "").replace(/\t/g, "  ").trim();
-  if (!stripped) return "";
-
-  const numbered = stripped.match(/^(\d+)\)\s*(.+)$/);
-  if (numbered) return `${numbered[1]}. ${numbered[2].trim()}`;
-
-  const lettered = stripped.match(/^([a-z])\)\s*:?\s*(.+)$/i);
-  if (lettered) return `- ${lettered[2].trim()}`;
-
-  const roman = stripped.match(/^([ivxlcdm]+)\)\s*:?\s*(.+)$/i);
-  if (roman) return `- ${roman[2].trim()}`;
-
-  return stripped;
-}
-
-function normalizeDeepDiveImageRef(value) {
-  const segments = String(value || "")
-    .replace(/\\/g, "/")
-    .replace(/\.(?:apng|avif|gif|jpe?g|png|svg|webp)$/i, "")
-    .split("/")
-    .map((segment) => segment.replace(/-(?:light|dark)$/i, ""))
-    .filter((segment) => segment && segment !== "deepdives" && segment !== "deep-dives")
-    .map((segment) => slugify(segment))
-    .filter(Boolean);
-
-  return segments.join("/");
-}
-
-function parseHighLevelDesign(body) {
-  const tokens = tokenizeMarkdownFences(body);
-  const intro = [];
-  const flows = [];
-  let currentFlow = null;
-  let mode = "notes";
-
-  function startFlow(id, firstLine = "") {
-    currentFlow = {
-      id: id.toUpperCase(),
-      notes: [],
-      sql: "",
-      explanation: []
-    };
-    flows.push(currentFlow);
-    mode = "notes";
-    if (firstLine.trim()) currentFlow.notes.push(firstLine.trim());
-  }
-
-  function appendText(value) {
-    const lines = String(value || "").replace(/\r\n/g, "\n").split("\n");
-
-    lines.forEach((line) => {
-      const trimmed = line.trim();
-      const flowMatch = trimmed.match(/^(FR-\d+)\s*:\s*(.*)$/i);
-      if (flowMatch) {
-        startFlow(flowMatch[1], flowMatch[2] || "");
-        return;
-      }
-
-      const explanationMatch = trimmed.match(/^EXPLANATION\s*:\s*(.*)$/i);
-      if (explanationMatch && currentFlow) {
-        mode = "explanation";
-        if (explanationMatch[1]) currentFlow.explanation.push(explanationMatch[1]);
-        return;
-      }
-
-      if (!currentFlow) {
-        intro.push(line);
-        return;
-      }
-
-      if (mode === "explanation") {
-        currentFlow.explanation.push(line);
-      } else {
-        currentFlow.notes.push(line);
-      }
-    });
-  }
-
-  tokens.forEach((token) => {
-    if (token.type === "text") {
-      appendText(token.value);
+    const field = !inFence && structuredDepth === 0 ? parseTabFieldStart(line) : null;
+    if (field) {
+      currentField = field.name;
+      fieldLines[currentField] = field.inline ? [field.inline] : [];
       return;
     }
 
-    if (currentFlow && String(token.lang || "").toLowerCase() === "sql" && !currentFlow.sql) {
-      currentFlow.sql = token.code.trim();
-      return;
-    }
-
-    const fenced = [
-      `\`\`\`${token.lang || ""}`,
-      token.code.trim(),
-      "```"
-    ].join("\n");
-
-    if (currentFlow && mode === "explanation") {
-      currentFlow.explanation.push(fenced);
-    } else if (currentFlow) {
-      currentFlow.notes.push(fenced);
+    if (currentField) {
+      fieldLines[currentField].push(line);
     } else {
-      intro.push(fenced);
+      bodyLines.push(line);
     }
+
+    if (isFenceLine(line)) inFence = !inFence;
+  });
+
+  Object.keys(fields).forEach((key) => {
+    fields[key] = fieldLines[key].join("\n").trim();
   });
 
   return {
-    intro: intro.join("\n").trim(),
-    flows: flows.map((flow) => ({
-      ...flow,
-      notes: flow.notes.join("\n").trim(),
-      explanation: flow.explanation.join("\n").trim()
-    }))
+    title: fields.title.replace(/\s+/g, " ").trim(),
+    fields,
+    body: bodyLines.join("\n").trim()
   };
+}
+
+function parseSideBySideContent(body) {
+  const lines = splitLines(body);
+  const leftLines = [];
+  const rightLines = [];
+  let target = "";
+  let inFence = false;
+
+  lines.forEach((line) => {
+    const marker = !inFence ? getStructuredMarker(line) : "";
+
+    if (marker === "LEFT") {
+      target = "left";
+      return;
+    }
+
+    if (marker === "END-LEFT") {
+      if (target === "left") target = "";
+      return;
+    }
+
+    if (marker === "RIGHT") {
+      target = "right";
+      return;
+    }
+
+    if (marker === "END-RIGHT") {
+      if (target === "right") target = "";
+      return;
+    }
+
+    if (target === "left") leftLines.push(line);
+    if (target === "right") rightLines.push(line);
+    if (isFenceLine(line)) inFence = !inFence;
+  });
+
+  return {
+    left: leftLines.join("\n").trim(),
+    right: rightLines.join("\n").trim()
+  };
+}
+
+function collectUntilMarker(lines, startIndex, endMarker) {
+  const collected = [];
+  let inFence = false;
+
+  for (let index = startIndex; index < lines.length; index += 1) {
+    const line = lines[index];
+    const marker = !inFence ? getStructuredMarker(line) : "";
+
+    if (marker === endMarker) {
+      return { body: collected.join("\n").trim(), nextIndex: index + 1 };
+    }
+
+    collected.push(line);
+    if (isFenceLine(line)) inFence = !inFence;
+  }
+
+  return { body: collected.join("\n").trim(), nextIndex: lines.length };
+}
+
+function parseTabFieldStart(line) {
+  const match = String(line || "").match(/^(TITLE|IMAGE|EXPLANATION|SQL)\s*:\s*(.*)$/i);
+  if (!match) return null;
+  return {
+    name: match[1].toLowerCase(),
+    inline: (match[2] || "").trim()
+  };
+}
+
+function getStructuredMarker(line) {
+  const match = String(line || "").trim().match(/^::([A-Z-]+)::$/i);
+  return match ? match[1].toUpperCase() : "";
+}
+
+function isFenceLine(line) {
+  return /^```/.test(String(line || "").trim());
+}
+
+function splitLines(value) {
+  return String(value || "").replace(/\r\n/g, "\n").split("\n");
+}
+
+function hasTabContent(tab) {
+  return Boolean(
+    tab?.title ||
+    tab?.body ||
+    tab?.fields?.image ||
+    tab?.fields?.explanation ||
+    tab?.fields?.sql
+  );
+}
+
+function splitImageRefs(value) {
+  return String(value || "")
+    .split(/[\n,]+/)
+    .map((item) => item.trim().replace(/^-\s+/, ""))
+    .filter(Boolean);
+}
+
+function parseSqlField(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return { lang: "sql", code: "" };
+
+  const lines = splitLines(raw);
+  const opening = lines[0]?.trim().match(/^```([A-Za-z0-9_-]*)\s*$/);
+  const closing = lines[lines.length - 1]?.trim() === "```";
+
+  if (opening && closing && lines.length >= 2) {
+    return {
+      lang: opening[1] || "sql",
+      code: lines.slice(1, -1).join("\n").trim()
+    };
+  }
+
+  return { lang: "sql", code: raw };
+}
+
+function parseLabeledPane(value) {
+  const lines = splitLines(value);
+  const firstContentIndex = lines.findIndex((line) => line.trim());
+  if (firstContentIndex === -1) return null;
+
+  const label = lines[firstContentIndex].trim().match(/^(SQL|EXPLANATION)\s*:\s*(.*)$/i);
+  if (!label) return null;
+
+  const content = [
+    label[2],
+    ...lines.slice(firstContentIndex + 1)
+  ].filter((line, index) => index > 0 || String(line || "").trim()).join("\n").trim();
+
+  if (label[1].toLowerCase() === "sql") {
+    const sql = parseSqlField(content);
+    return sql.code ? { type: "sql", ...sql } : null;
+  }
+
+  return content ? { type: "markdown", body: content } : null;
 }
 
 function parseApiDesign(body) {
@@ -1810,11 +1721,11 @@ function inferApiBlockRole(endpoint, leadText, lang, code) {
     return "status";
   }
 
-  if (/\b(response\s+body|response|returns?)\b/.test(text)) {
+  if (/\bresponse\s+body\b|\bresponse\b|\breturns?\b/.test(text)) {
     return "responseBody";
   }
 
-  if (/\b(request\s+body|request|payload|post|put|patch)\b/.test(text)) {
+  if (/\brequest\s+body\b|\brequest\b|\bpayload\b|\bpost\b|\bput\b|\bpatch\b/.test(text)) {
     return "requestBody";
   }
 
@@ -1853,6 +1764,67 @@ function joinMarkdownText(current, next) {
   if (!current.trim()) return next;
   if (!next.trim()) return current;
   return `${current.trim()}\n\n${next.trim()}`;
+}
+
+function joinMarkdownBlocks(...blocks) {
+  return blocks
+    .map((block) => String(block || "").trim())
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+function resolveStructuredImageSet(imageRef, images = []) {
+  const exact = findImageByRef(imageRef, images);
+  const baseRef = removeImageTheme(exact?.fileName || imageRef);
+  const light = findImageByRef(imagePathWithTheme(baseRef, "light"), images);
+  const dark = findImageByRef(imagePathWithTheme(baseRef, "dark"), images);
+  const fallback = exact && !exact.theme ? exact : findImageByRef(baseRef, images) || exact;
+
+  return { light, dark, fallback };
+}
+
+function findImageByRef(imageRef, images = []) {
+  const candidates = new Set(imageRefCandidates(imageRef));
+  return images.find((image) => candidates.has(normalizeImagePath(image.fileName)));
+}
+
+function imageRefCandidates(imageRef) {
+  const normalized = normalizeImagePath(imageRef);
+  if (!normalized) return [];
+  const withoutImagesPrefix = normalized.replace(/^images\//, "");
+  return Array.from(new Set([
+    normalized,
+    withoutImagesPrefix,
+    `images/${withoutImagesPrefix}`
+  ]));
+}
+
+function normalizeImagePath(value) {
+  return String(value || "")
+    .trim()
+    .replace(/\\/g, "/")
+    .replace(/^\.?\//, "")
+    .replace(/^\/+/, "")
+    .split(/[?#]/)[0];
+}
+
+function imagePathWithTheme(value, theme) {
+  const withoutTheme = removeImageTheme(value);
+  return withoutTheme.replace(/(\.[^./]+)$/i, `-${theme}$1`);
+}
+
+function removeImageTheme(value) {
+  return normalizeImagePath(value).replace(/-(?:light|dark)(\.[^./]+)$/i, "$1");
+}
+
+function titleFromImagePath(value) {
+  const fileName = normalizeImagePath(value).split("/").pop() || "Diagram";
+  const name = removeImageTheme(fileName).replace(/\.[^/.]+$/, "");
+  return slugify(name)
+    .split("-")
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ") || "Diagram";
 }
 
 function slugify(value) {

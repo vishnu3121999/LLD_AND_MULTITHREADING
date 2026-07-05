@@ -202,22 +202,18 @@ function countSections(sections = []) {
 
 async function collectProblemImages(id, assetDir, assetId = id) {
   try {
-    const files = await collectImageFiles(assetDir);
+    const imagesDir = path.join(assetDir, "images");
+    const files = await collectImageFiles(imagesDir);
     const images = files.map((file) => {
       const ext = path.extname(file.relativePath);
       const basename = path.basename(file.relativePath, ext);
-      const directory = file.directory.replace(/\\/g, "/");
-      const hldFlow = parseHldFlowImage(basename);
-      const deepDiveImage = parseDeepDiveImage(file.relativePath, directory, basename);
+      const fileName = `images/${file.relativePath}`;
       const assetVersion = `${Math.trunc(file.mtimeMs || 0)}-${file.size || 0}`;
 
       return {
-        fileName: file.relativePath,
-        src: `/api/hld/assets/${encodeURIComponent(assetId)}/${encodeURIComponent(file.relativePath)}?v=${assetVersion}`,
+        fileName,
+        src: `/api/hld/assets/${encodeURIComponent(assetId)}/${encodeURIComponent(fileName)}?v=${assetVersion}`,
         alt: titleFromId(basename.replace(/-(?:light|dark)$/i, "")),
-        sectionSlug: deepDiveImage ? "deep-dives" : (hldFlow || directory === "hld") ? "high-level-design" : sectionSlugForImage(basename),
-        hldFlow,
-        deepDiveImage,
         theme: parseImageTheme(basename)
       };
     });
@@ -255,77 +251,9 @@ async function collectImageFiles(rootDir, currentDir = rootDir) {
   return files;
 }
 
-function parseHldFlowImage(value) {
-  const match = String(value || "").match(/^(FR-\d+)(?:-(?:light|dark))?$/i);
-  return match ? match[1].toUpperCase() : "";
-}
-
 function parseImageTheme(value) {
   const match = String(value || "").match(/-(light|dark)$/i);
   return match ? match[1].toLowerCase() : "";
-}
-
-function parseDeepDiveImage(relativePath, directory, basename) {
-  const normalizedDirectory = String(directory || "").replace(/\\/g, "/");
-  const segments = normalizedDirectory.split("/").filter(Boolean);
-  const root = segments[0] || "";
-
-  if (root !== "deepdives" && root !== "deep-dives") return "";
-
-  const imageName = basename.replace(/-(?:light|dark)$/i, "");
-  return [...segments.slice(1), imageName]
-    .map((segment) => slugify(segment))
-    .filter(Boolean)
-    .join("/");
-}
-
-function attachImagesToSections(sections = [], images = []) {
-  if (!Array.isArray(sections) || !images.length) return sections;
-
-  return sections.map((section) => {
-    const sectionSlug = slugify(section.title);
-    const sectionImages = images.filter((image) => image.sectionSlug === sectionSlug);
-    const next = { ...section };
-
-    if (sectionImages.length > 0) {
-      next.images = [...(Array.isArray(section.images) ? section.images : []), ...sectionImages];
-    }
-
-    if (section.type === "deepdive" && Array.isArray(section.items)) {
-      next.items = attachImagesToSections(section.items, images);
-    }
-
-    return next;
-  });
-}
-
-function sectionSlugForImage(value) {
-  const slug = slugify(value);
-  if (/^(hld|high-level-design|architecture|system-design|diagram)(-|\d|$)/.test(slug) || slug === "hld") {
-    return "high-level-design";
-  }
-
-  if (/^(deep-dive|deepdive|deep)(-|\d|$)/.test(slug)) {
-    return "deep-dives";
-  }
-
-  if (/^(api|api-design)(-|\d|$)/.test(slug)) {
-    return "api-design";
-  }
-
-  if (/^(nfr|non-functional|non-functional-requirements)(-|\d|$)/.test(slug)) {
-    return "non-functional-requirements";
-  }
-
-  if (/^(fr|functional|functional-requirements)(-|\d|$)/.test(slug)) {
-    return "functional-requirements";
-  }
-
-  if (/^(entities|core-entities|data-model)(-|\d|$)/.test(slug)) {
-    return "core-entities";
-  }
-
-  return slug;
 }
 
 async function readHldProblemFile(id, target = problemPath(id), assetDir = path.join(HLD_DATA_DIR, id), assetId = id) {
@@ -339,7 +267,7 @@ async function readHldProblemFile(id, target = problemPath(id), assetDir = path.
     return {
       ...parsed,
       images,
-      sections: attachImagesToSections(parsed.sections || [], images)
+      sections: parsed.sections || []
     };
   } catch {
     return null;
@@ -370,10 +298,7 @@ async function readTextHldProblemFile(id, target = path.join(HLD_DATA_DIR, `${id
       created_at: fileStat.birthtime.toISOString(),
       updated_at: fileStat.mtime.toISOString(),
       images,
-      sections: attachImagesToSections(
-        parseTextProblemSections(repairCommonMojibake(raw)),
-        images
-      )
+      sections: parseTextProblemSections(repairCommonMojibake(raw))
     };
   } catch {
     return null;
@@ -414,7 +339,7 @@ async function readMarkdownHldProblemFile(
       created_at: parsed.created_at || fileStat.birthtime.toISOString(),
       updated_at: parsed.updated_at || fileStat.mtime.toISOString(),
       images,
-      sections: attachImagesToSections(sections, images)
+      sections
     };
   } catch {
     return null;
