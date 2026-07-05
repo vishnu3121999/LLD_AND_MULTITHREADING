@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
 
@@ -15,7 +15,7 @@ const IMAGE_TYPES = new Map([
   [".webp", "image/webp"]
 ]);
 
-export async function GET(_request, { params }) {
+export async function GET(request, { params }) {
   const { id, asset } = await params;
   const relativeAsset = decodeURIComponent(asset || "");
   const ext = path.extname(relativeAsset).toLowerCase();
@@ -41,11 +41,26 @@ export async function GET(_request, { params }) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
 
+    const fileStat = await stat(filePath);
+    const etag = `"${fileStat.size}-${Math.trunc(fileStat.mtimeMs)}"`;
+
+    if (request.headers.get("if-none-match") === etag) {
+      return new Response(null, {
+        status: 304,
+        headers: {
+          "Cache-Control": "no-cache, must-revalidate",
+          "ETag": etag
+        }
+      });
+    }
+
     const file = await readFile(filePath);
     return new Response(file, {
       headers: {
-        "Cache-Control": "public, max-age=31536000, immutable",
-        "Content-Type": IMAGE_TYPES.get(ext)
+        "Cache-Control": "no-cache, must-revalidate",
+        "Content-Type": IMAGE_TYPES.get(ext),
+        "ETag": etag,
+        "Last-Modified": fileStat.mtime.toUTCString()
       }
     });
   } catch {

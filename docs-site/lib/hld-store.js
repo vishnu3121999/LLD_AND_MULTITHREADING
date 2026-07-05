@@ -209,10 +209,11 @@ async function collectProblemImages(id, assetDir, assetId = id) {
       const directory = file.directory.replace(/\\/g, "/");
       const hldFlow = parseHldFlowImage(basename);
       const deepDiveImage = parseDeepDiveImage(file.relativePath, directory, basename);
+      const assetVersion = `${Math.trunc(file.mtimeMs || 0)}-${file.size || 0}`;
 
       return {
         fileName: file.relativePath,
-        src: `/api/hld/assets/${encodeURIComponent(assetId)}/${encodeURIComponent(file.relativePath)}`,
+        src: `/api/hld/assets/${encodeURIComponent(assetId)}/${encodeURIComponent(file.relativePath)}?v=${assetVersion}`,
         alt: titleFromId(basename.replace(/-(?:light|dark)$/i, "")),
         sectionSlug: deepDiveImage ? "deep-dives" : (hldFlow || directory === "hld") ? "high-level-design" : sectionSlugForImage(basename),
         hldFlow,
@@ -242,9 +243,12 @@ async function collectImageFiles(rootDir, currentDir = rootDir) {
     if (!entry.isFile() || !IMAGE_EXTENSIONS.has(path.extname(entry.name).toLowerCase())) continue;
 
     const relativePath = path.relative(rootDir, target).replace(/\\/g, "/");
+    const fileStat = await stat(target);
     files.push({
       relativePath,
-      directory: path.dirname(relativePath) === "." ? "" : path.dirname(relativePath)
+      directory: path.dirname(relativePath) === "." ? "" : path.dirname(relativePath),
+      size: fileStat.size,
+      mtimeMs: fileStat.mtimeMs
     });
   }
 
