@@ -3,7 +3,7 @@ import path from "node:path";
 import { NextResponse } from "next/server";
 
 const HLD_DATA_DIR = path.join(process.cwd(), "content", "hld", "problems");
-const VALID_ID = /^[a-z0-9][a-z0-9-]*$/;
+const VALID_STORAGE_ID = /^[a-z0-9][a-z0-9._-]*$/;
 const IMAGE_TYPES = new Map([
   [".apng", "image/apng"],
   [".avif", "image/avif"],
@@ -22,7 +22,7 @@ export async function GET(request, { params }) {
   const normalizedAsset = path.normalize(relativeAsset);
 
   if (
-    !VALID_ID.test(id || "") ||
+    !isValidStorageId(id) ||
     !relativeAsset ||
     path.isAbsolute(normalizedAsset) ||
     normalizedAsset.startsWith("..") ||
@@ -66,4 +66,13 @@ export async function GET(request, { params }) {
   } catch {
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
+}
+
+function isValidStorageId(id) {
+  return (
+    typeof id === "string" &&
+    VALID_STORAGE_ID.test(id) &&
+    !id.includes("..") &&
+    !id.endsWith(".")
+  );
 }

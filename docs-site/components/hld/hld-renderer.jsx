@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import hljs from "highlight.js";
 import { marked } from "marked";
+import { useLiveDocument } from "./use-live-document";
 
 const MERMAID_SRC = "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js";
 
@@ -76,14 +77,6 @@ const sectionBlueprints = {
     icon: SearchCheck
   }
 };
-
-const answerFlow = [
-  ["1", "Functional requirements"],
-  ["2", "Non-functional requirements"],
-  ["3", "API design"],
-  ["4", "High-level design"],
-  ["5", "Deep dives"]
-];
 
 const sectionTemplates = {
   "functional-requirements": {
@@ -248,13 +241,17 @@ const sectionTemplates = {
   }
 };
 
-export function HldProblemRenderer({ problem, preview = false }) {
+export function HldProblemRenderer({ problem, preview = false, isAdmin = false }) {
+  const renderedProblem = useLiveDocument(problem, {
+    enabled: !preview,
+    url: !preview && problem?.id ? `/api/hld/problems/${problem.id}` : ""
+  });
   const [mermaidReady, setMermaidReady] = useState(false);
   const [showAllTemplates, setShowAllTemplates] = useState(false);
   const [openTemplateIds, setOpenTemplateIds] = useState(() => new Set());
   const solution = useMemo(
-    () => prepareSolution(problem?.sections || [], problem?.images || []),
-    [problem?.sections, problem?.images]
+    () => prepareSolution(renderedProblem?.sections || [], renderedProblem?.images || []),
+    [renderedProblem?.sections, renderedProblem?.images]
   );
 
   function toggleTemplate(nodeId) {
@@ -289,6 +286,7 @@ export function HldProblemRenderer({ problem, preview = false }) {
       <div className="space-y-4">
         {renderSolutionSections(solution, mermaidReady, {
           openTemplateIds,
+          requirementsLayout: normalizeRequirementsLayout(renderedProblem?.requirementsLayout),
           showAllTemplates,
           onToggleTemplate: toggleTemplate
         })}
@@ -310,7 +308,7 @@ export function HldProblemRenderer({ problem, preview = false }) {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="min-w-0">
               <div className="flex flex-wrap gap-2">
-                {(problem.tags || []).map((tag) => (
+                {(renderedProblem.tags || []).map((tag) => (
                   <span
                     key={tag}
                     className="rounded-full border border-[var(--hld-border)] bg-[var(--hld-surface-2)] px-3 py-1 text-xs font-semibold text-[var(--hld-muted)]"
@@ -320,7 +318,7 @@ export function HldProblemRenderer({ problem, preview = false }) {
                 ))}
               </div>
               <h1 className="mt-4 text-3xl font-semibold leading-tight tracking-normal text-[var(--hld-heading)]">
-                {problem.title}
+                {renderedProblem.title}
               </h1>
             </div>
             <div className="flex shrink-0 flex-wrap gap-2">
@@ -340,9 +338,9 @@ export function HldProblemRenderer({ problem, preview = false }) {
                 <ArrowLeft size={15} aria-hidden="true" />
                 Library
               </Link>
-              {problem.source === "json" && (
+              {isAdmin && (
                 <Link
-                  href={`/hld/${problem.id}/edit`}
+                  href={`/hld/${renderedProblem.id}/edit`}
                   className="inline-flex h-9 items-center gap-2 rounded-md border border-[var(--hld-border)] bg-[var(--hld-surface)] px-3 text-sm font-semibold text-[var(--hld-heading)] transition hover:border-[var(--hld-brand)] hover:bg-[var(--hld-surface-2)]"
                 >
                   <Edit3 size={15} aria-hidden="true" />
@@ -357,28 +355,7 @@ export function HldProblemRenderer({ problem, preview = false }) {
               <FileText size={14} aria-hidden="true" />
               Overview
             </div>
-            <p className="mt-2 max-w-4xl text-base leading-7 text-[var(--hld-muted)]">
-              {problem.summary || "Problem summary is not available in the source notes."}
-            </p>
-
-            <div className="mt-5 border-t border-[var(--hld-border)] pt-4">
-              <div className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--hld-brand)]">
-                Answer Flow
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {answerFlow.map(([number, label]) => (
-                  <div
-                    key={number}
-                    className="flex min-h-8 min-w-0 items-center gap-2 rounded-md border border-[var(--hld-border)] bg-[var(--hld-surface-2)] px-2.5 text-xs font-medium text-[var(--hld-muted)]"
-                  >
-                    <span className="grid h-5 w-5 shrink-0 place-items-center rounded bg-[var(--hld-brand-soft)] font-mono text-[10px] font-bold text-[var(--hld-brand)]">
-                      {number}
-                    </span>
-                    <span>{label}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <OverviewBody problem={renderedProblem} overviewNode={solution.overviewNode} />
           </div>
         </div>
       </header>
@@ -386,6 +363,37 @@ export function HldProblemRenderer({ problem, preview = false }) {
       {content}
     </article>
   );
+}
+
+function OverviewBody({ problem, overviewNode }) {
+  const body = stripEmptyBulletOnlyLines(overviewNode?.body || "");
+
+  if (body) {
+    return (
+      <div className="mt-2 hld-overview-body">
+        <HldStructuredMarkdown body={body} images={getNodeImages(overviewNode)} />
+      </div>
+    );
+  }
+
+  return (
+    <p className="mt-2 max-w-4xl text-base leading-7 text-[var(--hld-muted)]">
+      {problem.summary || "Problem summary is not available in the source notes."}
+    </p>
+  );
+}
+
+function normalizeRequirementsLayout(value) {
+  const normalized = String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[_\s]+/g, "-");
+
+  if (["stacked", "vertical", "up-down", "up/down", "top-bottom", "rows"].includes(normalized)) {
+    return "stacked";
+  }
+
+  return "side-by-side";
 }
 
 function renderSolutionSections(solution, mermaidReady, templateControls) {
@@ -397,10 +405,15 @@ function renderSolutionSections(solution, mermaidReady, templateControls) {
     const nextNode = sections[index + 1];
 
     if (node.slug === "functional-requirements" && nextNode?.slug === "non-functional-requirements") {
+      const stackedRequirements = templateControls?.requirementsLayout === "stacked";
+      const layoutClass = templateControls?.requirementsLayout === "stacked"
+        ? "grid gap-4"
+        : "grid gap-4 xl:grid-cols-2";
+
       items.push(
-        <div key="requirements-pair" className="grid gap-4 xl:grid-cols-2">
+        <div key="requirements-pair" className={layoutClass}>
           <SolutionSection
-            compact
+            compact={!stackedRequirements}
             index={index}
             mermaidReady={mermaidReady}
             node={node}
@@ -408,7 +421,7 @@ function renderSolutionSections(solution, mermaidReady, templateControls) {
             outOfScopeNode={solution.outOfScopeNode}
           />
           <SolutionSection
-            compact
+            compact={!stackedRequirements}
             index={index + 1}
             mermaidReady={mermaidReady}
             node={nextNode}
@@ -944,6 +957,7 @@ function ApiDesignBlock({ body }) {
 
   return (
     <div className="hld-api-spec">
+      {parsed.intro ? <MarkdownBlock body={parsed.intro} /> : null}
       <div className="hld-api-endpoints">
         {parsed.endpoints.map((endpoint, index) => (
           <ApiEndpointCard key={`${endpoint.method}-${endpoint.path}-${index}`} number={index + 1} endpoint={endpoint} />
@@ -968,9 +982,11 @@ function ApiEndpointCard({ endpoint, number }) {
   const hasResponseInfo = responseBlocks.length > 0;
   const hasContract = hasRequestInfo || hasResponseInfo;
   const status = endpoint.status ? formatInlineApiStatus(endpoint.status.code) : "";
+  const hasMeta = hasApiEndpointMeta(endpoint);
 
   return (
     <section className="hld-api-endpoint">
+      {hasMeta ? <ApiEndpointMeta endpoint={endpoint} /> : null}
       <div className="hld-api-request-line">
         <span className="hld-api-index">{number}.</span>
         <span className="hld-api-method">
@@ -1009,6 +1025,20 @@ function ApiEndpointCard({ endpoint, number }) {
   );
 }
 
+function ApiEndpointMeta({ endpoint }) {
+  return (
+    <div className="hld-api-meta-line">
+      {endpoint.requirement ? <span>{endpoint.requirement}</span> : null}
+      {endpoint.title ? <span>{endpoint.title}</span> : null}
+      {endpoint.protocol ? <span>Protocol: <code>{endpoint.protocol}</code></span> : null}
+    </div>
+  );
+}
+
+function hasApiEndpointMeta(endpoint) {
+  return Boolean(endpoint?.requirement || endpoint?.title || endpoint?.protocol);
+}
+
 function getApiBlockTitle(role) {
   if (role === "requestBody") return "Request body";
   if (role === "responseHeader") return "Response header";
@@ -1034,7 +1064,7 @@ function formatInlineApiStatus(value) {
 
 function MarkdownBlock({ body }) {
   const ref = useRef(null);
-  const html = useMemo(() => marked.parse(body || ""), [body]);
+  const html = useMemo(() => marked.parse(formatHldNotes(body || "")), [body]);
 
   useEffect(() => {
     if (!ref.current) return;
@@ -1048,6 +1078,103 @@ function MarkdownBlock({ body }) {
   }, [html]);
 
   return <div ref={ref} className="hld-course-prose" dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
+function formatHldNotes(body) {
+  const lines = splitLines(body);
+  const output = [];
+  let inFence = false;
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+
+    if (isFenceLine(line)) {
+      output.push(line);
+      inFence = !inFence;
+      continue;
+    }
+
+    if (!inFence) {
+      const quoteNote = parseQuotedNoteLine(line);
+      if (quoteNote) {
+        const noteLines = quoteNote.inline ? [quoteNote.inline] : [];
+
+        while (index + 1 < lines.length) {
+          const next = lines[index + 1];
+          const quoted = next.match(/^\s*>\s?(.*)$/);
+          if (!quoted) break;
+
+          noteLines.push(quoted[1]);
+          index += 1;
+        }
+
+        output.push(renderHldNoteHtml(noteLines.join("\n").trim()));
+        continue;
+      }
+
+      const note = parseNoteLine(line);
+      if (note) {
+        const noteLines = note.inline ? [note.inline] : [];
+
+        if (!note.inline) {
+          while (index + 1 < lines.length) {
+            const next = lines[index + 1];
+            if (!next.trim() || isFenceLine(next)) break;
+
+            noteLines.push(next);
+            index += 1;
+          }
+        }
+
+        output.push(renderHldNoteHtml(noteLines.join("\n").trim()));
+        continue;
+      }
+    }
+
+    output.push(line);
+  }
+
+  return output.join("\n");
+}
+
+function parseQuotedNoteLine(line) {
+  const quoted = String(line || "").match(/^\s*>\s?(.*)$/);
+  if (!quoted) return null;
+  return parseNoteLine(quoted[1]);
+}
+
+function parseNoteLine(line) {
+  const cleaned = String(line || "")
+    .trim()
+    .replace(/^[-*]\s+/, "");
+
+  if (!cleaned) return null;
+
+  const callout = cleaned.match(/^\[!NOTE\]\s*(.*)$/i);
+  if (callout) return { inline: callout[1].trim() };
+
+  const boldColon = cleaned.match(/^\*\*NOTE\s*[:\-]\s*\*\*\s*(.*)$/i);
+  if (boldColon) return { inline: boldColon[1].trim() };
+
+  const boldThenColon = cleaned.match(/^\*\*NOTE\*\*\s*[:\-]\s*(.*)$/i);
+  if (boldThenColon) return { inline: boldThenColon[1].trim() };
+
+  const plain = cleaned.match(/^NOTE\s*[:\-]\s*(.*)$/i);
+  if (plain) return { inline: plain[1].trim() };
+
+  if (/^(?:\*\*)?NOTE(?:\*\*)?$/i.test(cleaned)) return { inline: "" };
+
+  return null;
+}
+
+function renderHldNoteHtml(body) {
+  const noteBody = body || "Note";
+  return [
+    '<aside class="hld-note-callout">',
+    '<div class="hld-note-label">NOTE</div>',
+    `<div class="hld-note-content">${marked.parse(noteBody)}</div>`,
+    "</aside>"
+  ].join("");
 }
 
 function MermaidBlock({ code, caption, ready }) {
@@ -1087,10 +1214,11 @@ function MermaidBlock({ code, caption, ready }) {
 function prepareSolution(sections, problemImages = []) {
   const used = new Map();
   const nodes = sections.map((section, index) => buildNode(section, 0, [index], used, problemImages));
+  const overviewNode = nodes.find((node) => node.slug === "overview") || null;
   const outOfScopeNode = nodes.find((node) => node.slug === "out-of-scope") || null;
-  const visibleSections = nodes.filter((node) => node.slug !== "out-of-scope" && node.slug !== "core-entities");
+  const visibleSections = nodes.filter((node) => !["overview", "out-of-scope", "core-entities"].includes(node.slug));
 
-  return { visibleSections, outOfScopeNode };
+  return { visibleSections, overviewNode, outOfScopeNode };
 }
 
 function buildNode(section, depth, indexPath, used, problemImages = []) {
@@ -1213,6 +1341,15 @@ function parseHldStructuredBlocks(body) {
     if (marker === "SIDEBYSIDE") {
       flushMarkdown();
       const collected = collectUntilMarker(lines, index + 1, "END-SIDEBYSIDE");
+      blocks.push({ type: "sideBySide", ...parseSideBySideContent(collected.body) });
+      hasStructuredBlocks = true;
+      index = collected.nextIndex;
+      continue;
+    }
+
+    if (marker === "LEFT") {
+      flushMarkdown();
+      const collected = collectImplicitSideBySide(lines, index);
       blocks.push({ type: "sideBySide", ...parseSideBySideContent(collected.body) });
       hasStructuredBlocks = true;
       index = collected.nextIndex;
@@ -1363,6 +1500,27 @@ function parseSideBySideContent(body) {
   };
 }
 
+function collectImplicitSideBySide(lines, startIndex) {
+  const collected = [];
+  let inFence = false;
+  let sawRight = false;
+
+  for (let index = startIndex; index < lines.length; index += 1) {
+    const line = lines[index];
+    const marker = !inFence ? getStructuredMarker(line) : "";
+    collected.push(line);
+
+    if (marker === "RIGHT") sawRight = true;
+    if (marker === "END-RIGHT" && sawRight) {
+      return { body: collected.join("\n").trim(), nextIndex: index + 1 };
+    }
+
+    if (isFenceLine(line)) inFence = !inFence;
+  }
+
+  return { body: collected.join("\n").trim(), nextIndex: lines.length };
+}
+
 function collectUntilMarker(lines, startIndex, endMarker) {
   const collected = [];
   let inFence = false;
@@ -1486,12 +1644,13 @@ function parseApiDesign(body) {
 
     const signature = parseEndpointSignature(token.code);
     if (signature) {
+      const metadata = parseApiEndpointMeta(pendingText);
       if (!currentEndpoint && pendingText.trim()) {
-        intro.push(pendingText.trim());
+        if (!hasApiEndpointMeta(metadata)) intro.push(pendingText.trim());
       }
 
       currentEndpoint = {
-        ...createApiEndpoint(signature)
+        ...createApiEndpoint(signature, metadata)
       };
       endpoints.push(currentEndpoint);
       applyStructuredApiText(currentEndpoint, getEndpointRemainder(token.code));
@@ -1581,9 +1740,12 @@ function parseEndpointSignatureLine(line) {
   };
 }
 
-function createApiEndpoint(signature) {
+function createApiEndpoint(signature, metadata = {}) {
   return {
     ...signature,
+    requirement: metadata.requirement || "",
+    title: metadata.title || "",
+    protocol: metadata.protocol || "",
     requestBody: null,
     status: null,
     responseHeader: null,
@@ -1620,6 +1782,8 @@ function parseStructuredApiText(value) {
 
 function applyStructuredApiText(target, value) {
   const lines = String(value || "").replace(/\r\n/g, "\n").split("\n");
+  const supportsNewEndpoints = target.current !== undefined;
+  let pendingMeta = {};
   let block = null;
 
   function getCurrentEndpoint() {
@@ -1648,11 +1812,24 @@ function applyStructuredApiText(target, value) {
 
   lines.forEach((line) => {
     const trimmed = line.trim();
+    const metadata = supportsNewEndpoints ? parseApiMetaLine(trimmed) : null;
+
+    if (metadata && !block) {
+      const endpoint = getCurrentEndpoint();
+      if (endpoint) {
+        Object.assign(endpoint, mergeApiEndpointMeta(endpoint, metadata));
+      } else {
+        pendingMeta = mergeApiEndpointMeta(pendingMeta, metadata);
+      }
+      return;
+    }
+
     const signature = parseEndpointSignatureLine(trimmed);
 
     if (signature) {
       flushBlock();
-      setCurrentEndpoint(createApiEndpoint(signature));
+      setCurrentEndpoint(createApiEndpoint(signature, pendingMeta));
+      pendingMeta = {};
       return;
     }
 
@@ -1672,6 +1849,53 @@ function applyStructuredApiText(target, value) {
   });
 
   flushBlock();
+}
+
+function parseApiEndpointMeta(value) {
+  const lines = String(value || "").replace(/\r\n/g, "\n").split("\n");
+  return lines.reduce((metadata, line) => {
+    const parsed = parseApiMetaLine(line);
+    return parsed ? mergeApiEndpointMeta(metadata, parsed) : metadata;
+  }, {});
+}
+
+function parseApiMetaLine(line) {
+  const cleaned = cleanApiMetaLine(line);
+  if (!cleaned) return null;
+
+  const requirement = cleaned.match(/^(?:FR|Functional Requirement)\s*-?\s*(\d+)\s*(?::|-)?\s*(.*)$/i);
+  if (requirement) {
+    return {
+      requirement: `FR-${requirement[1]}`,
+      title: (requirement[2] || "").trim()
+    };
+  }
+
+  const title = cleaned.match(/^(?:Title|API Title|Use Case|Operation)\s*:\s*(.+)$/i);
+  if (title) return { title: title[1].trim() };
+
+  const protocol = cleaned.match(/^(?:Protocol|Network Protocol|Networking Protocol|Network Protocol Used|Networking Protocol Used|Protocol Used|Network Type|Type)\s*:\s*(.+)$/i);
+  if (protocol) return { protocol: protocol[1].trim() };
+
+  return null;
+}
+
+function cleanApiMetaLine(line) {
+  return String(line || "")
+    .trim()
+    .replace(/^#{1,6}\s+/, "")
+    .replace(/^[-*]\s+/, "")
+    .replace(/^\*\*(.+)\*\*$/, "$1")
+    .replace(/^__(.+)__$/, "$1")
+    .trim();
+}
+
+function mergeApiEndpointMeta(current = {}, next = {}) {
+  return {
+    requirement: next.requirement || current.requirement || "",
+    title: next.title || current.title || "",
+    protocol: next.protocol || current.protocol || ""
+  };
 }
 
 function parseApiFieldLabel(line) {

@@ -5,6 +5,7 @@ import { buildHldNavGroups, buildHldPageNav } from "../../../../lib/hld-navigati
 import { listHldReusedSubproblemDocs } from "../../../../lib/hld-reused-subproblems-store";
 import { getHldProblem, listHldProblems } from "../../../../lib/hld-store";
 import { listHldTheoryDocs } from "../../../../lib/hld-theory-store";
+import { getCurrentUser, isAdminUser } from "../../../../lib/supabase-server";
 
 export const dynamic = "force-dynamic";
 
@@ -18,11 +19,12 @@ export async function generateMetadata({ params }) {
 
 export default async function HldProblemPage({ params }) {
   const { slug } = await params;
-  const [problem, problems, theoryDocs, reusedSubproblemDocs] = await Promise.all([
+  const [problem, problems, theoryDocs, reusedSubproblemDocs, user] = await Promise.all([
     getHldProblem(slug),
     listHldProblems(),
     listHldTheoryDocs(),
-    listHldReusedSubproblemDocs()
+    listHldReusedSubproblemDocs(),
+    getCurrentUser()
   ]);
   if (!problem) notFound();
 
@@ -32,7 +34,7 @@ export default async function HldProblemPage({ params }) {
       groups={buildHldNavGroups(problems, theoryDocs, reusedSubproblemDocs)}
       pageNav={buildHldPageNav(problem)}
     >
-      <HldProblemRenderer problem={problem} />
+      <HldProblemRenderer problem={problem} isAdmin={isAdminUser(user)} />
     </HldShell>
   );
 }

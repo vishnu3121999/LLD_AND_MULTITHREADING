@@ -1225,6 +1225,21 @@
   overflow-wrap: anywhere;
 }
 
+.hld-overview-body .hld-course-prose {
+  max-width: 56rem;
+  color: var(--hld-muted);
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.hld-overview-body .hld-course-prose p {
+  margin: 0.5rem 0;
+}
+
+.hld-overview-body .hld-course-prose img {
+  max-width: 100%;
+}
+
 .hld-course-prose > :first-child {
   margin-top: 0;
 }
@@ -1285,6 +1300,38 @@
 
 .hld-course-prose li::marker {
   color: #818cf8;
+}
+
+.hld-course-prose .hld-note-callout {
+  margin: 1rem 0;
+  border: 1px solid color-mix(in srgb, var(--hld-brand) 26%, var(--hld-border));
+  border-left: 3px solid var(--hld-brand);
+  border-radius: 0.5rem;
+  background: color-mix(in srgb, var(--hld-brand-soft) 58%, var(--hld-surface));
+  padding: 0.85rem 1rem;
+}
+
+.hld-course-prose .hld-note-label {
+  margin-bottom: 0.35rem;
+  color: var(--hld-brand);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.hld-course-prose .hld-note-content {
+  color: var(--hld-heading);
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+.hld-course-prose .hld-note-content > :first-child {
+  margin-top: 0;
+}
+
+.hld-course-prose .hld-note-content > :last-child {
+  margin-bottom: 0;
 }
 
 .hld-nfr-prose .hld-nfr-list {
@@ -1610,6 +1657,33 @@
   padding-top: 0;
 }
 
+.hld-api-meta-line {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: 1.75rem;
+  color: var(--hld-muted);
+  font-size: 0.76rem;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.hld-api-meta-line > * + *::before {
+  content: "|";
+  margin-right: 0.4rem;
+  color: color-mix(in srgb, var(--hld-muted) 55%, transparent);
+  font-weight: 500;
+}
+
+.hld-api-meta-line code {
+  color: var(--hld-heading);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.74rem;
+  font-weight: 650;
+}
+
 .hld-api-request-line {
   display: flex;
   min-width: 0;
@@ -1762,6 +1836,10 @@
     margin-left: 0;
   }
 
+  .hld-api-meta-line {
+    margin-left: 0;
+  }
+
   .hld-api-contract-slot-empty {
     display: none;
   }
@@ -1853,13 +1931,15 @@
 
 .hld-course-prose img {
   display: block;
-  max-width: 100%;
+  max-width: min(100%, 760px);
+  max-height: 70vh;
   height: auto;
   margin: 1rem auto;
   border: 1px solid var(--site-border);
   border-radius: 0.5rem;
   background: var(--site-surface);
   padding: 0.5rem;
+  object-fit: contain;
 }
 
 .hld-course-prose pre code.hljs {

@@ -5,6 +5,7 @@ import { buildHldNavGroups, buildHldTheoryPageNav } from "../../../../../lib/hld
 import { getHldReusedSubproblemDoc, listHldReusedSubproblemDocs } from "../../../../../lib/hld-reused-subproblems-store";
 import { listHldProblems } from "../../../../../lib/hld-store";
 import { listHldTheoryDocs } from "../../../../../lib/hld-theory-store";
+import { getCurrentUser, isAdminUser } from "../../../../../lib/supabase-server";
 
 export const dynamic = "force-dynamic";
 
@@ -18,11 +19,12 @@ export async function generateMetadata({ params }) {
 
 export default async function HldReusedSubproblemPage({ params }) {
   const { slug } = await params;
-  const [doc, problems, theoryDocs, reusedSubproblemDocs] = await Promise.all([
+  const [doc, problems, theoryDocs, reusedSubproblemDocs, user] = await Promise.all([
     getHldReusedSubproblemDoc(slug),
     listHldProblems(),
     listHldTheoryDocs(),
-    listHldReusedSubproblemDocs()
+    listHldReusedSubproblemDocs(),
+    getCurrentUser()
   ]);
 
   if (!doc) notFound();
@@ -33,7 +35,12 @@ export default async function HldReusedSubproblemPage({ params }) {
       groups={buildHldNavGroups(problems, theoryDocs, reusedSubproblemDocs)}
       pageNav={buildHldTheoryPageNav(doc)}
     >
-      <HldTheoryRenderer doc={doc} label="Reused Subproblem" />
+      <HldTheoryRenderer
+        doc={doc}
+        label="Reused Subproblem"
+        editHref={isAdminUser(user) ? `/hld/reused-subproblems/${doc.id}/edit` : ""}
+        liveUrl={`/api/hld/reused-subproblems/${doc.id}`}
+      />
     </HldShell>
   );
 }

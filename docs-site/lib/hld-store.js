@@ -4,6 +4,7 @@ import path from "node:path";
 
 const HLD_DATA_DIR = path.join(process.cwd(), "content", "hld", "problems");
 const VALID_ID = /^[a-z0-9][a-z0-9-]*$/;
+const VALID_STORAGE_ID = /^[a-z0-9][a-z0-9._-]*$/;
 const IMAGE_EXTENSIONS = new Set([".apng", ".avif", ".gif", ".jpeg", ".jpg", ".png", ".svg", ".webp"]);
 const TEXT_PROBLEM_META = {
   camelcamelcamel: {
@@ -22,12 +23,16 @@ let writeQueue = Promise.resolve();
 
 export async function listHldProblems() {
   await ensureHldDataDir();
-  const entries = await readdir(HLD_DATA_DIR, { withFileTypes: true }).catch(() => []);
+  const entries = (await readdir(HLD_DATA_DIR, { withFileTypes: true }).catch(() => []))
+    .sort(compareProblemEntries);
   const problems = new Map();
+  let order = 0;
 
   for (const entry of entries) {
     let id = "";
     let problem = null;
+    const sourceOrder = order;
+    order += 1;
 
     if (entry.isDirectory()) {
       id = entry.name;
@@ -57,11 +62,14 @@ export async function listHldProblems() {
       updated_at: problem.updated_at || "",
       created_at: problem.created_at || "",
       sectionCount: countSections(problem.sections),
-      imageCount: Array.isArray(problem.images) ? problem.images.length : 0
+      imageCount: Array.isArray(problem.images) ? problem.images.length : 0,
+      order: sourceOrder
     });
   }
 
-  return Array.from(problems.values()).sort((a, b) => (b.updated_at || "").localeCompare(a.updated_at || ""));
+  return Array.from(problems.values())
+    .sort((a, b) => a.order - b.order)
+    .map(({ order: _order, ...problem }) => problem);
 }
 
 export async function getHldProblem(id) {
@@ -121,6 +129,32 @@ export async function updateHldProblem(id, payload) {
   });
 }
 
+export async function readHldProblemMarkdown(id) {
+  const source = await findMarkdownHldProblemSource(id);
+  if (!source) return null;
+
+  return {
+    id,
+    storageId: source.storageId,
+    fileName: path.relative(HLD_DATA_DIR, source.target).replace(/\\/g, "/"),
+    markdown: source.raw
+  };
+}
+
+export async function updateHldProblemMarkdown(id, markdown) {
+  if (!isValidId(id)) return null;
+
+  return enqueueWrite(async () => {
+    const source = await findMarkdownHldProblemSource(id);
+    if (!source) return null;
+
+    const normalized = normalizeMarkdownSource(markdown);
+    validateMarkdownSource(id, normalized, source);
+    await writeFile(source.target, normalized, "utf8");
+    return getHldProblem(id);
+  });
+}
+
 export async function deleteHldProblem(id) {
   if (!isValidId(id)) return false;
 
@@ -153,6 +187,7 @@ function normalizeHldProblem(payload = {}) {
     title,
     summary: String(payload.summary || "").trim(),
     tags: normalizeTags(payload.tags),
+    requirementsLayout: normalizeRequirementsLayout(payload.requirementsLayout),
     sections: Array.isArray(payload.sections) ? payload.sections.map(normalizeSection) : []
   };
 }
@@ -184,6 +219,23 @@ function normalizeTags(tags) {
   }
 
   return [];
+}
+
+function normalizeRequirementsLayout(value) {
+  const normalized = String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[_\s]+/g, "-");
+
+  if (["stacked", "vertical", "up-down", "up/down", "top-bottom", "rows"].includes(normalized)) {
+    return "stacked";
+  }
+
+  if (["side-by-side", "horizontal", "columns", "side-by-side-layout"].includes(normalized)) {
+    return "side-by-side";
+  }
+
+  return "";
 }
 
 function defaultTitleForType(type) {
@@ -322,6 +374,7 @@ async function readMarkdownHldProblemFile(
     const images = await collectProblemImages(id, assetDir, assetId);
     const parsed = parseMarkdownProblem(raw, id);
     if (options.requireMatchingSlug && parsed.slug !== id) return null;
+    if (options.requireSlug && !isValidId(parsed.slug)) return null;
 
     const problemId = isValidId(parsed.id) ? parsed.id : id;
 
@@ -335,6 +388,7 @@ async function readMarkdownHldProblemFile(
       title: parsed.title || titleFromId(id),
       summary: parsed.summary || "Solved high-level design problem.",
       tags: parsed.tags,
+      requirementsLayout: parsed.requirementsLayout,
       source: "markdown",
       created_at: parsed.created_at || fileStat.birthtime.toISOString(),
       updated_at: parsed.updated_at || fileStat.mtime.toISOString(),
@@ -346,8 +400,106 @@ async function readMarkdownHldProblemFile(
   }
 }
 
+async function findMarkdownHldProblemSource(id) {
+  if (!isValidId(id)) return null;
+  await ensureHldDataDir();
+
+  const entries = (await readdir(HLD_DATA_DIR, { withFileTypes: true }).catch(() => []))
+    .sort(compareProblemEntries);
+
+  for (const entry of entries) {
+    try {
+      if (entry.isDirectory()) {
+        const source = await findDirectoryMarkdownSource(entry.name);
+        if (!source) continue;
+
+        const parsed = parseMarkdownProblem(source.raw, source.fallbackId);
+        const problemId = isValidId(parsed.id) ? parsed.id : source.fallbackId;
+        if (problemId === id) return { ...source, id: problemId, requireSlug: true };
+        continue;
+      }
+
+      if (!entry.isFile() || path.extname(entry.name) !== ".md") continue;
+
+      const fileId = entry.name.slice(0, -".md".length);
+      if (!isValidId(fileId)) continue;
+
+      const target = path.join(HLD_DATA_DIR, entry.name);
+      const raw = await readFile(target, "utf8");
+      const parsed = parseMarkdownProblem(raw, fileId);
+      const problemId = isValidId(parsed.id) ? parsed.id : fileId;
+
+      if (problemId === id) {
+        return {
+          id: problemId,
+          storageId: fileId,
+          target,
+          raw,
+          fallbackId: fileId,
+          requireSlug: false
+        };
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return null;
+}
+
+async function findDirectoryMarkdownSource(storageId) {
+  if (!isValidStorageId(storageId)) return null;
+
+  const fallbackId = storageIdToPublicFallback(storageId);
+  if (!fallbackId) return null;
+
+  const dir = path.join(HLD_DATA_DIR, storageId);
+  const entries = await readdir(dir, { withFileTypes: true });
+  const files = entries.filter((entry) => entry.isFile()).map((entry) => entry.name);
+  const markdownFile = files.includes("index.md")
+    ? "index.md"
+    : files.includes(`${storageId}.md`)
+      ? `${storageId}.md`
+      : files.find((file) => path.extname(file) === ".md");
+
+  if (!markdownFile) return null;
+
+  const target = path.join(dir, markdownFile);
+  const raw = await readFile(target, "utf8");
+
+  return {
+    storageId,
+    target,
+    raw,
+    fallbackId
+  };
+}
+
+function normalizeMarkdownSource(markdown) {
+  const normalized = String(markdown || "").replace(/\r\n/g, "\n");
+  return normalized.endsWith("\n") ? normalized : `${normalized}\n`;
+}
+
+function validateMarkdownSource(id, markdown, source) {
+  const parsed = parseMarkdownProblem(markdown, source.fallbackId);
+  const problemId = isValidId(parsed.id) ? parsed.id : source.fallbackId;
+
+  if (source.requireSlug && !isValidId(parsed.slug)) {
+    const error = new Error("Directory markdown problems must define a valid slug in frontmatter.");
+    error.status = 400;
+    throw error;
+  }
+
+  if (problemId !== id) {
+    const error = new Error(`Frontmatter slug must remain "${id}" for this page.`);
+    error.status = 400;
+    throw error;
+  }
+}
+
 async function findHldProblemByPublicId(id) {
-  const entries = await readdir(HLD_DATA_DIR, { withFileTypes: true }).catch(() => []);
+  const entries = (await readdir(HLD_DATA_DIR, { withFileTypes: true }).catch(() => []))
+    .sort(compareProblemEntries);
 
   for (const entry of entries) {
     let problem = null;
@@ -369,7 +521,7 @@ async function findHldProblemByPublicId(id) {
 }
 
 async function readDirectoryHldProblem(id) {
-  if (!isValidId(id)) return null;
+  if (!isValidStorageId(id)) return null;
 
   try {
     const dir = path.join(HLD_DATA_DIR, id);
@@ -406,9 +558,11 @@ async function readDirectoryHldProblem(id) {
 }
 
 async function readDirectoryMarkdownHldProblemFile(id, target, assetDir, assetId) {
-  const problem = await readMarkdownHldProblemFile(id, target, assetDir, assetId, { requireMatchingSlug: true });
+  const fallbackId = storageIdToPublicFallback(id);
+  if (!fallbackId) return null;
+  const problem = await readMarkdownHldProblemFile(fallbackId, target, assetDir, assetId, { requireSlug: true });
   if (!problem) return null;
-  return problem.id === id ? problem : null;
+  return isValidId(problem.id) ? problem : null;
 }
 
 async function writeHldProblemFile(problem) {
@@ -435,6 +589,30 @@ function problemPath(id) {
 
 function isValidId(id) {
   return typeof id === "string" && VALID_ID.test(id);
+}
+
+function isValidStorageId(id) {
+  return (
+    typeof id === "string" &&
+    VALID_STORAGE_ID.test(id) &&
+    !id.includes("..") &&
+    !id.endsWith(".")
+  );
+}
+
+function storageIdToPublicFallback(id) {
+  const fallback = String(id || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return isValidId(fallback) ? fallback : "";
+}
+
+function compareProblemEntries(a, b) {
+  return a.name.localeCompare(b.name, undefined, {
+    numeric: true,
+    sensitivity: "base"
+  });
 }
 
 function isoNow() {
@@ -495,6 +673,12 @@ function parseMarkdownProblem(raw, id) {
     title,
     summary: stringValue(data.summary),
     tags: normalizeTags(data.tags),
+    requirementsLayout: normalizeRequirementsLayout(
+      data.requirementsLayout ||
+      data.requirements_layout ||
+      data["requirements-layout"] ||
+      data.layout
+    ),
     created_at: stringValue(data.created_at),
     updated_at: stringValue(data.updated_at),
     sections: parseMarkdownSections(body)

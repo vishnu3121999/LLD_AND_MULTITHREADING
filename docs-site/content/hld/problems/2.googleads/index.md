@@ -7,166 +7,151 @@ tags:
   - Analytics
   - Event Processing
 difficulty: Hard
+requirementsLayout: stacked
 ---
 
+## Overview
+Serve ads, track impressions/clicks/conversions, and provide campaign analytics to advertisers.
+![Google Ads](./images/overview.png)
 ## Functional Requirements
-
-1. Advertiser should be able to create ad campaigns with budget, bid, targeting rules and ad creatives.
-2. System should be able to serve relevant ads for a given user/page/search context.
-3. System should record ad events like impressions, clicks and conversions.
-4. Advertiser should be able to view campaign analytics. (e.g., impressions, clicks, CTR, CPC, spend, conversions, trends)
-
+1. Advertisers should be able to create campaigns with a set of ads, daily budget, bid strategy, start time, end time.
+2. User should be able to request ads when publisher page loads.
+3. User should be redirected to advertiser's page upon clicking on the ad. System should record click events when user clicks an ad.
+4. Advertiser should be able to view analytics for their ads.
+			i. User should be able to query clicks grouped by date, campaign, ad , country, device
+NOTE: refer query patterns
 ## Out of Scope
-
 1. User auth & authz
 2. Fraud detection
 3. Advanced ML-based ad ranking
 
 ## Non-Functional Requirements
 
-No single point of failure (fault tolerance).
-CAP Theorem:
-Ad serving & event recording (FR-2 & FR-3):
-availability > consistency
-`1-5 sec` inconsistency allowed
-Analytics aggregation & view (FR-3 & FR-4):
-availability > consistency
-Minor delay `(1–5 sec)` in analytics updates is acceptable.
-Throughput & Latencies:
-Campaign creation (FR-1):
-Write TPS = `1M/day = 10/s`
-Write Latency = never mind
-Ad serving (FR-2):
-Read QPS = `1B/day = 10k/s`
-Read Latency = `100ms`
-Handle Celebrity/Hot keys
-Handle traffic spikes in cost effective way (optional, only if time at end)
-
+1. Fault Tolerance
+2. CAP Theorem:
+   FR-1: & FR-2
+       1) availability > consistency
+           a) staleness allowed = 10s
+           b) If an advertiser creates a campaign, it is acceptable if the campaign does not immediately start serving ads for the next 10s
+   FR-3 & FR-4
+       1) availability > consistency
+           a) staleness allowed = 1min
+           b) A click happens at 10:00:00. Advertiser opens analytics at 10:00:10. If the click is not visible yet, it is acceptable.But it should usually appear within 1 minute.
+3. System Scale:
+               i. new system , 10 years
+               ii. market size: 100,000 advertisers, 1M active campaigns, ~10M ads.
+4. Throughput & Latencies:
+               i. FR-1:
+                   1) write tps = 100k/day = 1/s , peak = 5/s
+                   2) write latency = p99 < 500ms
+               ii. FR-2:
+                   1) Read QPS = 1B/day = 10k/s , peak = 50k/s
+                   2) Read latency = p99 < 100ms
+               iii. FR-3:
+                   1) Read QPS = 10M/day ( assuming 1 in 100 ads gets a click) = 100/s , peak = 1k/s
+                   2) Read Latency = p99 < 100ms
+               iv. FR-4:
+                   1) Read QPS = 100k/day = 1/s, peak 5/s
+                   2) Read Latency = p99 < 1-2s
+5. Problem specific:
+               • Click fraud / bot detection: dedupe rapid repeat clicks from same IP/user/ad within a short window; flag is_valid=false clicks so they don't count toward spend or analytics.
+               • Idempotency on clicks: each ad impression carries a signed click-token; redirect endpoint rejects/dedupes replayed tokens so refreshing or double-clicking doesn't double-charge.
+               • Budget pacing & hot campaigns: a viral/high-budget campaign can get a disproportionate share of ad requests — use sharded, approximate counters (e.g. Redis INCR per campaign per minute bucket) instead of a single row lock, to avoid write contention as a hot key.
+               • Hot ad creatives: cache ad creative assets on a CDN, not served from the app tier.
+               • Traffic spike handling (cost-effective): Ad Serving autoscaling on QPS with pre-warmed cache; avoid provisioning peak capacity 24/7 — use burst-capable stateless compute (e.g. autoscaling groups/serverless) since ad request traffic is highly diurnal.
+               • PII/targeting data: country/device stored, but no raw IP or precise geo retained longer than needed for fraud checks; aggregate before long-term retention.
+   Data retention: raw click events retained ~90 days hot (OLAP), older data rolled up into daily aggregates in cold storage for the 10-year analytics history.
 
 ## API Design
 
+
+### FR-1: Create Campaign
+Protocol: REST 
 ```http
 POST /api/v1/campaigns
 
 REQUEST BODY:
 {
-  "advertiserId": "adv-123",
-  "name": "Summer Sale Campaign",
-  "dailyBudget": 10000,
-  "bidAmount": 5,
-  "targetCountries": ["IN"],
-  "targetKeywords": ["shoes", "running shoes"],
-  "startTime": "2026-12-01T00:00:00Z",
-  "endTime": "2026-12-31T23:59:59Z"
-}
-
-STATUS : 201 CREATED
-RESPONSE BODY:
-{
-  "campaignId": "camp-123",
-  "status": "ACTIVE"
-}
-```
-
-```http
-POST /api/v1/ads
-
-REQUEST BODY:
-{
-  "campaignId": "camp-123",
-  "title": "Buy Running Shoes",
-  "description": "Flat 40% off on running shoes.",
-  "landingUrl": "https://example.com/shoes",
-  "imageUrl": "https://cdn.example.com/shoe-ad.png"
-}
-
-STATUS : 201 CREATED
-RESPONSE BODY:
-{
-  "adId": "ad-123",
-  "status": "ACTIVE"
-}
-```
-
-```http
-POST /api/v1/ad-requests
-
-REQUEST BODY:
-{
-  "userId": "user-123",
-  "country": "IN",
-  "device": "MOBILE",
-  "keywords": ["running shoes"],
-  "placement": "SEARCH_TOP"
-}
-
-STATUS : 200 OK
-RESPONSE BODY:
-{
-  "adId": "ad-123",
-  "campaignId": "camp-123",
-  "title": "Buy Running Shoes",
-  "description": "Flat 40% off on running shoes.",
-  "landingUrl": "https://example.com/shoes",
-  "imageUrl": "https://cdn.example.com/shoe-ad.png",
-  "impressionTrackingId": "imp-123"
-}
-```
-
-```http
-POST /api/v1/ad-events
-
-REQUEST BODY:
-{
-  "eventType": "CLICK",
-  "adId": "ad-123",
-  "campaignId": "camp-123",
-  "userId": "user-123",
-  "impressionTrackingId": "imp-123",
-  "country": "IN",
-  "device": "MOBILE",
-  "placement": "SEARCH_TOP",
-  "eventTime": "2026-12-10T10:30:00Z"
-}
-
-STATUS : 202 ACCEPTED
-RESPONSE BODY:
-{
-  "status": "RECORDED"
-}
-```
-
-```http
-GET /api/v1/campaigns/{campaignId}/analytics?from={from}&to={to}
-
-STATUS : 200 OK
-RESPONSE BODY:
-{
-  "campaignId": "camp-123",
-  "impressions": 100000,
-  "clicks": 2500,
-  "conversions": 300,
-  "ctr": 2.5,
-  "cpc": 5,
-  "spend": 12500,
-  "trend": [
+  "advertiserId": "adv_9821",
+  "name": "Summer Sale 2026",
+  "dailyBudget": 500.00,
+  "bidStrategy": "CPC",
+  "bidAmount": 0.75,
+  "startTime": "2026-07-15T00:00:00Z",
+  "endTime": "2026-08-15T00:00:00Z",
+  "ads": [
     {
-      "timestamp": "2026-12-10T10:00:00Z",
-      "impressions": 10000,
-      "clicks": 300,
-      "conversions": 40,
-      "spend": 1500
+      "title": "50% off summer collection",
+      "creativeUrl": "https://cdn.example.com/creatives/summer1.png",
+      "landingPageUrl": "https://advertiser.com/summer-sale"
+    }
+  ]
+}
+
+STATUS : 201 CREATED
+RESPONSE BODY:
+{
+  "campaignId": "camp_10293",
+  "status": "ACTIVE",
+  "adIds": ["ad_55011"]
+}
+```
+
+
+### FR-2: Request Ad
+Protocol: REST
+```http
+GET /api/v1/ads?publisherId=pub_442&placementId=banner_top&country=IN&device=mobile
+
+STATUS : 200 OK
+RESPONSE BODY:
+{
+  "adId": "ad_55011",
+  "campaignId": "camp_10293",
+  "creativeUrl": "https://cdn.example.com/creatives/summer1.png",
+  "clickUrl": "https://ads.example.com/r/click_tok_a1b2c3"
+}
+```
+
+### FR-3: Click Redirect
+Protocol: REST
+```http
+GET /api/v1/ads/{adId}
+
+STATUS : 302 FOUND
+RESPONSE HEADER:
+Location: https://advertiser.com/shoes
+```
+
+### FR-4: Query Analytics
+Protocol: REST
+```http
+GET /api/v1/campaigns/camp_10293/analytics?startDate=2026-07-01&endDate=2026-07-09&groupBy=date,ad,country,device
+
+STATUS : 200 OK
+RESPONSE BODY:
+{
+  "campaignId": "camp_10293",
+  "results": [
+    {
+      "date": "2026-07-08",
+      "adId": "ad_55011",
+      "country": "IN",
+      "device": "mobile",
+      "clicks": 4210
     },
     {
-      "timestamp": "2026-12-10T11:00:00Z",
-      "impressions": 12000,
-      "clicks": 350,
-      "conversions": 50,
-      "spend": 1750
+      "date": "2026-07-08",
+      "adId": "ad_55011",
+      "country": "US",
+      "device": "desktop",
+      "clicks": 1875
     }
   ]
 }
 ```
+
+
 
 
 ## High-Level Design

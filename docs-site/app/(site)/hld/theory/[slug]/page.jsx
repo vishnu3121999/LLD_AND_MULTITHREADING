@@ -33,7 +33,11 @@ export default async function HldTheoryPage({ params }) {
       groups={buildHldNavGroups(problems, theoryDocs, reusedSubproblemDocs)}
       pageNav={buildHldTheoryPageNav(doc)}
     >
-      <HldTheoryRenderer doc={doc} />
+      <HldTheoryRenderer
+        assetBaseUrl={`/api/hld/theory/${doc.id}/assets`}
+        doc={doc}
+        liveUrl={`/api/hld/theory/${doc.id}`}
+      />
     </HldShell>
   );
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { deleteHldProblem, getHldProblem, updateHldProblem } from "../../../../../lib/hld-store";
+import { requireApiAdmin } from "../../../../../lib/supabase-server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,6 +13,9 @@ export async function GET(_request, { params }) {
 }
 
 export async function PUT(request, { params }) {
+  const auth = await requireApiAdmin();
+  if (auth.response) return auth.response;
+
   try {
     const { id } = await params;
     const payload = await request.json();
@@ -24,6 +28,9 @@ export async function PUT(request, { params }) {
 }
 
 export async function DELETE(_request, { params }) {
+  const auth = await requireApiAdmin();
+  if (auth.response) return auth.response;
+
   const { id } = await params;
   const deleted = await deleteHldProblem(id);
   if (!deleted) return NextResponse.json({ error: "Problem not found" }, { status: 404 });

@@ -1,5 +1,10 @@
 import path from "node:path";
-import { getMarkdownDoc, listMarkdownDocs } from "./hld-markdown-doc-store.js";
+import {
+  getMarkdownDoc,
+  listMarkdownDocs,
+  readMarkdownDocSource,
+  updateMarkdownDocSource
+} from "./hld-markdown-doc-store.js";
 
 const HLD_REUSED_SUBPROBLEMS_DIR = path.join(process.cwd(), "content", "hld", "reused-subproblems");
 const TITLE_OVERRIDES = new Map([
@@ -29,6 +34,24 @@ export async function getHldReusedSubproblemDoc(id) {
   const doc = await getMarkdownDoc({
     contentDir: HLD_REUSED_SUBPROBLEMS_DIR,
     id,
+    titleOverrides: TITLE_OVERRIDES
+  });
+  return doc ? { ...doc, source: "reused-subproblems" } : null;
+}
+
+export async function readHldReusedSubproblemMarkdown(id) {
+  return readMarkdownDocSource({
+    contentDir: HLD_REUSED_SUBPROBLEMS_DIR,
+    id,
+    titleOverrides: TITLE_OVERRIDES
+  });
+}
+
+export async function updateHldReusedSubproblemMarkdown(id, markdown) {
+  const doc = await updateMarkdownDocSource({
+    contentDir: HLD_REUSED_SUBPROBLEMS_DIR,
+    id,
+    markdown,
     titleOverrides: TITLE_OVERRIDES
   });
   return doc ? { ...doc, source: "reused-subproblems" } : null;

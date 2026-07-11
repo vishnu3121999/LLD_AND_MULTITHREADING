@@ -45,6 +45,9 @@ Uniqueness
 
 ## API Design
 
+### FR-1: Generate short URL
+Protocol: REST over HTTP
+
 ```http
 POST /api/v1/urls
 
@@ -63,6 +66,9 @@ RESPONSE BODY:
 }
 ```
 
+### FR-2: Redirect to original URL
+Protocol: HTTP redirect
+
 ```http
 GET /{shortCode}
 
@@ -72,44 +78,17 @@ Location: https://example.com/some/very/long/url
 
 ```
 
+### FR-4: View URL analytics
+Protocol: REST over HTTP
+
 ```http
-GET /api/v1/urls/{shortCode}/analytics
+GET /api/v1/urls/my-link/clicks
 
 STATUS : 200 OK
 RESPONSE BODY:
 {
   "shortCode": "my-link",
-  "totalClicks": 15230,
-  "locationDistribution": [
-    {
-      "country": "IN",
-      "clicks": 10000
-    },
-    {
-      "country": "US",
-      "clicks": 5230
-    }
-  ],
-  "deviceDistribution": [
-    {
-      "device": "MOBILE",
-      "clicks": 9000
-    },
-    {
-      "device": "DESKTOP",
-      "clicks": 6230
-    }
-  ],
-  "referrerDistribution": [
-    {
-      "referrer": "google.com",
-      "clicks": 7000
-    },
-    {
-      "referrer": "instagram.com",
-      "clicks": 8230
-    }
-  ]
+  "totalClicks": 15230
 }
 ```
 

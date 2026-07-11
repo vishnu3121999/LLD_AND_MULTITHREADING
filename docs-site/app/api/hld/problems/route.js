@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createHldProblem, listHldProblems } from "../../../../lib/hld-store";
+import { requireApiAdmin } from "../../../../lib/supabase-server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,6 +11,9 @@ export async function GET() {
 }
 
 export async function POST(request) {
+  const auth = await requireApiAdmin();
+  if (auth.response) return auth.response;
+
   try {
     const payload = await request.json();
     const problem = await createHldProblem(payload);

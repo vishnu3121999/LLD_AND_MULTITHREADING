@@ -55,10 +55,15 @@ export function buildHldPageNav(problem) {
   if (!problem) return [];
 
   const used = new Map();
-  const sectionItems = (problem.sections || []).map((section, index) => ({
-    href: `#${makeId(section.title, `section-${index}`, used)}`,
-    label: section.title || "Untitled"
-  }));
+  const sectionItems = (problem.sections || []).reduce((items, section, index) => {
+    const id = makeId(section.title, `section-${index}`, used);
+    if (slugify(section.title) === "overview") return items;
+    items.push({
+      href: `#${id}`,
+      label: section.title || "Untitled"
+    });
+    return items;
+  }, []);
 
   return [
     { href: "#overview", label: "Overview" },

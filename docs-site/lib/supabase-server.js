@@ -81,8 +81,17 @@ export async function requireApiAdmin() {
 }
 
 export function isAdminUser(user) {
-  const adminEmail = (process.env.ADMIN_EMAIL || DEFAULT_ADMIN_EMAIL).trim().toLowerCase();
-  return Boolean(user?.email && user.email.trim().toLowerCase() === adminEmail);
+  const email = user?.email?.trim().toLowerCase();
+  if (!email) return false;
+
+  const adminEmails = new Set(
+    [DEFAULT_ADMIN_EMAIL, process.env.ADMIN_EMAIL, process.env.ADMIN_EMAILS]
+      .flatMap((value) => String(value || "").split(","))
+      .map((value) => value.trim().toLowerCase())
+      .filter(Boolean)
+  );
+
+  return adminEmails.has(email);
 }
 
 export function publicUser(user) {
