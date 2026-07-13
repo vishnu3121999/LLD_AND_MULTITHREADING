@@ -1,5 +1,8 @@
 ### IntelliJ IDEA ###
 
+.idea/
+*.iml
+
 
 
 out/
@@ -28,6 +31,22 @@ bin/
 
 ### VS Code ###
 .vscode/
+
+### Node / Next.js ###
+node_modules/
+.next/
+dist/
+.vite/
+*.log
+.env*.local
+
+### Python ###
+.venv/
+__pycache__/
+*.py[cod]
+
+### Local runtime data ###
+content/local-data/*.json
 
 ### Mac OS ###
 .DS_Store
