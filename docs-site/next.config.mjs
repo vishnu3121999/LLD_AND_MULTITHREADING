@@ -9,7 +9,8 @@ export default withMDX({
   pageExtensions: ["js", "jsx", "md", "mdx"],
   outputFileTracingIncludes: {
     "/api/java/**/*": ["./content/java-modules/**/*"],
-    "/api/hld/**/*": ["./content/hld/**/*", "./public/hld/**/*"]
+    "/api/hld/**/*": ["./content/hld/**/*", "./public/hld/**/*"],
+    "/api/lld/**/*": ["./content/lld/**/*"]
   },
   turbopack: {
     root: process.cwd()

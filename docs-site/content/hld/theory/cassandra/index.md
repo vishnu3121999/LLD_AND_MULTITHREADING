@@ -770,9 +770,22 @@ A logged batch can provide atomic application of a small related set of mutation
 [//]: # ()
 [//]: # (---) - commented
 
+---
+
 # Write Path
 
-## 27. End-to-End Write Flow
+## End-to-End Write Flow
+
+![cassandra-write-path](./images/cassandra-write-path.png)
+<!-- IMAGE PLACEHOLDER
+Title: Cassandra write path
+What to use: A diagram showing coordinator to replicas, then commit log and memtable, followed by memtable flush to immutable SSTables and background compaction.
+Preferred source: Apache Cassandra documentation, "Storage Engine", or the official Apache Cassandra article "Learn How CommitLog Works".
+Search terms: site:cassandra.apache.org Cassandra commit log memtable SSTable write path
+Purpose: Explain why foreground writes are sequential and fast.
+Alt text: Cassandra writes append to the commit log, update the memtable, flush to SSTables and later compact SSTables.
+-->
+
 
 For each replica receiving a write:
 
@@ -812,19 +825,21 @@ Consequences:
 - Retrying a normal deterministic upsert is usually safe.
 - Application-supplied timestamps should be used only when necessary and carefully controlled.
 
-<!-- IMAGE PLACEHOLDER
-Title: Cassandra write path
-What to use: A diagram showing coordinator to replicas, then commit log and memtable, followed by memtable flush to immutable SSTables and background compaction.
-Preferred source: Apache Cassandra documentation, "Storage Engine", or the official Apache Cassandra article "Learn How CommitLog Works".
-Search terms: site:cassandra.apache.org Cassandra commit log memtable SSTable write path
-Purpose: Explain why foreground writes are sequential and fast.
-Alt text: Cassandra writes append to the commit log, update the memtable, flush to SSTables and later compact SSTables.
--->
+
 
 ---
 
 # Read Path
 
+![cassandra-read-path](./images/cassandra-read-path.png)
+<!-- IMAGE PLACEHOLDER
+Title: Cassandra read path
+What to use: A diagram showing the coordinator contacting replicas, each replica checking memtable and multiple SSTables through Bloom filters, then returning data for reconciliation.
+Preferred source: Apache Cassandra documentation, "Storage Engine", "Bloom Filters" and "Read repair". If no clear official diagram is available, create an original diagram based on these pages instead of copying an outdated third-party diagram.
+Search terms: Apache Cassandra read path memtable SSTable Bloom filter coordinator replicas
+Purpose: Contrast the read path with the simpler write path.
+Alt text: Cassandra replicas merge data from memtables and SSTables, and the coordinator reconciles replica responses.
+-->
 ## 30. End-to-End Read Flow
 
 For a partition read:
@@ -890,14 +905,7 @@ Read repair is useful but is not a replacement for regular anti-entropy repair:
 - It only involves replicas contacted by the read.
 - Cold data may remain inconsistent indefinitely without scheduled repair.
 
-<!-- IMAGE PLACEHOLDER
-Title: Cassandra read path
-What to use: A diagram showing the coordinator contacting replicas, each replica checking memtable and multiple SSTables through Bloom filters, then returning data for reconciliation.
-Preferred source: Apache Cassandra documentation, "Storage Engine", "Bloom Filters" and "Read repair". If no clear official diagram is available, create an original diagram based on these pages instead of copying an outdated third-party diagram.
-Search terms: Apache Cassandra read path memtable SSTable Bloom filter coordinator replicas
-Purpose: Contrast the read path with the simpler write path.
-Alt text: Cassandra replicas merge data from memtables and SSTables, and the coordinator reconciles replica responses.
--->
+
 
 ---
 

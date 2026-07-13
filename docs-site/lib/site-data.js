@@ -1,4 +1,5 @@
 export const navItems = [
+  { href: "/calendar", label: "Calendar" },
   { href: "/pricing", label: "Pricing" }
 ];
 

@@ -61,13 +61,19 @@ function getDocumentFingerprint(document) {
   if (!document) return "";
 
   return [
-    document.id || "",
+    document.id || document.slug || "",
     document.updated_at || "",
-    document.title || "",
-    document.summary || "",
-    document.sectionCount || "",
-    document.imageCount || "",
-    Array.isArray(document.sections) ? document.sections.length : "",
-    typeof document.body === "string" ? document.body.length : ""
+    hashString(JSON.stringify(document))
   ].join("|");
+}
+
+function hashString(value) {
+  const text = String(value || "");
+  let hash = 0;
+
+  for (let index = 0; index < text.length; index += 1) {
+    hash = ((hash << 5) - hash + text.charCodeAt(index)) | 0;
+  }
+
+  return String(hash);
 }

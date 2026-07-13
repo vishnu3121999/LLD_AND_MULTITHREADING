@@ -23,6 +23,14 @@ const dashboardTheme = {
 
 const lldSections = [
   {
+    title: "Low Level Design",
+    href: "/lld",
+    eyebrow: "Object modeling",
+    description: "OOP concepts, design principles, patterns, and problem writeups from the LLD content folder.",
+    icon: Code2,
+    meta: "LLD"
+  },
+  {
     title: "Concurrency",
     href: "/concurrency",
     eyebrow: "Correctness",
@@ -42,7 +50,7 @@ const lldSections = [
 
 const hldSections = [
   {
-    title: "Problem Library",
+    title: "High Level Design",
     href: "/hld",
     eyebrow: "Case studies",
     description: "System design problems written as interview docs with diagrams, trade-offs, and deep dives.",
@@ -90,7 +98,7 @@ export default function HomePage() {
       </section>
 
       <section className="site-container py-4 lg:py-5">
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           {mainSections.map((section) => (
             <SectionCard key={section.href} section={section} />
           ))}
